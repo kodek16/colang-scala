@@ -31,6 +31,7 @@ object Expression {
     */
   val primaryStrategy = StrategyUnion(
     DoubleLiteral.strategy,
+    IntLiteral.strategy,
     SymbolReference.strategy)
 
   /**

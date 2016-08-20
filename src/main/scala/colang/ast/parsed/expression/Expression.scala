@@ -27,6 +27,7 @@ object Expression {
   def analyze(implicit scope: Scope, rawExpr: raw.Expression): (Expression, Seq[Issue]) = {
     rawExpr match {
       case r: raw.DoubleLiteral => DoubleLiteral.analyze(r)
+      case r: raw.IntLiteral => IntLiteral.analyze(r)
       case r: raw.SymbolReference => SymbolReference.analyze(r)
       case r: raw.FunctionCall => FunctionCall.analyze(r)
       case r: raw.InfixOperator => InfixOperator.analyze(r)
