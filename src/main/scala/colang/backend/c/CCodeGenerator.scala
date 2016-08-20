@@ -19,7 +19,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     val funcProtos = generateFunctionPrototypes(rootNamespace)
     val funcDefs = generateFunctionDefinitions(rootNamespace)
 
-    val headers = Seq("stdlib.h", "stdio.h")
+    val headers = Seq("stdlib.h", "stdio.h", "math.h")
     val sourceFile = CSourceFile(headers, typeDefs, varDefs, funcProtos, funcDefs)
 
     writer.write(sourceFile)
@@ -150,9 +150,20 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     */
   private def generateExpression(expression: Expression): CExpression = {
     expression match {
-      case DoubleLiteral(value) => CExpression(Seq(CLiteralToken(value.toString)))
       case FunctionReference(function) => CExpression(Seq(CSymbolReferenceToken(function)))
       case VariableReference(variable) => CExpression(Seq(CSymbolReferenceToken(variable)))
+
+      case DoubleLiteral(value) =>
+        val cStringRepr = if (value.isPosInfinity) {
+          "INFINITY"
+        } else if (value.isNegInfinity) {
+          "-INFINITY"
+        } else if (value.isNaN) {
+          "NAN"
+        } else {
+          value.toString
+        }
+        CExpression(Seq(CLiteralToken(cStringRepr)))
 
       case FunctionCall(function, arguments) =>
         val cArguments = arguments map generateExpression
