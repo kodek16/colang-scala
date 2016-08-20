@@ -22,7 +22,7 @@ object DoubleLiteral {
     */
   val simpleStrategy = new LexerImpl.Strategy[DoubleLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, DoubleLiteral] = {
-      val re = """-?\d+\.\d+""".r
+      val re = """-?\d+\.\d+(?![\w\.])""".r
 
       re findPrefixOf stream match {
         case Some(text) =>
@@ -39,7 +39,7 @@ object DoubleLiteral {
     */
   val scientificStrategy = new LexerImpl.Strategy[DoubleLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, DoubleLiteral] = {
-      val re = """(-?\d+\.\d+)[eE](\+|\-|)(\d+(\.\d+)?)""".r("significand", "exp-sign", "exponent")
+      val re = """(-?\d+\.\d+)[eE](\+|\-|)(\d+(\.\d+)?)(?![\w\.])""".r("significand", "exp-sign", "exponent")
 
       re findPrefixMatchOf stream match {
         case Some(m) =>

@@ -17,7 +17,7 @@ object IntLiteral {
     */
   val simpleStrategy = new LexerImpl.Strategy[IntLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
-      val re = """-?\d+""".r
+      val re = """-?\d+(?![\w\.])""".r
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
@@ -40,7 +40,7 @@ object IntLiteral {
     */
   val malformedScientificStrategy = new LexerImpl.Strategy[IntLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
-      val re = """(-?\d+)([eE][-+]?\d*\.\d+)""".r
+      val re = """(-?\d+)([eE][-+]?\d*\.\d+)(?![\w\.])""".r
       re findPrefixMatchOf stream match {
         case Some(m) =>
           val (source, streamAfterToken) = stream.take(m.toString)
@@ -60,7 +60,7 @@ object IntLiteral {
     */
   val scientificStrategy = new LexerImpl.Strategy[IntLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
-      val re = """(-?\d+)[eE](\d+)""".r
+      val re = """(-?\d+)[eE](\d+)(?![\w\.])""".r
       re findPrefixMatchOf stream match {
         case Some(m) =>
           val (source, streamAfterToken) = stream.take(m.toString)

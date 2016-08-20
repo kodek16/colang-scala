@@ -36,8 +36,11 @@ class LexerImpl extends Lexer {
     StructKeyword.strategy,
     NativeKeyword.strategy,
     Identifier.strategy,
+
     DoubleLiteral.strategy,
     IntLiteral.strategy,
+    LexerImpl.unknownNumberStrategy,
+
     LeftParen.strategy,
     RightParen.strategy,
     LeftBrace.strategy,
@@ -106,14 +109,32 @@ object LexerImpl {
     * A fallback strategy that matches any non-whitespace characters.
     */
   val unknownTokenStrategy = new Strategy[Token] {
-    def apply(stream: SourceCodeStream): colang.Strategy.Result[SourceCodeStream, Token] = {
+    def apply(stream: SourceCodeStream): Result[SourceCodeStream, Token] = {
       val re = """[^\s]+""".r
 
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
-          val error = Error(source, "unknown character sequence")
-          Malformed(Seq(error), streamAfterToken)
+          val issue = Error(source, "unknown character sequence")
+          Malformed(Seq(issue), streamAfterToken)
+        case None => NoMatch()
+      }
+    }
+  }
+
+  /**
+    * A strategy that matches any "word" ('.' is allowed) beginning with a digit. It generates the issue but treats
+    * the word as it was '0', not returning Malformed (to improve further analysis).
+    */
+  val unknownNumberStrategy = new Strategy[IntLiteral] {
+    def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
+      val re = """\d[\w\.]*""".r
+
+      re findPrefixOf stream match {
+        case Some(text) =>
+          val (source, streamAfterToken) = stream.take(text)
+          val issue = Error(source, "unknown number format")
+          Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
         case None => NoMatch()
       }
     }
