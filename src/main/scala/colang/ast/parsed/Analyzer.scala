@@ -44,6 +44,7 @@ class AnalyzerImpl extends Analyzer {
     val globalVarInitStatements = ListBuffer.empty[Statement]
 
     registerTypes()
+    assertThatNativeTypeDeclarationsArePresent()
     registerFunctions()
     registerMethods()
     registerGlobalVariables()
@@ -58,6 +59,22 @@ class AnalyzerImpl extends Analyzer {
           issues ++= typeIssues
         case _ => ()
       }
+    }
+
+    def assertThatNativeTypeDeclarationsArePresent(): Unit = {
+      def assertTypePresent(name: String): Unit = {
+        rootNamespace resolve name match {
+          case Some(t: Type) => ()
+          case _ =>
+            System.err.println(s"Error: '$name' type declaration not found in standard library. Please check if your " +
+              s"CO installation is correct and up-to-date.")
+            sys.exit(2)
+        }
+      }
+
+      assertTypePresent("void")
+      assertTypePresent("double")
+      assertTypePresent("int")
     }
 
     def registerFunctions(): Unit = {
