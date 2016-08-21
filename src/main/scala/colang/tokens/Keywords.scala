@@ -1,6 +1,7 @@
 package colang.tokens
 
 import colang.SourceCode
+import colang.tokens.LexerImpl.StatelessTokenStrategy
 
 /**
   * Represents a keyword. This trait helps the parser to produce better error messages when a keyword is used instead
@@ -13,7 +14,7 @@ trait Keyword extends Token
   */
 case class StructKeyword(source: SourceCode) extends Keyword
 object StructKeyword {
-  val strategy = new LexerImpl.StatelessTokenStrategy(StructKeyword.apply, """\bstruct\b""".r)
+  val strategy = new StatelessTokenStrategy(StructKeyword.apply, """\bstruct\b""".r)
 }
 
 /**
@@ -21,5 +22,5 @@ object StructKeyword {
   */
 case class NativeKeyword(source: SourceCode) extends Keyword
 object NativeKeyword {
-  val strategy = new LexerImpl.StatelessTokenStrategy(NativeKeyword.apply, """\bnative\b""".r)
+  val strategy = new StatelessTokenStrategy(NativeKeyword.apply, """\bnative\b""".r)
 }
