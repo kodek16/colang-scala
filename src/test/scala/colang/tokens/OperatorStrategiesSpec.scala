@@ -4,6 +4,20 @@ import colang.LexerUnitSpec
 
 class OperatorStrategiesSpec extends LexerUnitSpec {
 
+  describe("'!' lexer strategy") {
+    it("should match single '!' tokens") {
+      LogicalNot.strategy shouldSucceedOn "!" withoutIssues()
+    }
+
+    it("should match sequential '!' tokens one-by-one") {
+      LogicalNot.strategy shouldOnlySucceedOn "!" from "!!" withoutIssues()
+    }
+
+    it("should not match '!' from '!=' operator") {
+      LogicalNot.strategy shouldNotMatch "!="
+    }
+  }
+
   describe("'*' lexer strategy") {
     it("should match single '*' tokens") {
       Multiply.strategy shouldSucceedOn "*" withoutIssues()

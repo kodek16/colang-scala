@@ -4,6 +4,19 @@ import colang.tokens.Associativity.Associativity
 import colang.SourceCode
 
 /**
+  * Represents an unary prefix operator (like '!' or '-').
+  */
+trait PrefixOperator extends Token
+
+/**
+  * '!' operator
+  */
+case class LogicalNot(source: SourceCode) extends PrefixOperator
+object LogicalNot {
+  val strategy = new LexerImpl.StatelessTokenStrategy(LogicalNot.apply, """\!(?!=)""".r)
+}
+
+/**
   * Represents a binary infix operator.
   */
 trait InfixOperator extends Token {
@@ -58,9 +71,9 @@ object Plus {
 }
 
 /**
-  * '-' operator
+  * '-' operator (can be either binary or unary).
   */
-case class Minus(source: SourceCode) extends InfixOperator {
+case class Minus(source: SourceCode) extends InfixOperator with PrefixOperator {
   val precedence = 60
   val associativity = Associativity.LEFT
 }

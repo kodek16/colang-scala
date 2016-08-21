@@ -29,6 +29,8 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     val sourceCodeString = "// Original CO source:\n" + sourceCode
 
     val macros = Seq(
+      """#define _not(a) (!(a))""",
+      """#define _neg(a) (-(a))""",
       """#define _mul(a, b) ((a) * (b))""",
       """#define _div(a, b) ((a) / (b))""",
       """#define _add(a, b) ((a) + (b))""",
@@ -189,6 +191,10 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     }
   }
 
+  private val internalUnaryOperatorNames: Map[String, String] = Map(
+    "not" -> "_not",
+    "unaryMinus" -> "_neg")
+
   private val internalBinaryOperatorNames: Map[String, String] = Map(
     "times" -> "_mul",
     "div"   -> "_div",
@@ -202,8 +208,7 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     "notEquals" -> "_neq",
     "and" -> "_and",
     "or" -> "_or",
-    "assign" -> "_assign"
-  )
+    "assign" -> "_assign")
 
   /**
     * Returns a C native name for a method.
@@ -213,6 +218,8 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   private def internalNativeName(method: Method): String = {
     if (method.parameters.size == 1 && (internalBinaryOperatorNames contains method.name)) {
       internalBinaryOperatorNames(method.name)
+    } else if (method.parameters.isEmpty && (internalUnaryOperatorNames contains method.name)) {
+      internalUnaryOperatorNames(method.name)
     } else {
       reportMissingInternalSymbol(method)
     }

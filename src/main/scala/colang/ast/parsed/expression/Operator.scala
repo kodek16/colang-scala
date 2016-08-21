@@ -5,9 +5,10 @@ import colang.{Error, Issue, tokens}
 import colang.ast.raw.{expression => raw}
 
 /**
-  * Infix operators are translated to method calls on the left operand.
+  * Operators calls are translated to method calls on the left operand.
   */
-object InfixOperator {
+object Operator {
+
   def analyze(rawExpr: raw.InfixOperator)(implicit scope: Scope): (Expression, Seq[Issue]) = {
     val (rawLhs, operator, rawRhs) = (rawExpr.lhs, rawExpr.operator, rawExpr.rhs)
 
@@ -37,6 +38,24 @@ object InfixOperator {
         val (lType, rType) = (lhs.type_.qualifiedName, rhs.type_.qualifiedName)
         val issue = Error(rawExpr.source, s"operator '$methodName' is not defined for types '$lType' and '$rType'")
         (InvalidExpression(), lhsIssues ++ rhsIssues :+ issue)
+    }
+  }
+
+  def analyze(rawExpr: raw.PrefixOperator)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+    val methodName = rawExpr.operator match {
+      case tokens.LogicalNot(_) => "not"
+      case tokens.Minus(_) => "unaryMinus"
+    }
+
+    val (expr, exprIssues) = Expression.analyze(scope, rawExpr.expression)
+
+    expr.type_ resolveMethod methodName match {
+      case Some(m) if m.canBeAppliedTo(Seq.empty) =>
+        (MethodCall(m, expr, Seq.empty), exprIssues)
+      case _ =>
+        val exprType = expr.type_.qualifiedName
+        val issue = Error(rawExpr.source, s"operator '$methodName' is not defined for type '$exprType'")
+        (InvalidExpression(), exprIssues :+ issue)
     }
   }
 }

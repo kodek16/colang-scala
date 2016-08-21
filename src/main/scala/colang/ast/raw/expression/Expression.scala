@@ -30,8 +30,9 @@ object Expression {
     * A strategy for parsing primary expressions.
     * All expressions are primary except when the outermost node is a postfix operator or a binary infix operator.
     */
-  val primaryStrategy = StrategyUnion(
+  val primaryStrategy: ParserImpl.Strategy[Expression] = StrategyUnion(
     ParenthesesExpression.strategy,
+    PrefixOperator.strategy,
     IntLiteral.strategy,
     DoubleLiteral.strategy,
     BoolLiteral.strategy,
