@@ -30,6 +30,7 @@ object Expression {
     * All expressions are primary except when the outermost node is a postfix operator or a binary infix operator.
     */
   val primaryStrategy = StrategyUnion(
+    ParenthesesExpression.strategy,
     DoubleLiteral.strategy,
     IntLiteral.strategy,
     SymbolReference.strategy)
