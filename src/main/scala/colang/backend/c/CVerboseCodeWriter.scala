@@ -32,11 +32,13 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
       """#define _mul(a, b) ((a) * (b))""",
       """#define _div(a, b) ((a) / (b))""",
       """#define _add(a, b) ((a) + (b))""",
-      """#define _div(a, b) ((a) - (b))""",
+      """#define _sub(a, b) ((a) - (b))""",
       """#define _eq(a, b) ((a) == (b))""",
       """#define _assign(a, b) ((a) = (b))""",
-      """#define _read(a) scanf("%lf", &(a))""",
-      """#define _writeln(a) printf("%lf\n", a)""") mkString "\n"
+      """#define _readInt(a) scanf("%d", &(a))""",
+      """#define _readDbl(a) scanf("%lf", &(a))""",
+      """#define _writeIntLn(a) printf("%d\n", a)""",
+      """#define _writeDblLn(a) printf("%lf\n", a)""") mkString "\n"
 
     val mainDef = s"int main() {\n${INDENT}co_main();\n${INDENT}return 0;\n}"
 
@@ -171,16 +173,12 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     * @return C name
     */
   private def internalNativeName(function: Function): String = {
-    if (function.name == "read" &&
-      function.parameters.size == 1 &&
-      function.parameters.head.type_.qualifiedName == "double") {
-      "_read"
-    } else if (function.name == "writeln" &&
-      function.parameters.size == 1 &&
-      function.parameters.head.type_.qualifiedName == "double") {
-      "_writeln"
-    } else {
-      reportMissingInternalSymbol(function)
+    function.name match {
+      case "readInt" => "_readInt"
+      case "readDouble" => "_readDbl"
+      case "writeIntLn" => "_writeIntLn"
+      case "writeDoubleLn" => "_writeDblLn"
+      case _ => reportMissingInternalSymbol(function)
     }
   }
 
