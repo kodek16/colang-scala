@@ -152,7 +152,9 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     expression match {
       case FunctionReference(function) => CExpression(Seq(CSymbolReferenceToken(function)))
       case VariableReference(variable) => CExpression(Seq(CSymbolReferenceToken(variable)))
+
       case IntLiteral(value) => CExpression(Seq(CLiteralToken(value.toString)))
+      case BoolLiteral(value) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))
 
       case DoubleLiteral(value) =>
         val cStringRepr = if (value.isPosInfinity) {

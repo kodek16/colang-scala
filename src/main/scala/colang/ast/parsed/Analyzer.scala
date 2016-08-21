@@ -73,8 +73,9 @@ class AnalyzerImpl extends Analyzer {
       }
 
       assertTypePresent("void")
-      assertTypePresent("double")
       assertTypePresent("int")
+      assertTypePresent("double")
+      assertTypePresent("bool")
     }
 
     def registerFunctions(): Unit = {

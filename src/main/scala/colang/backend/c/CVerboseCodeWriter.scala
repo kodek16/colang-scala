@@ -155,7 +155,7 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     "int"    -> "int32_t",
     "double" -> "double",
     "void"   -> "void",
-    "bool"   -> "char"
+    "bool"   -> "int"
   )
 
   /**
