@@ -13,7 +13,7 @@ trait Keyword extends Token
   */
 case class StructKeyword(source: SourceCode) extends Keyword
 object StructKeyword {
-  val strategy = new LexerImpl.StatelessTokenStrategy[StructKeyword](StructKeyword.apply, """\bstruct\b""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(StructKeyword.apply, """\bstruct\b""".r)
 }
 
 /**
@@ -21,5 +21,5 @@ object StructKeyword {
   */
 case class NativeKeyword(source: SourceCode) extends Keyword
 object NativeKeyword {
-  val strategy = new LexerImpl.StatelessTokenStrategy[NativeKeyword](NativeKeyword.apply, """\bnative\b""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(NativeKeyword.apply, """\bnative\b""".r)
 }

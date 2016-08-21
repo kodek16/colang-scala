@@ -27,7 +27,9 @@ class LexerImpl extends Lexer {
 
   /**
     * The lexer basically operates on a strategy union of all possible token parsing strategies. As the StrategyUnion
-    * description states, order matters a lot, e.g. Equals.strategy MUST be specified before Assign.strategy.
+    * description states, strategies order matters. Most strategies are implemented in an order-agnostic way (e.g.
+    * 'assign' strategy will not match individual characters of 'equals' token), but some are not (keywords), so pay
+    * attention to this.
     */
   private val strategies = StrategyUnion(
     LexerImpl.lineCommentStrategy,
@@ -47,7 +49,11 @@ class LexerImpl extends Lexer {
     RightBrace.strategy,
     Comma.strategy,
     Semicolon.strategy,
+
+    Multiply.strategy,
+    Divide.strategy,
     Plus.strategy,
+    Minus.strategy,
     Equals.strategy,
     Assign.strategy,
     Whitespace.strategy,

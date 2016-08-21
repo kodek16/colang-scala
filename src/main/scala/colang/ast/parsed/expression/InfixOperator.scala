@@ -12,7 +12,10 @@ object InfixOperator {
     val (rawLhs, operator, rawRhs) = (rawExpr.lhs, rawExpr.operator, rawExpr.rhs)
 
     val methodName = operator match {
+      case tokens.Multiply(_) => "multiply"
+      case tokens.Divide(_) => "divide"
       case tokens.Plus(_) => "plus"
+      case tokens.Minus(_) => "minus"
       case tokens.Equals(_) => "equals"
       case tokens.Assign(_) => "assign"
     }

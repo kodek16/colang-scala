@@ -29,9 +29,12 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     val sourceCodeString = "// Original CO source:\n" + sourceCode
 
     val macros = Seq(
+      """#define _mul(a, b) ((a) * (b))""",
+      """#define _div(a, b) ((a) / (b))""",
+      """#define _add(a, b) ((a) + (b))""",
+      """#define _div(a, b) ((a) - (b))""",
+      """#define _eq(a, b) ((a) == (b))""",
       """#define _assign(a, b) ((a) = (b))""",
-      """#define _plus(a, b) ((a) + (b))""",
-      """#define _equals(a, b) ((a) == (b))""",
       """#define _read(a) scanf("%lf", &(a))""",
       """#define _writeln(a) printf("%lf\n", a)""") mkString "\n"
 
@@ -182,9 +185,12 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   }
 
   private val internalBinaryOperatorNames: Map[String, String] = Map(
-    "assign" -> "_assign",
-    "plus"   -> "_plus",
-    "equals" -> "_equals"
+    "multiply" -> "_mul",
+    "divide"   -> "_div",
+    "plus" -> "_add",
+    "minus" -> "_sub",
+    "equals" -> "_eq",
+    "assign" -> "_assign"
   )
 
   /**

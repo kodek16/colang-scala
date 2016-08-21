@@ -7,7 +7,7 @@ import colang.SourceCode
   */
 case class LeftParen(source: SourceCode) extends Token
 object LeftParen {
-  val strategy = new LexerImpl.StatelessTokenStrategy[LeftParen](LeftParen.apply, """\(""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(LeftParen.apply, """\(""".r)
 }
 
 /**
@@ -15,7 +15,7 @@ object LeftParen {
   */
 case class RightParen(source: SourceCode) extends Token
 object RightParen {
-  val strategy = new LexerImpl.StatelessTokenStrategy[RightParen](RightParen.apply, """\)""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(RightParen.apply, """\)""".r)
 }
 
 /**
@@ -23,7 +23,7 @@ object RightParen {
   */
 case class LeftBrace(source: SourceCode) extends Token
 object LeftBrace {
-  val strategy = new LexerImpl.StatelessTokenStrategy[LeftBrace](LeftBrace.apply, """\{""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(LeftBrace.apply, """\{""".r)
 }
 
 /**
@@ -31,7 +31,7 @@ object LeftBrace {
   */
 case class RightBrace(source: SourceCode) extends Token
 object RightBrace {
-  val strategy = new LexerImpl.StatelessTokenStrategy[RightBrace](RightBrace.apply, """}""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(RightBrace.apply, """}""".r)
 }
 
 /**
@@ -39,7 +39,7 @@ object RightBrace {
   */
 case class Comma(source: SourceCode) extends Token
 object Comma {
-  val strategy = new LexerImpl.StatelessTokenStrategy[Comma](Comma.apply, """,""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(Comma.apply, """,""".r)
 }
 
 /**
@@ -47,5 +47,5 @@ object Comma {
   */
 case class Semicolon(source: SourceCode) extends Token
 object Semicolon {
-  val strategy = new LexerImpl.StatelessTokenStrategy[Semicolon](Semicolon.apply, """;""".r)
+  val strategy = new LexerImpl.StatelessTokenStrategy(Semicolon.apply, """;""".r)
 }
