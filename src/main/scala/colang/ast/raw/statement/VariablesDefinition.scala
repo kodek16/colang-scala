@@ -2,7 +2,7 @@ package colang.ast.raw.statement
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
-import colang.ast.raw.ParserImpl.{identifierStrategy, SingleTokenStrategy}
+import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
 import colang.tokens.{Assign, Comma, Identifier}
@@ -33,13 +33,19 @@ object VariableDefinition {
         .parse(stream)
         .as[Identifier, Assign, Expression] match {
 
-        case (Some(name), Some(_), Some(initializer), issues, streamAfterVariable) =>
+        case (Present(name), Present(_), Present(initializer), issues, streamAfterVariable) =>
           Success(VariableDefinition(name, Some(initializer)), issues, streamAfterVariable)
-        case (Some(name), Some(assign), None, issues, streamAfterVariable) =>
+
+        case (Present(name), Present(assign), Invalid(), issues, streamAfterVariable) =>
+          Success(VariableDefinition(name, None), issues, streamAfterVariable)
+
+        case (Present(name), Present(assign), Absent(), issues, streamAfterVariable) =>
           val issue = Error(assign.source.after, "missing initializer after '='")
           Success(VariableDefinition(name, None), issues :+ issue, streamAfterVariable)
-        case (Some(name), None, _, issues, streamAfterVariable) =>
+
+        case (Present(name), Absent(), _, issues, streamAfterVariable) =>
           Success(VariableDefinition(name, None), issues, streamAfterVariable)
+
         case _ => NoMatch()
       }
     }
@@ -86,7 +92,7 @@ object VariablesDefinition {
         .parse(stream)
         .as[Type, VariableDefinitionSequence] match {
 
-        case (Some(type_), Some(VariableDefinitionSequence(variables)), issues, streamAfterVariables) =>
+        case (Present(type_), Present(VariableDefinitionSequence(variables)), issues, streamAfterVariables) =>
             Success(VariablesDefinition(type_, variables), issues, streamAfterVariables)
         case _ => NoMatch()
       }

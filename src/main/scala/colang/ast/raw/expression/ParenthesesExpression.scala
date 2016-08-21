@@ -4,7 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
-import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
 import colang.tokens.{LeftParen, RightParen}
 
 /**
@@ -30,15 +30,15 @@ object ParenthesesExpression {
         .parse(stream)
         .as[LeftParen, Expression, RightParen] match {
 
-        case (Some(leftParen), Some(expression), rightParenOption, issues, streamAfterExpression) =>
-          val rightParen = rightParenOption match {
+        case (Present(leftParen), Present(expression), rightParenOption, issues, streamAfterExpression) =>
+          val rightParen = rightParenOption.toOption match {
             case Some(rp) => rp
             case None =>
               RightParen(expression.source.after)
           }
 
           Success(ParenthesesExpression(leftParen, expression, rightParen), issues, streamAfterExpression)
-        case (Some(leftParen), None, Some(rightParen), issues, streamAfterExpression) =>
+        case (Present(leftParen), Invalid() | Absent(), Present(rightParen), issues, streamAfterExpression) =>
           Malformed(issues, streamAfterExpression)
         case _ => NoMatch()
       }

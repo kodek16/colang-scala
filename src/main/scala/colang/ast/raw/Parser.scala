@@ -310,8 +310,8 @@ object ParserImpl {
   /**
     * Provides a builder interface for parsing groups of nodes, possibly of different types. This could be implemented
     * in a much better way if Scala had variadic templates, but we have to work with what we have.
-    * See the GroupParseBuilder and GroupParseResult for detailed explanation and every second node class for usage
-    * examples.
+    * See the GroupParseBuilder and GroupParseResult for detailed explanation and every second non-trivial node class
+    * for usage examples.
     * @return a GroupParseBuilder object
     */
   def parseGroup() = new GroupParseBuilder(Vector.empty)
@@ -349,24 +349,24 @@ object ParserImpl {
       @tailrec
       def doIt(elements: Vector[GroupElement],
                stream: TokenStream,
-               collectedNodes: Vector[Option[Node]] = Vector.empty,
-               collectedIssues: Vector[Issue] = Vector.empty): (Vector[Option[Node]], Vector[Issue], TokenStream) = {
+               collectedNodes: Vector[NodeOption[_]] = Vector.empty,
+               collectedIssues: Vector[Issue] = Vector.empty): (Vector[NodeOption[_]], Vector[Issue], TokenStream) = {
         elements match {
           case element +: tail =>
             element.strategy(stream) match {
               case Success(node, issues_, newStream_) =>
-                doIt(tail, newStream_, collectedNodes :+ Some(node), collectedIssues ++ issues_)
-              case Malformed(issues_, newStream_) if !element.stopIfAbsent =>
-                doIt(tail, newStream_, collectedNodes :+ None, collectedIssues ++ issues_)
+                doIt(tail, newStream_, collectedNodes :+ Present(node), collectedIssues ++ issues_)
+              case Malformed(issues_, newStream_) =>
+                doIt(tail, newStream_, collectedNodes :+ Invalid(), collectedIssues ++ issues_)
               case NoMatch() if !element.stopIfAbsent =>
                 if (element.optional) {
-                  doIt(tail, stream, collectedNodes :+ None, collectedIssues)
+                  doIt(tail, stream, collectedNodes :+ Absent(), collectedIssues)
                 } else {
                   val issue = Error(stream.beforeNext, "missing " + element.description)
-                  doIt(tail, stream, collectedNodes :+ None, collectedIssues :+ issue)
+                  doIt(tail, stream, collectedNodes :+ Absent(), collectedIssues :+ issue)
                 }
               case _ =>
-                val nones = Vector.fill(elements.size)(None)
+                val nones = Vector.fill(elements.size)(Absent())
                 (collectedNodes ++ nones, collectedIssues, stream)
             }
           case _ =>
@@ -380,41 +380,70 @@ object ParserImpl {
   }
 
   /**
-    * A totally unsafe class that exists because variadic templates don't. Use 'as' method with explicitly specified
-    * node types to extract options for individual nodes, encountered issues and the stream after the group.
+    * Represents a possibly present and valid node. Unlike Strategy.Result, subclasses don't provide encountered issues
+    * and the new stream. This trait is only used as a return value from group parsing.
+    * @tparam N node type
     */
-  class GroupParseResult private [ParserImpl] (nodes: Seq[Option[Node]], issues: Vector[Issue], stream: TokenStream) {
+  sealed trait NodeOption[+N <: Node] {
+    def toOption: Option[N] = {
+      this match {
+        case Present(node) => Some(node)
+        case _ => None
+      }
+    }
+  }
+
+  /**
+    * Represents a successfully matched node.
+    */
+  case class Present[N <: Node](node: N) extends NodeOption[N]
+
+  /**
+    * Represents a malformed but present node.
+    */
+  case class Invalid[N <: Node]() extends NodeOption[N]
+
+  /**
+    * Represents an absent node.
+    */
+  case class Absent[N <: Node]() extends NodeOption[N]
+
+  /**
+    * A totally unsafe class that exists because variadic templates don't. Use 'as' method with explicitly specified
+    * node types to extract NodeOptions for individual nodes, encountered issues and the stream after the group.
+    */
+  class GroupParseResult private [ParserImpl] (nodes: Seq[NodeOption[_]], issues: Vector[Issue], stream: TokenStream) {
     def as[N1 <: Node] = nodes match {
       case e1 +: _ =>
-        (e1.asInstanceOf[Option[N1]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], issues, stream)
     }
 
     def as[N1 <: Node, N2 <: Node] = nodes match {
       case e1 +: e2 +: _ =>
-        (e1.asInstanceOf[Option[N1]], e2.asInstanceOf[Option[N2]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], e2.asInstanceOf[NodeOption[N2]], issues, stream)
     }
 
     def as[N1 <: Node, N2 <: Node, N3 <: Node] = nodes match {
       case e1 +: e2 +: e3 +: _ =>
-        (e1.asInstanceOf[Option[N1]], e2.asInstanceOf[Option[N2]], e3.asInstanceOf[Option[N3]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], e2.asInstanceOf[NodeOption[N2]], e3.asInstanceOf[NodeOption[N3]], issues, stream)
     }
 
     def as[N1 <: Node, N2 <: Node, N3 <: Node, N4 <: Node] = nodes match {
       case e1 +: e2 +: e3 +: e4 +: _ =>
-        (e1.asInstanceOf[Option[N1]], e2.asInstanceOf[Option[N2]], e3.asInstanceOf[Option[N3]],
-         e4.asInstanceOf[Option[N4]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], e2.asInstanceOf[NodeOption[N2]], e3.asInstanceOf[NodeOption[N3]],
+         e4.asInstanceOf[NodeOption[N4]], issues, stream)
     }
 
     def as[N1 <: Node, N2 <: Node, N3 <: Node, N4 <: Node, N5 <: Node] = nodes match {
       case e1 +: e2 +: e3 +: e4 +: e5 +: _ =>
-        (e1.asInstanceOf[Option[N1]], e2.asInstanceOf[Option[N2]], e3.asInstanceOf[Option[N3]],
-         e4.asInstanceOf[Option[N4]], e5.asInstanceOf[Option[N5]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], e2.asInstanceOf[NodeOption[N2]], e3.asInstanceOf[NodeOption[N3]],
+         e4.asInstanceOf[NodeOption[N4]], e5.asInstanceOf[NodeOption[N5]], issues, stream)
     }
 
     def as[N1 <: Node, N2 <: Node, N3 <: Node, N4 <: Node, N5 <: Node, N6 <: Node] = nodes match {
       case e1 +: e2 +: e3 +: e4 +: e5 +: e6 +: _ =>
-        (e1.asInstanceOf[Option[N1]], e2.asInstanceOf[Option[N2]], e3.asInstanceOf[Option[N3]],
-         e4.asInstanceOf[Option[N4]], e5.asInstanceOf[Option[N5]], e6.asInstanceOf[Option[N6]], issues, stream)
+        (e1.asInstanceOf[NodeOption[N1]], e2.asInstanceOf[NodeOption[N2]], e3.asInstanceOf[NodeOption[N3]],
+         e4.asInstanceOf[NodeOption[N4]], e5.asInstanceOf[NodeOption[N5]], e6.asInstanceOf[NodeOption[N6]], issues, stream)
     }
   }
 }

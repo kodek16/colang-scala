@@ -2,7 +2,7 @@ package colang.ast.raw
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
-import colang.ast.raw.ParserImpl.{identifierStrategy, SingleTokenStrategy}
+import colang.ast.raw.ParserImpl._
 import colang.{SourceCode, TokenStream}
 import colang.tokens._
 
@@ -36,10 +36,11 @@ object TypeDefinition {
         .parse(stream)
         .as[SpecifiersList, Keyword, Identifier, TypeBody] match {
 
-        case (Some(specifiersList), Some(keyword), Some(name), bodyOption, issues, newStream) =>
-          Success(TypeDefinition(specifiersList, keyword, name, bodyOption), issues, newStream)
-        case (_, Some(keyword), None, _, issues, newStream) =>
-          Malformed(issues, newStream)
+        case (Present(specifiersList), Present(keyword), Present(name), bodyOption, issues, streamAfterType) =>
+          val typeDef = TypeDefinition(specifiersList, keyword, name, bodyOption.toOption)
+          Success(typeDef, issues, streamAfterType)
+        case (Present(_), Present(_) | Invalid(), Invalid() | Absent(), _, issues, streamAfterType) =>
+          Malformed(issues, streamAfterType)
         case _ => NoMatch()
       }
     }
