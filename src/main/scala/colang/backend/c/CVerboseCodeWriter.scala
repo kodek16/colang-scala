@@ -29,11 +29,25 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     val sourceCodeString = "// Original CO source:\n" + sourceCode
 
     val macros = Seq(
+      """#define _not(a) (!(a))""",
+      """#define _neg(a) (-(a))""",
+      """#define _mul(a, b) ((a) * (b))""",
+      """#define _div(a, b) ((a) / (b))""",
+      """#define _add(a, b) ((a) + (b))""",
+      """#define _sub(a, b) ((a) - (b))""",
+      """#define _lt(a, b) ((a) < (b))""",
+      """#define _gt(a, b) ((a) > (b))""",
+      """#define _ltEq(a, b) ((a) <= (b))""",
+      """#define _gtEq(a, b) ((a) >= (b))""",
+      """#define _eq(a, b) ((a) == (b))""",
+      """#define _neq(a, b) ((a) != (b))""",
+      """#define _and(a, b) ((a) && (b))""",
+      """#define _or(a, b) ((a) || (b))""",
       """#define _assign(a, b) ((a) = (b))""",
-      """#define _plus(a, b) ((a) + (b))""",
-      """#define _equals(a, b) ((a) == (b))""",
-      """#define _read(a) scanf("%lf", &(a))""",
-      """#define _writeln(a) printf("%lf\n", a)""") mkString "\n"
+      """#define _readInt(a) scanf("%d", &(a))""",
+      """#define _readDbl(a) scanf("%lf", &(a))""",
+      """#define _writeIntLn(a) printf("%d\n", a)""",
+      """#define _writeDblLn(a) printf("%lf\n", a)""") mkString "\n"
 
     val mainDef = s"int main() {\n${INDENT}co_main();\n${INDENT}return 0;\n}"
 
@@ -150,7 +164,7 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     "int"    -> "int32_t",
     "double" -> "double",
     "void"   -> "void",
-    "bool"   -> "char"
+    "bool"   -> "int"
   )
 
   /**
@@ -168,24 +182,33 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     * @return C name
     */
   private def internalNativeName(function: Function): String = {
-    if (function.name == "read" &&
-      function.parameters.size == 1 &&
-      function.parameters.head.type_.qualifiedName == "double") {
-      "_read"
-    } else if (function.name == "writeln" &&
-      function.parameters.size == 1 &&
-      function.parameters.head.type_.qualifiedName == "double") {
-      "_writeln"
-    } else {
-      reportMissingInternalSymbol(function)
+    function.name match {
+      case "readInt" => "_readInt"
+      case "readDouble" => "_readDbl"
+      case "writeIntLn" => "_writeIntLn"
+      case "writeDoubleLn" => "_writeDblLn"
+      case _ => reportMissingInternalSymbol(function)
     }
   }
 
+  private val internalUnaryOperatorNames: Map[String, String] = Map(
+    "not" -> "_not",
+    "unaryMinus" -> "_neg")
+
   private val internalBinaryOperatorNames: Map[String, String] = Map(
-    "assign" -> "_assign",
-    "plus"   -> "_plus",
-    "equals" -> "_equals"
-  )
+    "times" -> "_mul",
+    "div"   -> "_div",
+    "plus" -> "_add",
+    "minus" -> "_sub",
+    "lessThan" -> "_lt",
+    "greaterThan" -> "_gt",
+    "lessOrEquals" -> "_ltEq",
+    "greaterOrEquals" -> "_gtEq",
+    "equals" -> "_eq",
+    "notEquals" -> "_neq",
+    "and" -> "_and",
+    "or" -> "_or",
+    "assign" -> "_assign")
 
   /**
     * Returns a C native name for a method.
@@ -195,6 +218,8 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   private def internalNativeName(method: Method): String = {
     if (method.parameters.size == 1 && (internalBinaryOperatorNames contains method.name)) {
       internalBinaryOperatorNames(method.name)
+    } else if (method.parameters.isEmpty && (internalUnaryOperatorNames contains method.name)) {
+      internalUnaryOperatorNames(method.name)
     } else {
       reportMissingInternalSymbol(method)
     }

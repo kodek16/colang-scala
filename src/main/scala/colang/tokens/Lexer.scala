@@ -27,7 +27,9 @@ class LexerImpl extends Lexer {
 
   /**
     * The lexer basically operates on a strategy union of all possible token parsing strategies. As the StrategyUnion
-    * description states, order matters a lot, e.g. Equals.strategy MUST be specified before Assign.strategy.
+    * description states, strategies order matters. Most strategies are implemented in an order-agnostic way (e.g.
+    * 'assign' strategy will not match individual characters of 'equals' token), but some are not (keywords), so pay
+    * attention to this.
     */
   private val strategies = StrategyUnion(
     LexerImpl.lineCommentStrategy,
@@ -35,17 +37,35 @@ class LexerImpl extends Lexer {
 
     StructKeyword.strategy,
     NativeKeyword.strategy,
+    BoolLiteral.strategy,
     Identifier.strategy,
+
     DoubleLiteral.strategy,
+    IntLiteral.strategy,
+    LexerImpl.unknownNumberStrategy,
+
     LeftParen.strategy,
     RightParen.strategy,
     LeftBrace.strategy,
     RightBrace.strategy,
     Comma.strategy,
     Semicolon.strategy,
+
+    LogicalNot.strategy,
+    Multiply.strategy,
+    Divide.strategy,
     Plus.strategy,
+    Minus.strategy,
+    Less.strategy,
+    Greater.strategy,
+    LessOrEquals.strategy,
+    GreaterOrEquals.strategy,
     Equals.strategy,
+    NotEquals.strategy,
+    LogicalAnd.strategy,
+    LogicalOr.strategy,
     Assign.strategy,
+
     Whitespace.strategy,
 
     LexerImpl.unknownTokenStrategy)
@@ -105,14 +125,32 @@ object LexerImpl {
     * A fallback strategy that matches any non-whitespace characters.
     */
   val unknownTokenStrategy = new Strategy[Token] {
-    def apply(stream: SourceCodeStream): colang.Strategy.Result[SourceCodeStream, Token] = {
+    def apply(stream: SourceCodeStream): Result[SourceCodeStream, Token] = {
       val re = """[^\s]+""".r
 
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
-          val error = Error(source, "unknown character sequence")
-          Malformed(Seq(error), streamAfterToken)
+          val issue = Error(source, "unknown character sequence")
+          Malformed(Seq(issue), streamAfterToken)
+        case None => NoMatch()
+      }
+    }
+  }
+
+  /**
+    * A strategy that matches any "word" ('.' is allowed) beginning with a digit. It generates the issue but treats
+    * the word as it was '0', not returning Malformed (to improve further analysis).
+    */
+  val unknownNumberStrategy = new Strategy[IntLiteral] {
+    def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
+      val re = """\d[\w\.]*""".r
+
+      re findPrefixOf stream match {
+        case Some(text) =>
+          val (source, streamAfterToken) = stream.take(text)
+          val issue = Error(source, "unknown number format")
+          Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
         case None => NoMatch()
       }
     }

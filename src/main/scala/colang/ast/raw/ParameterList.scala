@@ -2,7 +2,7 @@ package colang.ast.raw
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
-import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
 import colang.{SourceCode, TokenStream}
 import colang.tokens.{Comma, Identifier, LeftParen, RightParen}
 
@@ -20,14 +20,14 @@ object FunctionParameter {
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionParameter] = {
       ParserImpl.parseGroup()
-        .element(Type.strategy, "parameter type")
-        .element(SingleTokenStrategy(classOf[Identifier]), "parameter name")
+        .element(Type.strategy,                             "parameter type", stopIfAbsent = true)
+        .element(SingleTokenStrategy(classOf[Identifier]),  "parameter name")
         .parse(stream)
         .as[Type, Identifier] match {
 
-        case (Some(type_), Some(name), issues, streamAfterParam) =>
+        case (Present(type_), Present(name), issues, streamAfterParam) =>
           Success(FunctionParameter(type_, name), issues, streamAfterParam)
-        case (Some(type_), None, issues, streamAfterParam) =>
+        case (Present(_) | Invalid(), Invalid() | Absent(), issues, streamAfterParam) =>
           Malformed(issues, streamAfterParam)
         case _ => NoMatch()
       }

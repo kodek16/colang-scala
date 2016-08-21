@@ -1,0 +1,51 @@
+native struct void
+
+native struct int {
+    native int unaryMinus()
+
+    native int multiply(int other)
+    native int divide(int other)
+    native int plus(int other)
+    native int minus(int other)
+
+    native bool lessThan(int other)
+    native bool greaterThan(int other)
+    native bool lessOrEquals(int other)
+    native bool greaterOrEquals(int other)
+
+    native bool equals(int other)
+    native bool notEquals(int other)
+}
+
+native struct double {
+    native double unaryMinus()
+
+    native double multiply(double other)
+    native double divide(double other)
+    native double plus(double other)
+    native double minus(double other)
+
+    native bool lessThan(double other)
+    native bool greaterThan(double other)
+    native bool lessOrEquals(double other)
+    native bool greaterOrEquals(double other)
+
+    native bool equals(double other)
+    native bool notEquals(double other)
+}
+
+native struct bool {
+    native bool not()
+
+    native bool and(bool other)
+    native bool or(bool other)
+
+    native bool equals(bool other)
+    native bool notEquals(bool other)
+}
+
+native void readInt(int x)
+native void readDouble(double x)
+
+native void writeIntLn(int x)
+native void writeDoubleLn(double x)

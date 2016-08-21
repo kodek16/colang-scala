@@ -15,11 +15,14 @@ case class DoubleLiteral(value: Double, source: SourceCode) extends Token
 
 object DoubleLiteral {
 
-  val strategy = new LexerImpl.Strategy[DoubleLiteral] {
+  private val numberFormat = NumberFormat.getInstance(Locale.US)
 
+  /**
+    * Matches simple fractional numbers without exponent.
+    */
+  val simpleStrategy = new LexerImpl.Strategy[DoubleLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, DoubleLiteral] = {
-      val re = """\d+\.\d+""".r
-      val numberFormat = NumberFormat.getInstance(Locale.US)
+      val re = """-?\d+\.\d+(?![\w\.])""".r
 
       re findPrefixOf stream match {
         case Some(text) =>
@@ -30,4 +33,34 @@ object DoubleLiteral {
       }
     }
   }
+
+  /**
+    * Matches fractional numbers in scientific notation (like 1.2e3)
+    */
+  val scientificStrategy = new LexerImpl.Strategy[DoubleLiteral] {
+    def apply(stream: SourceCodeStream): Result[SourceCodeStream, DoubleLiteral] = {
+      val re = """(-?\d+\.\d+)[eE](\+|\-|)(\d+(\.\d+)?)(?![\w\.])""".r("significand", "exp-sign", "exponent")
+
+      re findPrefixMatchOf stream match {
+        case Some(m) =>
+          val (source, streamAfterToken) = stream.take(m.toString)
+
+          val significand = numberFormat.parse(m.group("significand")).doubleValue()
+          val expSign = m.group("exp-sign") match {
+            case "-" => -1
+            case _ => 1
+          }
+          val exponent = numberFormat.parse(m.group("exponent")).doubleValue()
+
+          val value = significand * Math.pow(10, expSign * exponent)
+          val token = DoubleLiteral(value, source)
+          Success(token, Seq.empty, streamAfterToken)
+        case None => NoMatch()
+      }
+    }
+  }
+
+  val strategy = StrategyUnion(
+    scientificStrategy,
+    simpleStrategy)
 }

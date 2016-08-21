@@ -3,6 +3,7 @@ package colang
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 
+@Deprecated
 object TestUtils {
 
   class InlineSourceFile(val name: String,

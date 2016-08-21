@@ -15,30 +15,24 @@ If you still want to try it out right now, grab the source, install SBT, and bui
 version with `sbt assembly`. It will produce an executable standalone JAR file under
 `target/scala-2.11`.
 
-colang requires a file named `prelude.co` to exist under one of standard libraries folders.
-It provides the entry point to the standard library. That said, CO doesn't really have a
-standard library yet, so it should only contain native symbols declarations. This file under
-`~/.colang-libs/prelude.co` will be enough to compile and run the solution to the A + B task:
+colang depends on the CO standard library that must be present at any of the following
+locations: `~/.colang-libs/`, `/usr/local/lib/colang`, `/usr/lib/colang`, `/lib/colang`.
+The standard library is included in this repo (the `stdlib` directory), so the most simple
+installation method (on Unix-like systems) is creating a symlink from `~/.colang-libs/`
+to the `stdlib` directory:
 ```
-native struct void
-
-native struct double {
-    native double plus(double other)
-}
-
-native void read(double x)
-native void writeln(double x)
+ln -s path/to/repo/stdlib ~/.colang-libs
 ```
 
-The solution looks like this by the way:
+You can now compile and execute the solution to the A + B problem:
 ```
 void main() {
-    double a, b
-    read(a)
-    read(b)
-    writeln(a + b)
+    int a, b
+    readInt(a)
+    readInt(b)
+    writeIntLn(a + b)
 }
 ```
 
-The syntax is by no means final: a much more convenient way to read variables will be eventually
+The syntax is by no means final: a much more convenient I/O interface will be eventually
 supported.

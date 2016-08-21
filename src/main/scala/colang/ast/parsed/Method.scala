@@ -28,7 +28,9 @@ class Method(val name: String,
     * @return true if function can be called with these arguments
     */
   def canBeAppliedTo(argumentTypes: Seq[Type]): Boolean = {
-    if (parameters.size == argumentTypes.size) {
+    if (parameters.isEmpty && argumentTypes.isEmpty) {
+      true
+    } else if (parameters.size == argumentTypes.size) {
       parameters map {_.type_} zip argumentTypes map { case (p, a) => a.isImplicitlyConvertibleTo(p) } reduce {_ && _}
     } else false
   }

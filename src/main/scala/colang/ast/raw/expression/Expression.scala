@@ -1,7 +1,8 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.ast.raw.ParserImpl.{Absent, Invalid, Present}
 import colang.ast.raw.statement.Statement
 import colang.ast.raw.{Node, ParserImpl}
 import colang.{SourceCode, StrategyUnion, TokenStream}
@@ -29,8 +30,12 @@ object Expression {
     * A strategy for parsing primary expressions.
     * All expressions are primary except when the outermost node is a postfix operator or a binary infix operator.
     */
-  val primaryStrategy = StrategyUnion(
+  val primaryStrategy: ParserImpl.Strategy[Expression] = StrategyUnion(
+    ParenthesesExpression.strategy,
+    PrefixOperator.strategy,
+    IntLiteral.strategy,
     DoubleLiteral.strategy,
+    BoolLiteral.strategy,
     SymbolReference.strategy)
 
   /**
@@ -66,12 +71,17 @@ object Expression {
         .parse(stream)
         .as[Expression, PostfixOperatorSequence] match {
 
-        case (Some(expression), Some(PostfixOperatorSequence(postfixOps)), issues, streamAfterExpr) =>
+        case (Present(expression), Present(PostfixOperatorSequence(postfixOps)), issues, streamAfterExpr) =>
           val transform = (postfixOps.reverse map { _.apply } foldLeft identity[Expression] _) { _ compose _ }
           val result = transform(expression)
           Success(result, issues, streamAfterExpr)
 
-        case (Some(expression), None, issues, streamAfterExpr) => Success(expression, issues, streamAfterExpr)
+        case (Present(expression), Invalid() | Absent(), issues, streamAfterExpr) =>
+          Success(expression, issues, streamAfterExpr)
+
+        case (Invalid(), _, issues, streamAfterExpr) =>
+          Malformed(issues, streamAfterExpr)
+
         case _ => NoMatch()
       }
     }

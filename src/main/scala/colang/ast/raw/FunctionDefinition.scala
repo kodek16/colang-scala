@@ -2,9 +2,9 @@ package colang.ast.raw
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
-import colang.tokens._
 import colang.TokenStream
-import colang.ast.raw.ParserImpl.{identifierStrategy, SingleTokenStrategy}
+import colang.ast.raw.ParserImpl.{Present, identifierStrategy}
+import colang.tokens._
 
 /**
   * Represents a function (or a method) definition.
@@ -40,8 +40,12 @@ object FunctionDefinition {
         .parse(stream)
         .as[SpecifiersList, Type, Identifier, ParameterList, CodeBlock] match {
 
-        case (Some(specifiersList), Some(returnType), Some(name), Some(parameterList), bodyOption, issues, streamAfterFunction) =>
-          Success(FunctionDefinition(specifiersList, returnType, name, parameterList, bodyOption), issues, streamAfterFunction)
+        case (Present(specifiersList), Present(returnType), Present(name), Present(parameterList),
+              bodyOption, issues, streamAfterFunction) =>
+
+          val funcDef = FunctionDefinition(specifiersList, returnType, name, parameterList, bodyOption.toOption)
+          Success(funcDef, issues, streamAfterFunction)
+
         case _ => NoMatch()
       }
     }
