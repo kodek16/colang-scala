@@ -44,6 +44,48 @@ class OperatorStrategiesSpec extends LexerUnitSpec {
     }
   }
 
+  describe("'<' lexer strategy") {
+    it("should match single '<' tokens") {
+      Less.strategy shouldSucceedOn "<" withoutIssues()
+    }
+
+    it("should not match multiple '<' tokens without whitespace") {
+      Less.strategy shouldNotMatch "<<"
+    }
+  }
+
+  describe("'>' lexer strategy") {
+    it("should match single '>' tokens") {
+      Greater.strategy shouldSucceedOn ">" withoutIssues()
+    }
+
+    it("should not match multiple '>' tokens without whitespace") {
+      Greater.strategy shouldNotMatch ">>"
+    }
+  }
+
+  describe("'<=' lexer strategy") {
+    it("should match separated '<=' tokens") {
+      LessOrEquals.strategy shouldSucceedOn "<=" withoutIssues()
+    }
+
+    it("should not match '<' followed by two or more '=' tokens without whitespace") {
+      LessOrEquals.strategy shouldNotMatch "<=="
+      LessOrEquals.strategy shouldNotMatch "<==="
+    }
+  }
+
+  describe("'>=' lexer strategy") {
+    it("should match separated '>=' tokens") {
+      GreaterOrEquals.strategy shouldSucceedOn ">=" withoutIssues()
+    }
+
+    it("should not match '>' followed by two or more '=' tokens without whitespace") {
+      GreaterOrEquals.strategy shouldNotMatch ">=="
+      GreaterOrEquals.strategy shouldNotMatch ">==="
+    }
+  }
+
   describe("'==' lexer strategy") {
     it("should match separated '==' tokens") {
       Equals.strategy shouldSucceedOn "==" withoutIssues()
@@ -52,6 +94,39 @@ class OperatorStrategiesSpec extends LexerUnitSpec {
     it("should not match three or more '=' tokens without whitespace") {
       Equals.strategy shouldNotMatch "==="
       Equals.strategy shouldNotMatch "===="
+    }
+  }
+
+  describe("'!=' lexer strategy") {
+    it("should match separated '!=' tokens") {
+      NotEquals.strategy shouldSucceedOn "!=" withoutIssues()
+    }
+
+    it("should not match '!' followed by two or more '=' tokens without whitespace") {
+      NotEquals.strategy shouldNotMatch "!=="
+      NotEquals.strategy shouldNotMatch "!==="
+    }
+  }
+
+  describe("'&&' lexer strategy") {
+    it("should match separated '&&' tokens") {
+      LogicalAnd.strategy shouldSucceedOn "&&" withoutIssues()
+    }
+
+    it("should not match three or more '&' tokens without whitespace") {
+      LogicalAnd.strategy shouldNotMatch "&&&"
+      LogicalAnd.strategy shouldNotMatch "&&&&"
+    }
+  }
+
+  describe("'||' lexer strategy") {
+    it("should match separated '||' tokens") {
+      LogicalOr.strategy shouldSucceedOn "||" withoutIssues()
+    }
+
+    it("should not match three or more '|' tokens without whitespace") {
+      LogicalOr.strategy shouldNotMatch "|||"
+      LogicalOr.strategy shouldNotMatch "||||"
     }
   }
 

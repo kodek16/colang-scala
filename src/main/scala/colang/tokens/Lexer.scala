@@ -55,8 +55,16 @@ class LexerImpl extends Lexer {
     Divide.strategy,
     Plus.strategy,
     Minus.strategy,
+    Less.strategy,
+    Greater.strategy,
+    LessOrEquals.strategy,
+    GreaterOrEquals.strategy,
     Equals.strategy,
+    NotEquals.strategy,
+    LogicalAnd.strategy,
+    LogicalOr.strategy,
     Assign.strategy,
+
     Whitespace.strategy,
 
     LexerImpl.unknownTokenStrategy)

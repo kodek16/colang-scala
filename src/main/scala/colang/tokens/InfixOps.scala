@@ -28,7 +28,7 @@ object Associativity extends Enumeration {
   * '*' operator
   */
 case class Multiply(source: SourceCode) extends InfixOperator {
-  val precedence = 40
+  val precedence = 70
   val associativity = Associativity.LEFT
 }
 object Multiply {
@@ -39,7 +39,7 @@ object Multiply {
   * '/' operator
   */
 case class Divide(source: SourceCode) extends InfixOperator {
-  val precedence = 40
+  val precedence = 70
   val associativity = Associativity.LEFT
 }
 object Divide {
@@ -50,7 +50,7 @@ object Divide {
   * '+' operator
   */
 case class Plus(source: SourceCode) extends InfixOperator {
-  val precedence = 30
+  val precedence = 60
   val associativity = Associativity.LEFT
 }
 object Plus {
@@ -61,7 +61,7 @@ object Plus {
   * '-' operator
   */
 case class Minus(source: SourceCode) extends InfixOperator {
-  val precedence = 30
+  val precedence = 60
   val associativity = Associativity.LEFT
 }
 object Minus {
@@ -69,14 +69,91 @@ object Minus {
 }
 
 /**
+  * '<' operator
+  */
+case class Less(source: SourceCode) extends InfixOperator {
+  val precedence = 50
+  val associativity = Associativity.LEFT
+}
+object Less {
+  val strategy = new LexerImpl.StatelessTokenStrategy(Less.apply, """<(?![<=])""".r)
+}
+
+/**
+  * '>' operator
+  */
+case class Greater(source: SourceCode) extends InfixOperator {
+  val precedence = 50
+  val associativity = Associativity.LEFT
+}
+object Greater {
+  val strategy = new LexerImpl.StatelessTokenStrategy(Greater.apply, """>(?![>=])""".r)
+}
+
+/**
+  * '<=' operator
+  */
+case class LessOrEquals(source: SourceCode) extends InfixOperator {
+  val precedence = 50
+  val associativity = Associativity.LEFT
+}
+object LessOrEquals {
+  val strategy = new LexerImpl.StatelessTokenStrategy(LessOrEquals.apply, """<=(?!=)""".r)
+}
+
+/**
+  * '>=' operator
+  */
+case class GreaterOrEquals(source: SourceCode) extends InfixOperator {
+  val precedence = 50
+  val associativity = Associativity.LEFT
+}
+object GreaterOrEquals {
+  val strategy = new LexerImpl.StatelessTokenStrategy(GreaterOrEquals.apply, """>=(?!=)""".r)
+}
+
+/**
   * '==' operator
   */
 case class Equals(source: SourceCode) extends InfixOperator {
-  val precedence = 20
+  val precedence = 40
   val associativity = Associativity.LEFT
 }
 object Equals {
   val strategy = new LexerImpl.StatelessTokenStrategy(Equals.apply, """==(?!=)""".r)
+}
+
+/**
+  * '!=' operator
+  */
+case class NotEquals(source: SourceCode) extends InfixOperator {
+  val precedence = 40
+  val associativity = Associativity.LEFT
+}
+object NotEquals {
+  val strategy = new LexerImpl.StatelessTokenStrategy(NotEquals.apply, """!=(?!=)""".r)
+}
+
+/**
+  * '&&' operator
+  */
+case class LogicalAnd(source: SourceCode) extends InfixOperator {
+  val precedence = 30
+  val associativity = Associativity.LEFT
+}
+object LogicalAnd {
+  val strategy = new LexerImpl.StatelessTokenStrategy(LogicalAnd.apply, """&&(?!&)""".r)
+}
+
+/**
+  * '||' operator
+  */
+case class LogicalOr(source: SourceCode) extends InfixOperator {
+  val precedence = 20
+  val associativity = Associativity.LEFT
+}
+object LogicalOr {
+  val strategy = new LexerImpl.StatelessTokenStrategy(LogicalOr.apply, """\|\|(?!\|)""".r)
 }
 
 /**

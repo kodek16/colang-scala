@@ -33,7 +33,14 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
       """#define _div(a, b) ((a) / (b))""",
       """#define _add(a, b) ((a) + (b))""",
       """#define _sub(a, b) ((a) - (b))""",
+      """#define _lt(a, b) ((a) < (b))""",
+      """#define _gt(a, b) ((a) > (b))""",
+      """#define _ltEq(a, b) ((a) <= (b))""",
+      """#define _gtEq(a, b) ((a) >= (b))""",
       """#define _eq(a, b) ((a) == (b))""",
+      """#define _neq(a, b) ((a) != (b))""",
+      """#define _and(a, b) ((a) && (b))""",
+      """#define _or(a, b) ((a) || (b))""",
       """#define _assign(a, b) ((a) = (b))""",
       """#define _readInt(a) scanf("%d", &(a))""",
       """#define _readDbl(a) scanf("%lf", &(a))""",
@@ -183,11 +190,18 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   }
 
   private val internalBinaryOperatorNames: Map[String, String] = Map(
-    "multiply" -> "_mul",
-    "divide"   -> "_div",
+    "times" -> "_mul",
+    "div"   -> "_div",
     "plus" -> "_add",
     "minus" -> "_sub",
+    "lessThan" -> "_lt",
+    "greaterThan" -> "_gt",
+    "lessOrEquals" -> "_ltEq",
+    "greaterOrEquals" -> "_gtEq",
     "equals" -> "_eq",
+    "notEquals" -> "_neq",
+    "and" -> "_and",
+    "or" -> "_or",
     "assign" -> "_assign"
   )
 

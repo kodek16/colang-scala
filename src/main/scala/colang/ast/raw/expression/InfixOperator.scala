@@ -29,7 +29,14 @@ object InfixOperator {
     SingleTokenStrategy(classOf[Divide]),
     SingleTokenStrategy(classOf[Plus]),
     SingleTokenStrategy(classOf[Minus]),
+    SingleTokenStrategy(classOf[Less]),
+    SingleTokenStrategy(classOf[Greater]),
+    SingleTokenStrategy(classOf[LessOrEquals]),
+    SingleTokenStrategy(classOf[GreaterOrEquals]),
     SingleTokenStrategy(classOf[Equals]),
+    SingleTokenStrategy(classOf[NotEquals]),
+    SingleTokenStrategy(classOf[LogicalAnd]),
+    SingleTokenStrategy(classOf[LogicalOr]),
     SingleTokenStrategy(classOf[Assign]))
 
   private class RHSStrategy(bindingPrecedence: Int = 0,
