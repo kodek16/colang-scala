@@ -56,7 +56,6 @@ object IfStatement {
             case _ => RightParen(condition.source.after)
           }
 
-
           val statement = IfStatement(ifKeyword, leftParen, condition, rightParen, ifBranch)
           Success(statement, issues, streamAfterStatement)
 

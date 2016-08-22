@@ -39,4 +39,5 @@ class KeywordStrategiesSpec extends UnitSpec {
   describeKeywordStrategy("struct", classOf[StructKeyword], StructKeyword.strategy)
   describeKeywordStrategy("if", classOf[IfKeyword], IfKeyword.strategy)
   describeKeywordStrategy("else", classOf[ElseKeyword], ElseKeyword.strategy)
+  describeKeywordStrategy("while", classOf[WhileKeyword], WhileKeyword.strategy)
 }

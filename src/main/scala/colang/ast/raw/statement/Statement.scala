@@ -38,6 +38,7 @@ object Statement {
     semicolonStrategy,
     IfElseStatement.strategy,
     IfStatement.strategy,
+    WhileStatement.strategy,
     VariablesDefinition.strategy,
     Expression.strategy,
     CodeBlock.strategy)

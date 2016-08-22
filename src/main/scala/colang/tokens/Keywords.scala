@@ -40,3 +40,11 @@ case class ElseKeyword(source: SourceCode) extends Keyword
 object ElseKeyword {
   val strategy = new StatelessTokenStrategy(ElseKeyword.apply, """\belse\b""".r)
 }
+
+/**
+  * 'while' keyword
+  */
+case class WhileKeyword(source: SourceCode) extends Keyword
+object WhileKeyword {
+  val strategy = new StatelessTokenStrategy(WhileKeyword.apply, """\bwhile\b""".r)
+}

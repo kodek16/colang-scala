@@ -1,7 +1,7 @@
 package colang.backend.c
 
 import colang.ast.parsed.expression._
-import colang.ast.parsed.statement.{IfElseStatement, Statement}
+import colang.ast.parsed.statement.{IfElseStatement, Statement, WhileStatement}
 import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, Symbol, Type, Variable}
 import colang.backend.Backend
 import colang.utils.SeqUtils
@@ -141,7 +141,12 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     statement match {
       case ifElseStmt: IfElseStatement =>
         val condition = generateExpression(ifElseStmt.condition)
-        val heading = CLiteralToken("if (") +: condition.tokens :+ CLiteralToken(")")
+        val heading = CLiteralToken("if") +:
+          COptionalSpaceToken() +:
+          CLiteralToken("(") +:
+          condition.tokens :+
+          CLiteralToken(")")
+
         val ifBranch = generateCodeBlock(ifElseStmt.ifBranch)
 
         val tail = ifElseStmt.elseBranch match {
@@ -153,6 +158,19 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
         }
 
         CBlock(heading, ifBranch.variables, ifBranch.statements, tail)
+
+      case whileStmt: WhileStatement =>
+        val condition = generateExpression(whileStmt.condition)
+        val heading = CLiteralToken("while") +:
+          COptionalSpaceToken() +:
+          CLiteralToken("(") +:
+          condition.tokens :+
+          CLiteralToken(")")
+
+        val loop = generateCodeBlock(whileStmt.loop)
+
+        CBlock(heading, loop.variables, loop.statements)
+
       case cb: CodeBlock => generateCodeBlock(cb)
       case expr: Expression => CSimpleStatement(generateExpression(expr).tokens)
     }

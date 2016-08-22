@@ -1,7 +1,7 @@
 package colang.ast.parsed
 
 import colang.ast.parsed.expression.Expression
-import colang.ast.parsed.statement.{IfElseStatement, Statement}
+import colang.ast.parsed.statement.{IfElseStatement, Statement, WhileStatement}
 import colang.ast.raw
 import colang.{Error, Issue}
 
@@ -36,6 +36,7 @@ class CodeBlock(var innerScope: Scope,
     statement match {
       case r: raw.statement.IfStatement => addStatement(r)
       case r: raw.statement.IfElseStatement => addStatement(r)
+      case r: raw.statement.WhileStatement => addStatement(r)
       case r: raw.statement.VariablesDefinition => addStatement(r)
       case r: raw.CodeBlock => addStatement(r)
       case r: raw.expression.Expression => addStatement(r)
@@ -43,35 +44,17 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addStatement(rawStmt: raw.statement.IfStatement): Seq[Issue] = {
-    val (condition, conditionIssues) = Expression.analyze(innerScope, rawStmt.condition)
-
-    val conditionTypeIssues = if (condition.type_ == innerScope.root.resolve("bool").get) {
-      Seq.empty
-    } else {
-      val typeStr = condition.type_.qualifiedName
-      val issue = Error(rawStmt.condition.source,
-        s"if statement condition must have type 'bool', but has type '$typeStr'.")
-      Seq(issue)
-    }
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
 
     val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)))
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifBranch)
 
     statements += IfElseStatement(condition, ifBranchBlock, None)
-    conditionIssues ++ conditionTypeIssues ++ ifBranchIssues
+    conditionIssues ++ ifBranchIssues
   }
 
   def addStatement(rawStmt: raw.statement.IfElseStatement): Seq[Issue] = {
-    val (condition, conditionIssues) = Expression.analyze(innerScope, rawStmt.ifStatement.condition)
-
-    val conditionTypeIssues = if (condition.type_ == innerScope.root.resolve("bool").get) {
-      Seq.empty
-    } else {
-      val typeStr = condition.type_.qualifiedName
-      val issue = Error(rawStmt.ifStatement.condition.source,
-        s"if statement condition must have type 'bool', but has type '$typeStr'.")
-      Seq(issue)
-    }
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.ifStatement.condition)
 
     val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)))
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifStatement.ifBranch)
@@ -80,7 +63,17 @@ class CodeBlock(var innerScope: Scope,
     val elseBranchIssues = elseBranchBlock.addStatement(rawStmt.elseBranch)
 
     statements += IfElseStatement(condition, ifBranchBlock, Some(elseBranchBlock))
-    conditionIssues ++ conditionTypeIssues ++ ifBranchIssues ++ elseBranchIssues
+    conditionIssues ++ ifBranchIssues ++ elseBranchIssues
+  }
+
+  def addStatement(rawStmt: raw.statement.WhileStatement): Seq[Issue] = {
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
+
+    val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+    val loopIssues = loopBlock.addStatement(rawStmt.loop)
+
+    statements += WhileStatement(condition, loopBlock)
+    conditionIssues ++ loopIssues
   }
 
   def addStatement(rawStmt: raw.statement.VariablesDefinition): Seq[Issue] = {
@@ -100,5 +93,25 @@ class CodeBlock(var innerScope: Scope,
     val (parsedExpr, exprIssues) = Expression.analyze(innerScope, rawStmt)
     statements += parsedExpr
     exprIssues
+  }
+
+  /**
+    * Analyzes the expression and also checks if it is eligible to be an 'if' or 'while' condition.
+    * @param rawCond raw expression
+    * @return (parsed expression, encountered issues)
+    */
+  private def analyzeConditionExpression(rawCond: raw.expression.Expression): (Expression, Seq[Issue]) = {
+    val (condition, conditionIssues) = Expression.analyze(innerScope, rawCond)
+
+    val conditionTypeIssues = if (condition.type_ == innerScope.root.resolve("bool").get) {
+      Seq.empty
+    } else {
+      val typeStr = condition.type_.qualifiedName
+      val issue = Error(rawCond.source,
+        s"condition must have type 'bool', but has type '$typeStr'.")
+      Seq(issue)
+    }
+
+    (condition, conditionIssues ++ conditionTypeIssues)
   }
 }
