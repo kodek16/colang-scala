@@ -76,8 +76,10 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   private def writeStatement(statement: CStatement, offset: String = ""): String = {
     statement match {
       case CSimpleStatement(tokens) => offset + (tokens map writeToken mkString "") + ";"
-      case CBlock(heading, variables, statements) =>
-        val headingText = writeStatement(heading, offset).dropRight(1)
+      case CBlock(heading, variables, statements, tail) =>
+        val headingText = if (heading.nonEmpty) {
+          offset + (heading map writeToken mkString "") + " "
+        } else offset
 
         val newOffset = offset + INDENT
         val varDefsText = variables map { v => s"$newOffset${nativeName(v.type_)} ${nativeName(v)};"} mkString "\n"
@@ -85,7 +87,12 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
 
         val blockContentsText = Seq(varDefsText, statementsText) filter { _.nonEmpty } mkString "\n\n"
 
-        s"$headingText {\n$blockContentsText\n$offset}"
+        val tailText = tail match {
+          case Some(t) => " " + writeStatement(t, offset).drop(offset.length)
+          case None => ""
+        }
+
+        s"$headingText{\n$blockContentsText\n$offset}$tailText"
     }
   }
 

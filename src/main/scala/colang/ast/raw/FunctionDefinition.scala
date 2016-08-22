@@ -22,6 +22,8 @@ case class FunctionDefinition(specifiers: SpecifiersList,
 
   lazy val source = specifiers.source + body.getOrElse(parameterList).source
   lazy val prototypeSource = specifiers.source + parameterList.source
+
+  override def toString: String = s"FuncDef: ${name.value}"
 }
 
 object FunctionDefinition {

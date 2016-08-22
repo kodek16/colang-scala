@@ -34,8 +34,10 @@ object Statement {
   /**
     * A strategy for parsing statements.
     */
-  val strategy = StrategyUnion(
+  val strategy: ParserImpl.Strategy[Statement] = StrategyUnion(
     semicolonStrategy,
+    IfElseStatement.strategy,
+    IfStatement.strategy,
     VariablesDefinition.strategy,
     Expression.strategy,
     CodeBlock.strategy)

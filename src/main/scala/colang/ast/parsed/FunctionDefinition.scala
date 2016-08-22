@@ -50,12 +50,12 @@ object FunctionDefinition {
 
     val bodyIssues = rawFunc.body match {
       case Some(body) =>
-        val nativeIssue = if (function.native) {
+        val nativeIssues = if (function.native) {
           Some(Error(rawFunc.body.get.source, "native function can't be defined with a body"))
         } else None
 
 
-        CodeBlock.analyze(body, function.body) ++ nativeIssue
+        nativeIssues ++ function.body.addStatementsFromBlock(body)
       case None =>
         if (!function.native) {
           Seq(Error(rawFunc.prototypeSource, "missing function body"))

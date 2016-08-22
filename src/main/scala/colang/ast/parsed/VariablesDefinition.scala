@@ -1,7 +1,8 @@
 package colang.ast.parsed
 
 import colang.ast.parsed.expression.{Expression, MethodCall, VariableReference}
-import colang.ast.raw.{ statement => raw }
+import colang.ast.parsed.statement.Statement
+import colang.ast.raw.{statement => raw}
 import colang.{Error, Issue}
 
 object VariablesDefinition {

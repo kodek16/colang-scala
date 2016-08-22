@@ -2,6 +2,7 @@ package colang.ast.parsed.expression
 
 import colang.Issue
 import colang.ast.parsed._
+import colang.ast.parsed.statement.Statement
 import colang.ast.raw.{expression => raw}
 
 /**
