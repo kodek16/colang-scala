@@ -1,8 +1,8 @@
 package colang.ast.parsed
 
 import colang.ast.parsed.statement.Statement
-import colang.{Error, Issue, SourceCode}
 import colang.ast.raw
+import colang.{Error, Issue, SourceCode}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

@@ -2,8 +2,6 @@ package colang.ast.parsed
 
 import colang.SourceCode
 
-import scala.collection.mutable
-
 class Namespace(val name: String,
                 val declarationSite: Option[SourceCode],
                 val parent: Option[Namespace]) extends Symbol with Scope {

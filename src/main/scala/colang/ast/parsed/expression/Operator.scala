@@ -1,8 +1,8 @@
 package colang.ast.parsed.expression
 
 import colang.ast.parsed.Scope
-import colang.{Error, Issue, tokens}
 import colang.ast.raw.{expression => raw}
+import colang.{Error, Issue, tokens}
 
 /**
   * Operators calls are translated to method calls on the left operand.

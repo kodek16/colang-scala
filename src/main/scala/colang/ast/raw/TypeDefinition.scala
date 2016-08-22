@@ -3,8 +3,8 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl._
-import colang.{SourceCode, TokenStream}
 import colang.tokens._
+import colang.{SourceCode, TokenStream}
 
 /**
   * Represents a type definition.

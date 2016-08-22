@@ -1,9 +1,9 @@
 package colang.ast.parsed
 
-import colang.{Error, Issue}
 import colang.ast.parsed.expression.Expression
 import colang.ast.parsed.statement.{IfElseStatement, Statement}
 import colang.ast.raw
+import colang.{Error, Issue}
 
 import scala.collection.mutable.ListBuffer
 

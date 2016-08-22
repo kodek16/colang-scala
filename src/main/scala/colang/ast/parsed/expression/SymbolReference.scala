@@ -1,8 +1,8 @@
 package colang.ast.parsed.expression
 
-import colang.{Error, Issue}
 import colang.ast.parsed.{Function, Namespace, Scope, Type, Variable}
 import colang.ast.raw.{expression => raw}
+import colang.{Error, Issue}
 
 /**
   * Represents a function reference.

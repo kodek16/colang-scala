@@ -1,8 +1,8 @@
 package colang.ast.parsed
 
-import colang.{Error, Issue}
 import colang.ast.raw
 import colang.tokens.NativeKeyword
+import colang.{Error, Issue}
 
 import scala.collection.mutable
 
