@@ -1,12 +1,12 @@
 package colang.ast.parsed
 
-import colang.{Note, SourceCode}
+import colang.Note
+import colang.ast.raw
 
 /**
   * Represents a method: a function that can only be called on an instance of some type.
   * Note that a method is not a symbol because it isn't stable.
   * @param name method name
-  * @param declarationSite optionally method declaration site
   * @param container containing type
   * @param returnType method return type
   * @param parameters method parameters
@@ -14,25 +14,16 @@ import colang.{Note, SourceCode}
   * @param native whether method is native
   */
 class Method(val name: String,
-             val declarationSite: Option[SourceCode],
              val container: Type,
              val returnType: Type,
              val parameters: Seq[Variable],
              val body: CodeBlock,
-             val native: Boolean = false) {
+             val definition: Option[raw.FunctionDefinition],
+             val native: Boolean = false) extends Applicable {
 
-  /**
-    * Returns true if method can be called with arguments of given types (this is, whether the arguments are
-    * implicitly convertible to parameter types).
-    * @param argumentTypes argument types
-    * @return true if function can be called with these arguments
-    */
-  def canBeAppliedTo(argumentTypes: Seq[Type]): Boolean = {
-    if (parameters.isEmpty && argumentTypes.isEmpty) {
-      true
-    } else if (parameters.size == argumentTypes.size) {
-      parameters map {_.type_} zip argumentTypes map { case (p, a) => a.isImplicitlyConvertibleTo(p) } reduce {_ && _}
-    } else false
+  val declarationSite = definition match {
+    case Some(fd) => Some(fd.prototypeSource)
+    case None => None
   }
 
   /**

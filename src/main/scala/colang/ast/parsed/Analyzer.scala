@@ -1,11 +1,7 @@
 package colang.ast.parsed
 
-import colang.ast.parsed.statement.Statement
 import colang.ast.raw
-import colang.{Error, Issue, SourceCode}
-
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import colang.{Issue, SourceCode}
 
 /**
   * Represents a compiler component that performs semantic analysis of the code, establishes symbol references and
@@ -35,103 +31,28 @@ trait Analyzer {
   */
 class AnalyzerImpl extends Analyzer {
   def analyze(symbolDefs: Seq[raw.GlobalSymbolDefinition], eof: SourceCode): (Namespace, Seq[Issue]) = {
-    val rootNamespace = new Namespace("", None, None)
-    val issues = ListBuffer.empty[Issue]
+    val typeDefs = (symbolDefs filter { _.isInstanceOf[raw.TypeDefinition] }).
+      asInstanceOf[Seq[raw.TypeDefinition]]
+    val funcDefs = (symbolDefs filter { _.isInstanceOf[raw.FunctionDefinition] }).
+      asInstanceOf[Seq[raw.FunctionDefinition]]
+    val varDefs = (symbolDefs filter { _.isInstanceOf[raw.statement.VariablesDefinition] }).
+      asInstanceOf[Seq[raw.statement.VariablesDefinition]]
 
-    val generatedTypes = mutable.Map.empty[raw.TypeDefinition, Type]
-    val generatedVariables = mutable.Map.empty[raw.statement.VariablesDefinition, Seq[Variable]]
-    val generatedFunctions = mutable.Map.empty[raw.FunctionDefinition, Function]
+    val rootNamespace = new Namespace(
+      name = "",
+      declarationSite = None,
+      parent = None)
 
-    val globalVarInitStatements = ListBuffer.empty[Statement]
+    val (types, typesIssues) = routines.registerTypes(rootNamespace, typeDefs)
+    val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)
+    val emptyTypeIssues = routines.checkTypesWithoutBody(types)
+    val (methods, methodsIssues) = routines.registerMethods(types)
+    val (variables, globalVarInitStatements, varIssues) = routines.registerGlobalVariables(rootNamespace, varDefs)
+    val funcBodiesIssues = routines.analyzeFunctionBodies(functions)
+    val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements, eof)
 
-    registerTypes()
-    assertThatNativeTypeDeclarationsArePresent()
-    registerFunctions()
-    registerMethods()
-    registerGlobalVariables()
-    analyzeFunctionBodies()
-    processMainFunction()
-
-    def registerTypes(): Unit = {
-      symbolDefs foreach {
-        case td: raw.TypeDefinition =>
-          val (type_, typeIssues) = TypeDefinition.register(rootNamespace, td)
-          generatedTypes(td) = type_
-          issues ++= typeIssues
-        case _ => ()
-      }
-    }
-
-    def assertThatNativeTypeDeclarationsArePresent(): Unit = {
-      def assertTypePresent(name: String): Unit = {
-        rootNamespace resolve name match {
-          case Some(t: Type) => ()
-          case _ =>
-            System.err.println(s"Error: '$name' type declaration not found in standard library. Please check if your " +
-              s"CO installation is correct and up-to-date.")
-            sys.exit(2)
-        }
-      }
-
-      assertTypePresent("void")
-      assertTypePresent("int")
-      assertTypePresent("double")
-      assertTypePresent("bool")
-    }
-
-    def registerFunctions(): Unit = {
-      symbolDefs foreach {
-        case fd: raw.FunctionDefinition =>
-          val (function, functionIssues) = FunctionDefinition.register(rootNamespace, fd)
-          generatedFunctions(fd) = function
-          issues ++= functionIssues
-        case _ => ()
-      }
-    }
-
-    def registerMethods(): Unit = {
-      symbolDefs foreach {
-        case td: raw.TypeDefinition =>
-          issues ++= TypeDefinition.registerMethods(generatedTypes(td), td)
-        case _ => ()
-      }
-    }
-
-    def registerGlobalVariables(): Unit = {
-      symbolDefs foreach {
-        case vsd: raw.statement.VariablesDefinition =>
-          val (vars, initStatements, varsIssues) = VariablesDefinition.register(rootNamespace, vsd)
-          generatedVariables(vsd) = vars
-          issues ++= varsIssues
-          globalVarInitStatements ++= initStatements
-        case _ => ()
-      }
-    }
-
-    def analyzeFunctionBodies(): Unit = {
-      symbolDefs foreach {
-        case fd: raw.FunctionDefinition =>
-          issues ++= FunctionDefinition.analyzeBody(generatedFunctions(fd), fd)
-        case _ => ()
-      }
-    }
-
-    def processMainFunction(): Unit = {
-      val mainIssues = rootNamespace.resolve("main") match {
-        case Some(f: Function) if f.returnType.qualifiedName == "void" && f.parameters.isEmpty =>
-          //Inject global variable initializers here
-          f.body.statements.prepend(globalVarInitStatements :_*)
-          Seq.empty
-        case Some(f: Function) if f.declarationSite.isDefined =>
-          Seq(Error(f.declarationSite.get, "'main' function must accept no parameters and return 'void'"))
-        case Some(s: Symbol) if s.declarationSite.isDefined =>
-          Seq(Error(s.declarationSite.get, "'main' must be a function"))
-        case _ =>
-          Seq(Error(eof, "missing 'main' function"))
-      }
-
-      issues ++= mainIssues
-    }
+    val issues = typesIssues ++ functionsIssues ++ emptyTypeIssues ++ methodsIssues ++ varIssues ++
+      funcBodiesIssues ++ mainFuncIssues
 
     (rootNamespace, issues)
   }

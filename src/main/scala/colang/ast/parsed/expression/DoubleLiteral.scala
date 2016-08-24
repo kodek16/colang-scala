@@ -1,7 +1,7 @@
 package colang.ast.parsed.expression
 
 import colang.Issue
-import colang.ast.parsed.{Scope, Type}
+import colang.ast.parsed.Scope
 import colang.ast.raw.{expression => raw}
 
 /**
@@ -9,12 +9,14 @@ import colang.ast.raw.{expression => raw}
   * @param value literal value
   * @param scope enclosing scope
   */
-case class DoubleLiteral(value: Double)(implicit scope: Scope) extends Expression {
-  val type_ = scope.root.resolve("double").get.asInstanceOf[Type]
+case class DoubleLiteral(value: Double,
+                         rawNode: Option[raw.DoubleLiteral])(implicit scope: Scope) extends Expression {
+
+  val type_ = scope.root.doubleType
 }
 
 object DoubleLiteral {
   def analyze(rawExpr: raw.DoubleLiteral)(implicit scope: Scope): (Expression, Seq[Issue]) = {
-    (DoubleLiteral(rawExpr.value.value), Seq.empty)
+    (DoubleLiteral(rawExpr.value.value, Some(rawExpr)), Seq.empty)
   }
 }

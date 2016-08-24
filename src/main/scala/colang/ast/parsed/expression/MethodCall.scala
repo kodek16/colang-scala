@@ -10,4 +10,5 @@ import colang.ast.parsed.{Method, Type}
   */
 case class MethodCall(method: Method, instance: Expression, arguments: Seq[Expression]) extends Expression {
   def type_ : Type = method.returnType
+  val rawNode = None
 }

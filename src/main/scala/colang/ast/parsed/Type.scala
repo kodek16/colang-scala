@@ -1,24 +1,29 @@
 package colang.ast.parsed
 
 import colang.ast.raw
-import colang.{Error, Issue, SourceCode}
+import colang.ast.raw.TypeDefinition
+import colang.{Error, Issue}
 
 import scala.collection.mutable
 
 /**
   * Represents a type.
   * @param name type name
-  * @param declarationSite optionally type declaration site
   * @param scope enclosing scope
+  * @param definition raw type definition
   * @param native whether type is native
   */
 class Type(val name: String,
-           val declarationSite: Option[SourceCode],
            val scope: Some[Scope],
+           val definition: Option[TypeDefinition],
            val native: Boolean = false) extends Symbol with Scope {
 
   val parent = scope
-  val description = "a type"
+  val declarationSite = definition match {
+    case Some(td) => Some(td.headSource)
+    case None => None
+  }
+  val description = "type"
 
   private val methods: mutable.LinkedHashMap[String, Method] = mutable.LinkedHashMap.empty
 
@@ -28,20 +33,20 @@ class Type(val name: String,
   methods("assign") = defaultAssignMethod
 
   private def defaultAssignMethod: Method = {
-    val body = new CodeBlock(new LocalScope(Some(this)))
+    val body = new CodeBlock(new LocalScope(Some(this)), None)
     val params = Seq(new Variable(
       name = "other",
-      declarationSite = None,
       scope = Some(body.innerScope),
-      type_ = this))
+      type_ = this,
+      definition = None))
 
     new Method(
       name = "assign",
-      declarationSite = None,
       container = this,
       returnType = this,
       parameters = params,
       body = body,
+      definition = None,
       native = true)
   }
 
@@ -94,7 +99,7 @@ object Type {
       case Some(otherSymbol) =>
         val issue = Error(
           rawType.source,
-          s"${rawType.name.value} is not a type, but ${otherSymbol.description}",
+          s"${rawType.name.value} is not a type, but a ${otherSymbol.description}",
           otherSymbol.declarationSiteNotes)
 
         (scope.root.unknownType, Seq(issue))

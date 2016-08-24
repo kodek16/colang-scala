@@ -1,7 +1,7 @@
 package colang.ast.parsed
 
 import colang.ast.parsed.expression.Expression
-import colang.ast.parsed.statement.{IfElseStatement, Statement, WhileStatement}
+import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.raw
 import colang.{Error, Issue}
 
@@ -16,6 +16,7 @@ import scala.collection.mutable.ListBuffer
   * @param statements statements in block
   */
 class CodeBlock(var innerScope: Scope,
+                val rawNode: Option[raw.CodeBlock],
                 val statements: ListBuffer[Statement] = ListBuffer.empty) extends Statement {
 
   /**
@@ -34,62 +35,69 @@ class CodeBlock(var innerScope: Scope,
     */
   def addStatement(statement: raw.statement.Statement): Seq[Issue] = {
     statement match {
-      case r: raw.statement.IfStatement => addStatement(r)
-      case r: raw.statement.IfElseStatement => addStatement(r)
-      case r: raw.statement.WhileStatement => addStatement(r)
-      case r: raw.statement.VariablesDefinition => addStatement(r)
-      case r: raw.CodeBlock => addStatement(r)
-      case r: raw.expression.Expression => addStatement(r)
+      case r: raw.statement.IfStatement => addIfStatement(r)
+      case r: raw.statement.IfElseStatement => addIfElseStatement(r)
+      case r: raw.statement.WhileStatement => addWhileStatement(r)
+      case r: raw.statement.ReturnStatement => addReturnStatement(r)
+      case r: raw.statement.VariablesDefinition => addVariablesDefinition(r)
+      case r: raw.CodeBlock => addCodeBlock(r)
+      case r: raw.expression.Expression => addExpression(r)
     }
   }
 
-  def addStatement(rawStmt: raw.statement.IfStatement): Seq[Issue] = {
+  def addIfStatement(rawStmt: raw.statement.IfStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
 
-    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifBranch)
 
-    statements += IfElseStatement(condition, ifBranchBlock, None)
+    statements += IfElseStatement(condition, ifBranchBlock, None, Some(rawStmt))
     conditionIssues ++ ifBranchIssues
   }
 
-  def addStatement(rawStmt: raw.statement.IfElseStatement): Seq[Issue] = {
+  def addIfElseStatement(rawStmt: raw.statement.IfElseStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.ifStatement.condition)
 
-    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifStatement.ifBranch)
 
-    val elseBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+    val elseBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val elseBranchIssues = elseBranchBlock.addStatement(rawStmt.elseBranch)
 
-    statements += IfElseStatement(condition, ifBranchBlock, Some(elseBranchBlock))
+    statements += IfElseStatement(condition, ifBranchBlock, Some(elseBranchBlock), Some(rawStmt))
     conditionIssues ++ ifBranchIssues ++ elseBranchIssues
   }
 
-  def addStatement(rawStmt: raw.statement.WhileStatement): Seq[Issue] = {
+  def addWhileStatement(rawStmt: raw.statement.WhileStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
 
-    val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+    val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val loopIssues = loopBlock.addStatement(rawStmt.loop)
 
-    statements += WhileStatement(condition, loopBlock)
+    statements += WhileStatement(condition, loopBlock, Some(rawStmt))
     conditionIssues ++ loopIssues
   }
 
-  def addStatement(rawStmt: raw.statement.VariablesDefinition): Seq[Issue] = {
-    val (_, initStatements, varIssues) = VariablesDefinition.register(innerScope, rawStmt)
+  def addReturnStatement(rawStmt: raw.statement.ReturnStatement): Seq[Issue] = {
+    val (returnValue, retValIssues) = Expression.analyze(innerScope, rawStmt.expression)
+    statements += ReturnStatement(returnValue, Some(rawStmt))
+    retValIssues
+  }
+
+  def addVariablesDefinition(rawStmt: raw.statement.VariablesDefinition): Seq[Issue] = {
+    val (_, initStatements, varIssues) = routines.registerVariables(innerScope, rawStmt)
     statements ++= initStatements
     varIssues
   }
 
-  def addStatement(rawStmt: raw.CodeBlock): Seq[Issue] = {
-    val childBlock = new CodeBlock(new LocalScope(Some(innerScope)))
+  def addCodeBlock(rawStmt: raw.CodeBlock): Seq[Issue] = {
+    val childBlock = new CodeBlock(new LocalScope(Some(innerScope)), Some(rawStmt))
     val blockIssues = childBlock.addStatementsFromBlock(rawStmt)
     statements += childBlock
     blockIssues
   }
 
-  def addStatement(rawStmt: raw.expression.Expression): Seq[Issue] = {
+  def addExpression(rawStmt: raw.expression.Expression): Seq[Issue] = {
     val (parsedExpr, exprIssues) = Expression.analyze(innerScope, rawStmt)
     statements += parsedExpr
     exprIssues
@@ -103,7 +111,7 @@ class CodeBlock(var innerScope: Scope,
   private def analyzeConditionExpression(rawCond: raw.expression.Expression): (Expression, Seq[Issue]) = {
     val (condition, conditionIssues) = Expression.analyze(innerScope, rawCond)
 
-    val conditionTypeIssues = if (condition.type_ == innerScope.root.resolve("bool").get) {
+    val conditionTypeIssues = if (condition.type_ == innerScope.root.boolType) {
       Seq.empty
     } else {
       val typeStr = condition.type_.qualifiedName

@@ -39,6 +39,7 @@ object Statement {
     IfElseStatement.strategy,
     IfStatement.strategy,
     WhileStatement.strategy,
+    ReturnStatement.strategy,
     VariablesDefinition.strategy,
     Expression.strategy,
     CodeBlock.strategy)

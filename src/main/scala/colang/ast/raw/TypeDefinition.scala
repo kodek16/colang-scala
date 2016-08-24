@@ -19,6 +19,7 @@ case class TypeDefinition(specifiers: SpecifiersList,
                           body: Option[TypeBody]) extends GlobalSymbolDefinition {
 
   def source: SourceCode = specifiers.source + body.getOrElse(name).source
+  def headSource: SourceCode = specifiers.source + name.source
 
   override def toString: String = s"TypeDef: ${name.value}"
 }

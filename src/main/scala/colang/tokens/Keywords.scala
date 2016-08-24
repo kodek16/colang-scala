@@ -48,3 +48,8 @@ case class WhileKeyword(source: SourceCode) extends Keyword
 object WhileKeyword {
   val strategy = new StatelessTokenStrategy(WhileKeyword.apply, """\bwhile\b""".r)
 }
+
+case class ReturnKeyword(source: SourceCode) extends Keyword
+object ReturnKeyword {
+  val strategy = new StatelessTokenStrategy(ReturnKeyword.apply, """\breturn\b""".r)
+}

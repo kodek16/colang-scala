@@ -9,7 +9,10 @@ import colang.{Error, Issue}
   * @param function called function
   * @param arguments function arguments
   */
-case class FunctionCall(function: Function, arguments: Seq[Expression]) extends Expression {
+case class FunctionCall(function: Function,
+                        arguments: Seq[Expression],
+                        rawNode: Option[raw.FunctionCall]) extends Expression {
+
   val type_ = function.returnType
 }
 
@@ -25,10 +28,10 @@ object FunctionCall {
     val argsIssues = argsResult flatMap { _._2 }
 
     parsedFunction match {
-      case FunctionReference(f) if f.canBeAppliedTo(parsedArgs map { _.type_ }) =>
-        (FunctionCall(f, parsedArgs), functionIssues ++ argsIssues)
+      case FunctionReference(f, _) if f.canBeAppliedTo(parsedArgs map { _.type_ }) =>
+        (FunctionCall(f, parsedArgs, Some(rawExpr)), functionIssues ++ argsIssues)
 
-      case FunctionReference(f) =>
+      case FunctionReference(f, _) =>
         val argTypes = parsedArgs map { _.type_.qualifiedName } mkString ", "
         val issue = Error(rawExpr.arguments.source, s"function cannot be applied to arguments with types ($argTypes)")
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)

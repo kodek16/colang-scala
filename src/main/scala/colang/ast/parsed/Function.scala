@@ -1,26 +1,30 @@
 package colang.ast.parsed
 
-import colang.SourceCode
+import colang.ast.raw
 
 /**
   * Represents a function: an independent callable code unit.
   * @param name function name
-  * @param declarationSite optionally function declaration site
   * @param scope enclosing scope
   * @param returnType function return type
   * @param parameters function parameters
   * @param body function body
+  * @param definition raw function definition
   * @param native whether function is native
   */
 class Function(val name: String,
-               val declarationSite: Option[SourceCode],
                val scope: Some[Scope],
                val returnType: Type,
                val parameters: Seq[Variable],
                val body: CodeBlock,
-               val native: Boolean = false) extends Symbol {
+               val definition: Option[raw.FunctionDefinition],
+               val native: Boolean = false) extends Symbol with Applicable {
 
-  val description = "a function"
+  val declarationSite = definition match {
+    case Some(fd) => Some(fd.prototypeSource)
+    case None => None
+  }
+  val description = "function"
 
   /**
     * Returns a corresponding function type. Isn't very useful yet.
@@ -29,20 +33,9 @@ class Function(val name: String,
     val paramString = (parameters map { _.type_.qualifiedName }).mkString(",")
     val retTypeString = returnType.qualifiedName
     val typeName = s"($paramString -> $retTypeString)"
-    new Type(typeName, None, Some(scope.get.root))
-  }
-
-  /**
-    * Returns true if function can be called with arguments of given types (this is, whether the arguments are
-    * implicitly convertible to parameter types).
-    * @param argumentTypes argument types
-    * @return true if function can be called with these arguments
-    */
-  def canBeAppliedTo(argumentTypes: Seq[Type]): Boolean = {
-    if (parameters.isEmpty && argumentTypes.isEmpty) {
-      true
-    } else if (parameters.size == argumentTypes.size) {
-      parameters map {_.type_} zip argumentTypes map { case (p, a) => a.isImplicitlyConvertibleTo(p) } reduce {_ && _}
-    } else false
+    new Type(
+      name = typeName,
+      scope = Some(scope.get.root),
+      definition = None)
   }
 }

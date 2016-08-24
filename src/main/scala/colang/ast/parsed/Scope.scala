@@ -50,7 +50,7 @@ trait Scope {
     members get symbol.name match {
       case Some(existingSymbol) =>
         val issue = Error(symbol.declarationSite.get,
-          s"there is already ${existingSymbol.description} with the same name in this scope",
+          s"there is already a ${existingSymbol.description} with the same name in this scope",
           existingSymbol.declarationSiteNotes)
 
         Some(issue)

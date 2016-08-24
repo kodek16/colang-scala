@@ -183,13 +183,13 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     */
   private def generateExpression(expression: Expression): CExpression = {
     expression match {
-      case FunctionReference(function) => CExpression(Seq(CSymbolReferenceToken(function)))
-      case VariableReference(variable) => CExpression(Seq(CSymbolReferenceToken(variable)))
+      case FunctionReference(function, _) => CExpression(Seq(CSymbolReferenceToken(function)))
+      case VariableReference(variable, _) => CExpression(Seq(CSymbolReferenceToken(variable)))
 
-      case IntLiteral(value) => CExpression(Seq(CLiteralToken(value.toString)))
-      case BoolLiteral(value) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))
+      case IntLiteral(value, _) => CExpression(Seq(CLiteralToken(value.toString)))
+      case BoolLiteral(value, _) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))
 
-      case DoubleLiteral(value) =>
+      case DoubleLiteral(value, _) =>
         val cStringRepr = if (value.isPosInfinity) {
           "INFINITY"
         } else if (value.isNegInfinity) {
@@ -201,7 +201,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
         }
         CExpression(Seq(CLiteralToken(cStringRepr)))
 
-      case FunctionCall(function, arguments) =>
+      case FunctionCall(function, arguments, _) =>
         val cArguments = arguments map generateExpression
 
         val argSeparatorSource = Seq(CLiteralToken(","), COptionalSpaceToken())

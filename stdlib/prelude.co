@@ -1,4 +1,4 @@
-native struct void
+native struct void {}
 
 native struct int {
     native int unaryMinus()

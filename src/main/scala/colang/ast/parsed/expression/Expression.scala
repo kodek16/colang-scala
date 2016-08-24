@@ -14,6 +14,11 @@ trait Expression extends Statement {
     * Produced value type.
     */
   def type_ : Type
+
+  /**
+    * Optional raw expression node.
+    */
+  def rawNode: Option[raw.Expression]
 }
 
 /**
@@ -22,6 +27,7 @@ trait Expression extends Statement {
   */
 case class InvalidExpression(implicit scope: Scope) extends Expression {
   val type_ = scope.root.unknownType
+  val rawNode = None
 }
 
 object Expression {
