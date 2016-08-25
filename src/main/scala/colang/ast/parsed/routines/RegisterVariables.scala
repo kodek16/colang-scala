@@ -33,7 +33,7 @@ private[routines] object RegisterVariables {
           val assignMethod = variable.type_.resolveMethod("assign").get
 
           if (assignMethod.canBeAppliedTo(Seq(init.type_))) {
-            val initStatement = MethodCall(assignMethod, VariableReference(variable, None), Seq(init))
+            val initStatement = MethodCall(assignMethod, VariableReference(variable, None), Seq(init), Some(rawDef))
             (Some(initStatement), initIssues)
 
           } else {

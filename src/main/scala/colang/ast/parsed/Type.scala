@@ -89,6 +89,19 @@ class Type(val name: String,
     * @return whether implicit conversion is possible
     */
   def isImplicitlyConvertibleTo(other: Type): Boolean = this eq other
+
+  /**
+    * Returns the most specific type that both types are implicitly convertable to, or None.
+    * @param other other type
+    * @return optional Least Upper Bound
+    */
+  def leastUpperBound(other: Type): Option[Type] = {
+    if (this isImplicitlyConvertibleTo other) {
+      Some(other)
+    } else if (other isImplicitlyConvertibleTo this) {
+      Some(this)
+    } else None
+  }
 }
 
 object Type {
@@ -107,6 +120,24 @@ object Type {
       case None =>
         val issue = Error(rawType.source, s"there is no type named ${rawType.name.value} is this scope", Seq.empty)
         (scope.root.unknownType, Seq(issue))
+    }
+  }
+
+  /**
+    * Calculates Least Upper Bound of multiple types. See leastUpperBound instance method.
+    * @param types types
+    * @return Least Upper Bound
+    */
+  def leastUpperBound(types: Type*): Option[Type] = {
+    if (types.isEmpty) {
+      None
+    } else {
+      (types foldLeft Some(types.head).asInstanceOf[Option[Type]]) { (lhsOption, rhs) =>
+        lhsOption match {
+          case Some(lhs) => lhs leastUpperBound rhs
+          case None => None
+        }
+      }
     }
   }
 }

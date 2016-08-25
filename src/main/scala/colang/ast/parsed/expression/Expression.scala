@@ -3,7 +3,7 @@ package colang.ast.parsed.expression
 import colang.Issue
 import colang.ast.parsed._
 import colang.ast.parsed.statement.Statement
-import colang.ast.raw.{expression => raw}
+import colang.ast.raw.{Node, expression => raw}
 
 /**
   * Represents a code fragment that can be evaluated.
@@ -18,7 +18,7 @@ trait Expression extends Statement {
   /**
     * Optional raw expression node.
     */
-  def rawNode: Option[raw.Expression]
+  def rawNode: Option[Node]
 }
 
 /**

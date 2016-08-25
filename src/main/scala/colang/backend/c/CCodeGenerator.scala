@@ -1,7 +1,7 @@
 package colang.backend.c
 
 import colang.ast.parsed.expression._
-import colang.ast.parsed.statement.{IfElseStatement, Statement, WhileStatement}
+import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, Symbol, Type, Variable}
 import colang.backend.Backend
 import colang.utils.SeqUtils
@@ -170,6 +170,14 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
         val loop = generateCodeBlock(whileStmt.loop)
 
         CBlock(heading, loop.variables, loop.statements)
+
+      case returnStmt: ReturnStatement =>
+        val expressionTokens = returnStmt.returnValue match {
+          case Some(value) => generateExpression(value).tokens
+          case None => Seq.empty
+        }
+
+        CSimpleStatement(CLiteralToken("return ") +: expressionTokens)
 
       case cb: CodeBlock => generateCodeBlock(cb)
       case expr: Expression => CSimpleStatement(generateExpression(expr).tokens)

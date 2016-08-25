@@ -79,7 +79,13 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addReturnStatement(rawStmt: raw.statement.ReturnStatement): Seq[Issue] = {
-    val (returnValue, retValIssues) = Expression.analyze(innerScope, rawStmt.expression)
+    val (returnValue, retValIssues) = rawStmt.expression match {
+      case Some(rawValue) =>
+        val (returnValue, retValIssues) = Expression.analyze(innerScope, rawValue)
+        (Some(returnValue), retValIssues)
+      case None => (None, Seq.empty)
+    }
+
     statements += ReturnStatement(returnValue, Some(rawStmt))
     retValIssues
   }
