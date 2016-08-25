@@ -1,7 +1,8 @@
 package colang.backend.c
 
 import colang.ast.parsed.expression._
-import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, Statement, Symbol, Type, Variable}
+import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
+import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, Symbol, Type, Variable}
 import colang.backend.Backend
 import colang.utils.SeqUtils
 
@@ -88,13 +89,13 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     def generateFuncDef(function: Function): CBlock = {
       val proto = generateFunctionPrototype(function)
       val body = generateCodeBlock(function.body, ignoredVariables = function.parameters)
-      CBlock(proto, body.variables, body.statements)
+      CBlock(proto.tokens, body.variables, body.statements)
     }
 
     def generateMethDef(method: Method): CBlock = {
       val proto = generateMethodPrototype(method)
       val body = generateCodeBlock(method.body, ignoredVariables = method.parameters)
-      CBlock(proto, body.variables, body.statements)
+      CBlock(proto.tokens, body.variables, body.statements)
     }
 
     @tailrec
@@ -128,7 +129,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     }
 
     val statements = block.statements map generateStatement
-    CBlock(CSimpleStatement(Seq.empty), variables, statements)
+    CBlock(Seq.empty, variables, statements)
   }
 
   /**
@@ -138,6 +139,46 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     */
   private def generateStatement(statement: Statement): CStatement = {
     statement match {
+      case ifElseStmt: IfElseStatement =>
+        val condition = generateExpression(ifElseStmt.condition)
+        val heading = CLiteralToken("if") +:
+          COptionalSpaceToken() +:
+          CLiteralToken("(") +:
+          condition.tokens :+
+          CLiteralToken(")")
+
+        val ifBranch = generateCodeBlock(ifElseStmt.ifBranch)
+
+        val tail = ifElseStmt.elseBranch match {
+          case Some(elseBlock) =>
+            val elseHeading = Seq(CLiteralToken("else"))
+            val elseBranch = generateCodeBlock(elseBlock)
+            Some(CBlock(elseHeading, elseBranch.variables, elseBranch.statements))
+          case None => None
+        }
+
+        CBlock(heading, ifBranch.variables, ifBranch.statements, tail)
+
+      case whileStmt: WhileStatement =>
+        val condition = generateExpression(whileStmt.condition)
+        val heading = CLiteralToken("while") +:
+          COptionalSpaceToken() +:
+          CLiteralToken("(") +:
+          condition.tokens :+
+          CLiteralToken(")")
+
+        val loop = generateCodeBlock(whileStmt.loop)
+
+        CBlock(heading, loop.variables, loop.statements)
+
+      case returnStmt: ReturnStatement =>
+        val expressionTokens = returnStmt.returnValue match {
+          case Some(value) => generateExpression(value).tokens
+          case None => Seq.empty
+        }
+
+        CSimpleStatement(CLiteralToken("return ") +: expressionTokens)
+
       case cb: CodeBlock => generateCodeBlock(cb)
       case expr: Expression => CSimpleStatement(generateExpression(expr).tokens)
     }
@@ -150,13 +191,13 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     */
   private def generateExpression(expression: Expression): CExpression = {
     expression match {
-      case FunctionReference(function) => CExpression(Seq(CSymbolReferenceToken(function)))
-      case VariableReference(variable) => CExpression(Seq(CSymbolReferenceToken(variable)))
+      case FunctionReference(function, _) => CExpression(Seq(CSymbolReferenceToken(function)))
+      case VariableReference(variable, _) => CExpression(Seq(CSymbolReferenceToken(variable)))
 
-      case IntLiteral(value) => CExpression(Seq(CLiteralToken(value.toString)))
-      case BoolLiteral(value) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))
+      case IntLiteral(value, _) => CExpression(Seq(CLiteralToken(value.toString)))
+      case BoolLiteral(value, _) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))
 
-      case DoubleLiteral(value) =>
+      case DoubleLiteral(value, _) =>
         val cStringRepr = if (value.isPosInfinity) {
           "INFINITY"
         } else if (value.isNegInfinity) {
@@ -168,7 +209,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
         }
         CExpression(Seq(CLiteralToken(cStringRepr)))
 
-      case FunctionCall(function, arguments) =>
+      case FunctionCall(function, arguments, _) =>
         val cArguments = arguments map generateExpression
 
         val argSeparatorSource = Seq(CLiteralToken(","), COptionalSpaceToken())

@@ -1,8 +1,8 @@
 package colang.ast.parsed.expression
 
 import colang.ast.parsed.Scope
-import colang.{Error, Issue, tokens}
 import colang.ast.raw.{expression => raw}
+import colang.{Error, Issue, tokens}
 
 /**
   * Operators calls are translated to method calls on the left operand.
@@ -33,7 +33,8 @@ object Operator {
 
     lhs.type_ resolveMethod methodName match {
       case Some(m) if m.canBeAppliedTo(Seq(rhs.type_)) =>
-        (MethodCall(m, lhs, Seq(rhs)), lhsIssues ++ rhsIssues)
+        (MethodCall(m, lhs, Seq(rhs), Some(rawExpr)), lhsIssues ++ rhsIssues)
+
       case _ =>
         val (lType, rType) = (lhs.type_.qualifiedName, rhs.type_.qualifiedName)
         val issue = Error(rawExpr.source, s"operator '$methodName' is not defined for types '$lType' and '$rType'")
@@ -51,7 +52,8 @@ object Operator {
 
     expr.type_ resolveMethod methodName match {
       case Some(m) if m.canBeAppliedTo(Seq.empty) =>
-        (MethodCall(m, expr, Seq.empty), exprIssues)
+        (MethodCall(m, expr, Seq.empty, Some(rawExpr)), exprIssues)
+
       case _ =>
         val exprType = expr.type_.qualifiedName
         val issue = Error(rawExpr.source, s"operator '$methodName' is not defined for type '$exprType'")

@@ -37,4 +37,8 @@ class KeywordStrategiesSpec extends UnitSpec {
 
   describeKeywordStrategy("native", classOf[NativeKeyword], NativeKeyword.strategy)
   describeKeywordStrategy("struct", classOf[StructKeyword], StructKeyword.strategy)
+  describeKeywordStrategy("if", classOf[IfKeyword], IfKeyword.strategy)
+  describeKeywordStrategy("else", classOf[ElseKeyword], ElseKeyword.strategy)
+  describeKeywordStrategy("while", classOf[WhileKeyword], WhileKeyword.strategy)
+  describeKeywordStrategy("return", classOf[ReturnKeyword], ReturnKeyword.strategy)
 }

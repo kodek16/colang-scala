@@ -2,7 +2,8 @@ package colang.ast.parsed.expression
 
 import colang.Issue
 import colang.ast.parsed._
-import colang.ast.raw.{expression => raw}
+import colang.ast.parsed.statement.Statement
+import colang.ast.raw.{Node, expression => raw}
 
 /**
   * Represents a code fragment that can be evaluated.
@@ -13,6 +14,11 @@ trait Expression extends Statement {
     * Produced value type.
     */
   def type_ : Type
+
+  /**
+    * Optional raw expression node.
+    */
+  def rawNode: Option[Node]
 }
 
 /**
@@ -21,6 +27,7 @@ trait Expression extends Statement {
   */
 case class InvalidExpression(implicit scope: Scope) extends Expression {
   val type_ = scope.root.unknownType
+  val rawNode = None
 }
 
 object Expression {

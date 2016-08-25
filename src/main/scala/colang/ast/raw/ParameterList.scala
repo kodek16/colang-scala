@@ -3,8 +3,8 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
-import colang.{SourceCode, TokenStream}
 import colang.tokens.{Comma, Identifier, LeftParen, RightParen}
+import colang.{SourceCode, TokenStream}
 
 /**
   * Represents a function parameter.

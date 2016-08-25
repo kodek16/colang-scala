@@ -18,7 +18,9 @@ case class CSimpleStatement(tokens: Seq[CToken]) extends CStatement
   * @param heading tokens to go before the block (like 'if' or 'while' statements)
   * @param variables variables declared in the block
   * @param statements statements in the block
+  * @param tail statement to be written after the closing brace (can be a whole block, like 'else' branch).
   */
-case class CBlock(heading: CSimpleStatement, variables: Seq[Variable], statements: Seq[CStatement]) extends CStatement
-
-
+case class CBlock(heading: Seq[CToken],
+                  variables: Seq[Variable],
+                  statements: Seq[CStatement],
+                  tail: Option[CStatement] = None) extends CStatement

@@ -1,10 +1,10 @@
-native struct void
+native struct void {}
 
 native struct int {
     native int unaryMinus()
 
-    native int multiply(int other)
-    native int divide(int other)
+    native int times(int other)
+    native int div(int other)
     native int plus(int other)
     native int minus(int other)
 
@@ -20,8 +20,8 @@ native struct int {
 native struct double {
     native double unaryMinus()
 
-    native double multiply(double other)
-    native double divide(double other)
+    native double times(double other)
+    native double div(double other)
     native double plus(double other)
     native double minus(double other)
 
