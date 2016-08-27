@@ -25,14 +25,62 @@ ln -s path/to/repo/stdlib ~/.colang-libs
 ```
 
 You can now compile and execute the solution to the A + B problem:
-```
+```java
 void main() {
     int a, b
-    readInt(a)
-    readInt(b)
-    writeIntLn(a + b)
+    read(a)
+    read(b)
+    println(a + b)
 }
 ```
 
-The syntax is by no means final: a much more convenient I/O interface will be eventually
-supported.
+The syntax is not final: a more convenient I/O interface will be eventually supported.
+
+Let's go for a more fun example. At this point, you can already solve quadratic equations
+with CO:
+
+```java
+double abs(double x) {
+    if (x >= 0.0) return x else return -x
+}
+
+double sqr(double x) {
+    return x * x
+}
+
+double EPS = 1.0e-9
+
+//If we have no sqrt(), we can just write our own :)
+double sqrt(double x) {
+    double r = 10.0
+
+    while (abs(r * r - x) > EPS) {
+        r = r - (sqr(r) - x) / (2.0 * r)
+    }
+
+    return r
+}
+
+void main() {
+    double a, b, c
+    read(a)
+    read(b)
+    read(c)
+
+    double det = sqr(b) - 4.0 * a * c
+    if (det < 0.0) {
+        //Can't print strings yet :(
+        println(-1)
+        return
+    }
+
+    double r1 = (-b - sqrt(det)) / (2.0 * a)
+    double r2 = (-b + sqrt(det)) / (2.0 * a)
+
+    println(r1)
+    println(r2)
+}
+```
+
+For the curious, the generated code looks like [this](http://pastebin.com/fNauPY0K).
+
