@@ -28,12 +28,20 @@ object FunctionCall {
     val argsIssues = argsResult flatMap { _._2 }
 
     parsedFunction match {
+      case OverloadedFunctionReference(of, _) =>
+        val (overloadOption, overloadingIssues) = of.resolveOverload(parsedArgs map { _.type_ }, Some(rawExpr.source))
+        val result = overloadOption match {
+          case Some(overload) => FunctionCall(overload, parsedArgs, Some(rawExpr))
+          case None => InvalidExpression()
+        }
+        (result, functionIssues ++ argsIssues ++ overloadingIssues)
+
       case FunctionReference(f, _) if f.canBeAppliedTo(parsedArgs map { _.type_ }) =>
         (FunctionCall(f, parsedArgs, Some(rawExpr)), functionIssues ++ argsIssues)
 
       case FunctionReference(f, _) =>
         val argTypes = parsedArgs map { _.type_.qualifiedName } mkString ", "
-        val issue = Error(rawExpr.arguments.source, s"function cannot be applied to arguments with types ($argTypes)")
+        val issue = Error(rawExpr.arguments.source, s"function cannot be applied to arguments with types: $argTypes")
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
       case _ =>

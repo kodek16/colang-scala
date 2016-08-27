@@ -2,7 +2,7 @@ package colang.backend.c
 
 import colang.ast.parsed.expression._
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
-import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, Symbol, Type, Variable}
+import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, OverloadedFunction, Symbol, Type, Variable}
 import colang.backend.Backend
 import colang.utils.SeqUtils
 
@@ -56,6 +56,10 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     def generateFuncProtos(symbols: Seq[Symbol],
                            generatedProtos: Vector[CSimpleStatement] = Vector.empty): Vector[CSimpleStatement] = {
       symbols match {
+        case (overloadedFunction: OverloadedFunction) +: rest =>
+          val newProtos = overloadedFunction.allOverloads filterNot { _.native } map generateFunctionPrototype
+          generateFuncProtos(rest, generatedProtos ++ newProtos)
+
         case (function: Function) +: rest if !function.native =>
           generateFuncProtos(rest, generatedProtos :+ generateFunctionPrototype(function))
 
@@ -102,6 +106,10 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     def generateFuncDefs(symbols: Seq[Symbol],
                          generatedDefs: Vector[CBlock] = Vector.empty): Vector[CBlock] = {
       symbols match {
+        case (overloadedFunction: OverloadedFunction) +: rest =>
+          val newDefs = overloadedFunction.allOverloads filterNot { _.native } map generateFuncDef
+          generateFuncDefs(rest, generatedDefs ++ newDefs)
+
         case (function: Function) +: rest if !function.native =>
           generateFuncDefs(rest, generatedDefs :+ generateFuncDef(function))
 
@@ -223,7 +231,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
           Seq(
             CLiteralToken(")")))
 
-      case MethodCall(method, instance, arguments) =>
+      case MethodCall(method, instance, arguments, _) =>
         val cArguments = (instance +: arguments) map generateExpression
 
         val argSeparatorSource = Seq(CLiteralToken(","), COptionalSpaceToken())

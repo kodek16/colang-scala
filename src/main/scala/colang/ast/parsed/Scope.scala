@@ -42,22 +42,34 @@ trait Scope {
   }
 
   /**
-    * Tries to register a symbol in the scope.
+    * Tries to register a symbol in the scope. Will overload functions if necessary and possible.
     * @param symbol detached symbol
-    * @return an issue if registration failed
+    * @return registration issues
     */
-  def tryAdd(symbol: Symbol): Option[Issue] = {
+  def tryAdd(symbol: Symbol): Seq[Issue] = {
     members get symbol.name match {
+      case Some(of: OverloadedFunction) if symbol.isInstanceOf[Function] =>
+        of.tryAddOverload(symbol.asInstanceOf[Function])
+
+      case Some(f: Function) if symbol.isInstanceOf[Function] =>
+        val overloadedFunction = new OverloadedFunction(name = f.name, scope = f.scope)
+        overloadedFunction.tryAddOverload(f)  // Will always succeed
+        val issues = overloadedFunction.tryAddOverload(symbol.asInstanceOf[Function])
+
+        members -= f.name
+        members(overloadedFunction.name) = overloadedFunction
+        issues
+
       case Some(existingSymbol) =>
         val issue = Error(symbol.declarationSite.get,
           s"there is already a ${existingSymbol.description} with the same name in this scope",
           existingSymbol.declarationSiteNotes)
 
-        Some(issue)
+        Seq(issue)
 
       case None =>
         members(symbol.name) = symbol
-        None
+        Seq.empty
     }
   }
 

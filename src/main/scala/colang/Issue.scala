@@ -1,8 +1,8 @@
 package colang
 
 /**
-  * Represents a problem that the compiler should report. An issue is bound to a source code fragment, and can reference
-  * other fragments as notes.
+  * Represents a problem that the compiler should report. An issue is bound to a source code fragment, and can be
+  * associated with any number of notes.
   */
 sealed trait Issue {
   /**
@@ -16,7 +16,7 @@ sealed trait Issue {
   def message: String
 
   /**
-    * Notes bound to other source code fragments.
+    * Associated notes.
     * @return
     */
   def notes: Seq[Note]
@@ -33,8 +33,6 @@ case class Error  (source: SourceCode, message: String, notes: Seq[Note] = Seq.e
 case class Warning(source: SourceCode, message: String, notes: Seq[Note] = Seq.empty) extends Issue
 
 /**
-  * A message bound to a source code fragment referenced by some other issue.
+  * A message optionally bound to a source code fragment referenced by some other issue.
   */
-case class Note(source: SourceCode, message: String) extends Issue {
-  val notes = Seq.empty
-}
+case class Note(source: Option[SourceCode], message: String)

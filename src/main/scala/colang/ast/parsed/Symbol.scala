@@ -45,7 +45,7 @@ trait Symbol {
     */
   def declarationSiteNotes: Seq[Note] = {
     declarationSite match {
-      case Some(site) => Seq(Note(site, "declared here"))
+      case Some(site) => Seq(Note(Some(site), "declared here"))
       case None => Seq.empty
     }
   }

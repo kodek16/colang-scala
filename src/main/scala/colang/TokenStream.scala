@@ -28,6 +28,18 @@ trait TokenStream {
   def beforeNext: SourceCode
 
   /**
+    * Returns a source code fragment pointing before the next non-whitespace token, or to EOF, if there are none.
+    * @return
+    */
+  def beforeNextNonWhitespace: SourceCode = {
+    if (nonEmpty) {
+      readNonWhitespace._1.source.before
+    } else {
+      beforeNext
+    }
+  }
+
+  /**
     * Reads a token from the stream, skipping all whitespace tokens that came before it. Will throw if used on empty
     * stream (a stream cannot contain only whitespace tokens, so a non-empty stream is guaranteed to have at least one
     * non-whitespace token).

@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, Namespace, Scope, Type, Variable}
+import colang.ast.parsed.{Function, Namespace, OverloadedFunction, Scope, Type, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.{Error, Issue}
 
@@ -10,6 +10,16 @@ import colang.{Error, Issue}
   */
 case class FunctionReference(function: Function, rawNode: Option[raw.SymbolReference]) extends Expression {
   val type_ = function.functionType
+}
+
+/**
+  * Represents an overloaded function reference.
+  * @param overloadedFunction referenced overloaded function
+  */
+case class OverloadedFunctionReference(overloadedFunction: OverloadedFunction,
+                                       rawNode: Option[raw.SymbolReference]) extends Expression {
+
+  val type_ = overloadedFunction.scope.get.root.overloadedFunctionType
 }
 
 /**
@@ -26,6 +36,7 @@ object SymbolReference {
     scope.resolve(rawExpr.name.value) match {
       case Some(v: Variable) => (VariableReference(v, Some(rawExpr)), Seq.empty)
       case Some(f: Function) => (FunctionReference(f, Some(rawExpr)), Seq.empty)
+      case Some(of: OverloadedFunction) => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
 
       case Some(s @ (_: Type | _: Namespace)) =>
         val issue = Error(rawExpr.source, s"expected an expression, but got a ${s.description} reference")
