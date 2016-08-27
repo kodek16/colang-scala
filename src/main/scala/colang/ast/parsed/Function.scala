@@ -27,6 +27,15 @@ class Function(val name: String,
   val description = "function"
 
   /**
+    * Constructs a string from a function signature: its return type, name, and parameter types.
+    * @return signature string
+    */
+  def signatureString: String = {
+    val paramString = parameters map { _.type_.qualifiedName } mkString ", "
+    s"${returnType.qualifiedName} $qualifiedName ($paramString)"
+  }
+
+  /**
     * Returns a corresponding function type. Isn't very useful yet.
     */
   lazy val functionType : Type = {
@@ -37,5 +46,20 @@ class Function(val name: String,
       name = typeName,
       scope = Some(scope.get.root),
       definition = None)
+  }
+}
+
+object Function {
+
+  /**
+    * Checks if two functions have the same parameter types.
+    * @param f first function
+    * @param g second function
+    * @return true if functions have the same parameter types.
+    */
+  def sameParameterTypes(f: Function, g: Function): Boolean = {
+    if (f.parameters.size == g.parameters.size) {
+      (f.parameters map { _.type_ }) zip (g.parameters map { _.type_ }) map { ts => ts._1 == ts._2 } reduce { _ && _ }
+    } else false
   }
 }

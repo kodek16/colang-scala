@@ -9,6 +9,9 @@ class Namespace(val name: String,
   val scope = parent
   val description = "namespace"
 
+  //Following methods should be only used on a root namespace instance:
+  //TODO actually, implement a RootNamespace subclass and put them there.
+
   /**
     * A type assigned to values that failed analysis.
     */
@@ -17,7 +20,15 @@ class Namespace(val name: String,
     definition = None,
     scope = Some(this))
 
-  //These should be only used on a root namespace instance:
+
+  /**
+    * A type assigned to overloaded function references.
+    */
+  val overloadedFunctionType: Type = new Type(
+    name = "(unresolved function overload)",
+    definition = None,
+    scope = Some(this))
+
   lazy val voidType = getPrimitiveType("void")
   lazy val intType = getPrimitiveType("int")
   lazy val doubleType = getPrimitiveType("double")

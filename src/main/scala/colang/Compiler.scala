@@ -96,18 +96,40 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
   def printIssue(issue: Issue): Unit = {
     def colorWarning(s: String) = Console.YELLOW + s + Console.RESET
     def colorError(s: String) = Console.RED + s + Console.RESET
-    def colorNote(s: String) = Console.WHITE + s + Console.RESET
 
     val (issueType, color, source, message, notes) = issue match {
       case Warning(s, m, n) => ("warning", colorWarning _, s, m, n)
       case Error(s, m, n) => ("error", colorError _, s, m, n)
-      case Note(s, m) => ("note", colorNote _, s, m, Seq.empty)
     }
 
     val heading = s"${source.file.name}:${source.startLine + 1}:${source.startChar + 1}: ${color(issueType)}: $message"
     System.err.println(heading)
 
-    val codeListing = (source.startLine to source.endLine) map { lineNo =>
+    printSourceFragment(source, color)
+
+    notes foreach printNote
+  }
+
+  /**
+    * Prints a note to stderr
+    * @param note note to print
+    */
+  def printNote(note: Note): Unit = {
+    def colorNote(s: String) = Console.WHITE + s + Console.RESET
+
+    note.source match {
+      case Some(source) =>
+        val heading = s"${source.file.name}:${source.startLine + 1}:${source.startChar + 1}: ${colorNote("note")}: ${note.message}"
+        System.err.println(heading)
+
+        printSourceFragment(source, colorNote)
+      case None =>
+        System.err.println(s"${colorNote("note")}: ${note.message}")
+    }
+  }
+
+  private def printSourceFragment(source: SourceCode, color: String => String): Unit = {
+    val listing = (source.startLine to source.endLine) map { lineNo =>
       val line = source.file.lines(lineNo)
 
       val startChar = if (lineNo == source.startLine) {
@@ -130,9 +152,7 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
       }
     } mkString "\n"
 
-    System.err.println(codeListing)
-
-    notes foreach printIssue
+    System.err.println(listing)
   }
 }
 

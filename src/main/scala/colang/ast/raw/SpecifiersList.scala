@@ -51,7 +51,7 @@ object SpecifiersList {
           val source = if (validSpecifiers.nonEmpty) {
             validSpecifiers.head.source + validSpecifiers.last.source
           } else {
-            streamAfterSpecifiers.beforeNext
+            streamAfterSpecifiers.beforeNextNonWhitespace
           }
 
           Success(SpecifiersList(validSpecifiers, source), parseIssues ++ issues, streamAfterSpecifiers)
