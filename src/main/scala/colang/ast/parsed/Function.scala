@@ -32,7 +32,7 @@ class Function(val name: String,
     */
   def signatureString: String = {
     val paramString = parameters map { _.type_.qualifiedName } mkString ", "
-    s"${returnType.qualifiedName} $qualifiedName ($paramString)"
+    s"${returnType.qualifiedName} $qualifiedName($paramString)"
   }
 
   /**

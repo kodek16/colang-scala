@@ -44,8 +44,8 @@ native struct bool {
     native bool notEquals(bool other)
 }
 
-native void readInt(int x)
-native void readDouble(double x)
+native void read(int x)
+native void read(double x)
 
-native void writeIntLn(int x)
-native void writeDoubleLn(double x)
+native void println(int x)
+native void println(double x)

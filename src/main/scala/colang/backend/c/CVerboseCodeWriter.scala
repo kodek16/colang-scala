@@ -183,19 +183,20 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     internalTypeNames getOrElse(type_.qualifiedName, reportMissingInternalSymbol(type_))
   }
 
+  private val internalFunctionNames: Map[String, String] = Map(
+    "void read(int)" -> "_readInt",
+    "void read(double)" -> "_readDbl",
+    "void println(int)" -> "_writeIntLn",
+    "void println(double)" -> "_writeDblLn"
+  )
+
   /**
     * Returns a C native name for a function.
     * @param function native function
     * @return C name
     */
   private def internalNativeName(function: Function): String = {
-    function.name match {
-      case "readInt" => "_readInt"
-      case "readDouble" => "_readDbl"
-      case "writeIntLn" => "_writeIntLn"
-      case "writeDoubleLn" => "_writeDblLn"
-      case _ => reportMissingInternalSymbol(function)
-    }
+    internalFunctionNames getOrElse(function.signatureString, reportMissingInternalSymbol(function))
   }
 
   private val internalUnaryOperatorNames: Map[String, String] = Map(
