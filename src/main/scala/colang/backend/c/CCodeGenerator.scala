@@ -20,7 +20,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     val funcProtos = generateFunctionPrototypes(rootNamespace)
     val funcDefs = generateFunctionDefinitions(rootNamespace)
 
-    val headers = Seq("stdlib.h", "stdio.h", "math.h")
+    val headers = Seq("stdlib.h", "stdio.h", "math.h", "stdint.h")
     val sourceFile = CSourceFile(headers, typeDefs, varDefs, funcProtos, funcDefs)
 
     writer.write(sourceFile)
