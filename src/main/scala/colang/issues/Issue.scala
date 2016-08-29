@@ -8,8 +8,7 @@ import colang.SourceCode
   */
 sealed trait Issue {
   /**
-    * Unique issue type identifier of form E0001/W0001
-    * @return
+    * Unique issue type identifier of form E0001/W0001.
     */
   def code: String
 

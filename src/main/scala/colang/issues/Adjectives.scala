@@ -2,10 +2,18 @@ package colang.issues
 
 import java.util.Locale
 
+/**
+  * A common trait for all locale-specific adjective classes.
+  */
 trait Adjective
 
 class EnglishAdjective(val text: String) extends Adjective
 
+/**
+  * Belarusian adjective forms differ by cases, genders, and plurality. The constructor accepts a single string
+  * literal that contains all forms, see below for usage examples.
+  * @param formsTable a table containing all adjective forms
+  */
 class BelarusianAdjective(formsTable: String) extends Adjective {
   private val formsArray = formsTable.split("\\s+")
 
@@ -25,6 +33,11 @@ class BelarusianAdjective(formsTable: String) extends Adjective {
   }
 }
 
+/**
+  * Russian adjective forms differ by cases, genders, and plurality. The constructor accepts a single string
+  * literal that contains all forms, see below for usage examples.
+  * @param formsTable a table containing all adjective forms
+  */
 class RussianAdjective(formsTable: String) extends Adjective {
   private val formsArray = formsTable.split("\\s+")
 
@@ -44,6 +57,10 @@ class RussianAdjective(formsTable: String) extends Adjective {
   }
 }
 
+/**
+  * Adjective factories implement this trait by defining locale-specific generation methods. The apply() method is
+  * inherited.
+  */
 trait LocaleAwareAdjectiveFactory {
   protected def en_US: EnglishAdjective
   protected def be_BY: BelarusianAdjective

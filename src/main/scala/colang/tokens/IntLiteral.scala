@@ -41,14 +41,13 @@ object IntLiteral {
     */
   val malformedScientificStrategy = new LexerImpl.Strategy[IntLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, IntLiteral] = {
-      val re = """(-?\d+)([eE][-+]?\d*\.\d+)(?![\w\.])""".r
+      val re = """(-?\d+)([eE]\d+\.\d+|[eE]-\d+(\.\d+)?)(?![\w\.])""".r
       re findPrefixMatchOf stream match {
         case Some(m) =>
           val (source, streamAfterToken) = stream.take(m.toString)
 
           val doubleLiteral = m.group(1) + ".0" + m.group(2)
-          val issue = Error(source, "integer literals can't have non-natural exponents. To make this a 'double' type " +
-            s"literal, rewrite it as '$doubleLiteral'")
+          val issue = Issues.IntegerLiteralWithNonNaturalExponent(source, doubleLiteral)
 
           Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
         case None => NoMatch()
