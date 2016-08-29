@@ -10,7 +10,7 @@ trait Adjective
 class EnglishAdjective(val text: String) extends Adjective
 
 /**
-  * Belarusian adjective forms differ by cases, genders, and plurality. The constructor accepts a single string
+  * Belarusian adjective forms are declined by cases, genders, and plurality. The constructor accepts a single string
   * literal that contains all forms, see below for usage examples.
   * @param formsTable a table containing all adjective forms
   */
@@ -34,7 +34,7 @@ class BelarusianAdjective(formsTable: String) extends Adjective {
 }
 
 /**
-  * Russian adjective forms differ by cases, genders, and plurality. The constructor accepts a single string
+  * Russian adjective forms are declined by cases, genders, and plurality. The constructor accepts a single string
   * literal that contains all forms, see below for usage examples.
   * @param formsTable a table containing all adjective forms
   */

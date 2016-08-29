@@ -5,7 +5,7 @@ import colang.Strategy.Result.{NoMatch, Success}
 import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
-import colang.issues.Error
+import colang.issues.Issues
 import colang.tokens.{Assign, Comma, Identifier}
 import colang.{SourceCode, TokenStream}
 
@@ -41,7 +41,7 @@ object VariableDefinition {
           Success(VariableDefinition(name, None), issues, streamAfterVariable)
 
         case (Present(name), Present(assign), Absent(), issues, streamAfterVariable) =>
-          val issue = Error(assign.source.after, "missing initializer after '='")
+          val issue = Issues.MissingVariableInitializer(assign.source.after, name.value)
           Success(VariableDefinition(name, None), issues :+ issue, streamAfterVariable)
 
         case (Present(name), Absent(), _, issues, streamAfterVariable) =>

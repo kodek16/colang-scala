@@ -98,6 +98,9 @@ object Issues {
     }
   }
 
+  /**
+    * Generates an issue for an unknown token.
+    */
   object UnknownCharacterSequence extends LocaleAwareIssueFactory[Error, Unit] {
     private val code = "E0004"
 
@@ -111,6 +114,104 @@ object Issues {
 
     protected def ru_RU(source: SourceCode, args: Unit): Error = {
       Error(code, source, "неизвестная последовательность символов", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a missing variable initializer.
+    * Args: relevant variable name
+    */
+  object MissingVariableInitializer extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0005"
+
+    protected def en_US(source: SourceCode, varName: String): Error = {
+      Error(code, source, s"missing initializer for variable '$varName' after '='", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, varName: String): Error = {
+      Error(code, source, s"прапушчаны ініцыялізатар зьменнай '$varName' пасьля '='", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, varName: String): Error = {
+      Error(code, source, s"пропущен инициализатор переменной '$varName' после '='", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for missing right operand of a binary infix operator expression.
+    * Args: operator textual representation
+    */
+  object MissingRightOperand extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0006"
+
+    protected def en_US(source: SourceCode, operator: String): Error = {
+      Error(code, source, s"missing right operand after '$operator'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, operator: String): Error = {
+      Error(code, source, s"прапушчаны правы аперанд пасьля '$operator'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, operator: String): Error = {
+      Error(code, source, s"пропущен правый операнд после '$operator'", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for an unexpected specifier on a node.
+    * Args: (specifier text, term describing context)
+    */
+  object MisplacedSpecifier extends LocaleAwareIssueFactory[Error, (String, Term)] {
+    private val code = "E0007"
+
+    protected def en_US(source: SourceCode, args: (String, Term)): Error = {
+      val (specifier, context) = args match {
+        case (spec, term: EnglishTerm) => (spec, term.indefinite)
+      }
+      Error(code, source, s"$context cannot be '$specifier'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, Term)): Error = {
+      val (specifier, context) = args match {
+        case (spec, term: BelarusianTerm) => (spec, term.nominative)
+      }
+      Error(code, source, s"$context ня можа быць '$specifier'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, Term)): Error = {
+      val (specifier, context) = args match {
+        case (spec, term: RussianTerm) => (spec, term.nominative)
+      }
+      Error(code, source, s"$context не может быть '$specifier'", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a repeated specifier.
+    * Args: (specifier text, first occurrence)
+    */
+  object RepeatedSpecifier extends LocaleAwareIssueFactory[Error, (String, SourceCode)] {
+    private val code = "E0008"
+
+    protected def en_US(source: SourceCode, args: (String, SourceCode)): Error = {
+      val (specifier, firstOccurrence) = args
+
+      Error(code, source, s"'$specifier' specifier is repeated", notes = Seq(
+        Note(Some(firstOccurrence), "first occurrence is here")))
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, SourceCode)): Error = {
+      val (specifier, firstOccurrence) = args
+
+      Error(code, source, s"сьпецыфікатар '$specifier' паўтараецца", notes = Seq(
+        Note(Some(firstOccurrence), "ў першы раз з'явіўся тут")))
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, SourceCode)): Error = {
+      val (specifier, firstOccurrence) = args
+
+      Error(code, source, s"спецификатор '$specifier' повторяется", notes = Seq(
+        Note(Some(firstOccurrence), "первое появление здесь")))
     }
   }
 }

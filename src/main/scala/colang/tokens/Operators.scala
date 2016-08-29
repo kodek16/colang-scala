@@ -27,6 +27,11 @@ trait InfixOperator extends Token {
     */
   def precedence: Int
   def associativity: Associativity
+
+  /**
+    * Textual operator representation (e.g. '+', '-').
+    */
+  def text: String
 }
 
 object Associativity extends Enumeration {
@@ -38,34 +43,28 @@ object Associativity extends Enumeration {
   val LEFT, RIGHT = Value
 }
 
-/**
-  * '*' operator
-  */
 case class Multiply(source: SourceCode) extends InfixOperator {
   val precedence = 70
   val associativity = Associativity.LEFT
+  val text = "*"
 }
 object Multiply {
   val strategy = new StatelessTokenStrategy(Multiply.apply, """\*(?!\*)""".r)
 }
 
-/**
-  * '/' operator
-  */
 case class Divide(source: SourceCode) extends InfixOperator {
   val precedence = 70
   val associativity = Associativity.LEFT
+  val text = "/"
 }
 object Divide {
   val strategy = new StatelessTokenStrategy(Divide.apply, """\/(?!\/)""".r)
 }
 
-/**
-  * '+' operator
-  */
 case class Plus(source: SourceCode) extends InfixOperator {
   val precedence = 60
   val associativity = Associativity.LEFT
+  val text = "+"
 }
 object Plus {
   val strategy = new StatelessTokenStrategy(Plus.apply, """\+(?!\+)""".r)
@@ -77,105 +76,88 @@ object Plus {
 case class Minus(source: SourceCode) extends InfixOperator with PrefixOperator {
   val precedence = 60
   val associativity = Associativity.LEFT
+  val text = "-"
 }
 object Minus {
   val strategy = new StatelessTokenStrategy(Minus.apply, """\-(?!\-)""".r)
 }
 
-/**
-  * '<' operator
-  */
 case class Less(source: SourceCode) extends InfixOperator {
   val precedence = 50
   val associativity = Associativity.LEFT
+  val text = "<"
 }
 object Less {
   val strategy = new StatelessTokenStrategy(Less.apply, """<(?![<=])""".r)
 }
 
-/**
-  * '>' operator
-  */
 case class Greater(source: SourceCode) extends InfixOperator {
   val precedence = 50
   val associativity = Associativity.LEFT
+  val text = ">"
 }
 object Greater {
   val strategy = new StatelessTokenStrategy(Greater.apply, """>(?![>=])""".r)
 }
 
-/**
-  * '<=' operator
-  */
 case class LessOrEquals(source: SourceCode) extends InfixOperator {
   val precedence = 50
   val associativity = Associativity.LEFT
+  val text = "<="
 }
 object LessOrEquals {
   val strategy = new StatelessTokenStrategy(LessOrEquals.apply, """<=(?!=)""".r)
 }
 
-/**
-  * '>=' operator
-  */
 case class GreaterOrEquals(source: SourceCode) extends InfixOperator {
   val precedence = 50
   val associativity = Associativity.LEFT
+  val text = ">="
 }
 object GreaterOrEquals {
   val strategy = new StatelessTokenStrategy(GreaterOrEquals.apply, """>=(?!=)""".r)
 }
 
-/**
-  * '==' operator
-  */
 case class Equals(source: SourceCode) extends InfixOperator {
   val precedence = 40
   val associativity = Associativity.LEFT
+  val text = "=="
 }
 object Equals {
   val strategy = new StatelessTokenStrategy(Equals.apply, """==(?!=)""".r)
 }
 
-/**
-  * '!=' operator
-  */
 case class NotEquals(source: SourceCode) extends InfixOperator {
   val precedence = 40
   val associativity = Associativity.LEFT
+  val text = "!="
 }
 object NotEquals {
   val strategy = new StatelessTokenStrategy(NotEquals.apply, """!=(?!=)""".r)
 }
 
-/**
-  * '&&' operator
-  */
 case class LogicalAnd(source: SourceCode) extends InfixOperator {
   val precedence = 30
   val associativity = Associativity.LEFT
+  val text = "&&"
 }
 object LogicalAnd {
   val strategy = new StatelessTokenStrategy(LogicalAnd.apply, """&&(?!&)""".r)
 }
 
-/**
-  * '||' operator
-  */
 case class LogicalOr(source: SourceCode) extends InfixOperator {
   val precedence = 20
   val associativity = Associativity.LEFT
+  val text = "||"
 }
 object LogicalOr {
   val strategy = new StatelessTokenStrategy(LogicalOr.apply, """\|\|(?!\|)""".r)
 }
 
-/**
-  * '=' operator
-  */
 case class Assign(source: SourceCode) extends InfixOperator {
   val precedence = 10
   val associativity = Associativity.RIGHT
+  val text = "="
 }
 object Assign {
   val strategy = new StatelessTokenStrategy(Assign.apply, """=(?!=)""".r)
