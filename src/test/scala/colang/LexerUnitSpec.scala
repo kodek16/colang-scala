@@ -1,6 +1,7 @@
 package colang
 
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.issues.{Error, Issue}
 import colang.tokens.{LexerImpl, Token}
 
 abstract class LexerUnitSpec extends UnitSpec {

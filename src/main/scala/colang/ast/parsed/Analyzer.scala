@@ -1,7 +1,8 @@
 package colang.ast.parsed
 
 import colang.ast.raw
-import colang.{Issue, SourceCode}
+import colang.SourceCode
+import colang.issues.Issue
 
 /**
   * Represents a compiler component that performs semantic analysis of the code, establishes symbol references and

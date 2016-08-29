@@ -2,7 +2,8 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed.Function
 import colang.ast.raw
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 private[routines] object AnalyzeFunctionBodies {
 

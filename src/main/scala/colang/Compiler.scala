@@ -6,6 +6,7 @@ import colang.ast.parsed.{Analyzer, AnalyzerImpl}
 import colang.ast.raw._
 import colang.backend.Backend
 import colang.backend.c.{CCodeGenerator, CVerboseCodeWriter}
+import colang.issues.{Error, Issue, Note}
 import colang.tokens.{Lexer, LexerImpl}
 import colang.utils.StringImplicits._
 

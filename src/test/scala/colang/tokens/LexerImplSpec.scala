@@ -1,6 +1,6 @@
 package colang.tokens
 
-import colang.{Error, SourceCode, UnitSpec}
+import colang.{SourceCode, UnitSpec}
 import colang.TestUtils._
 import org.scalatest.LoneElement._
 

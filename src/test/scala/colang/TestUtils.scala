@@ -2,6 +2,7 @@ package colang
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.issues.{Issue, Warning}
 
 @Deprecated
 object TestUtils {

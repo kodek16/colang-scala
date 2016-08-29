@@ -1,6 +1,7 @@
 package colang.ast.parsed
 
-import colang.{Note, SourceCode}
+import colang.SourceCode
+import colang.issues.Note
 
 /**
   * Represents a stable named and scoped entity in the program.

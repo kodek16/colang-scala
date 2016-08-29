@@ -1,9 +1,9 @@
 package colang.ast.parsed.routines
 
-import colang.Issue
 import colang.ast.parsed.statement.Statement
 import colang.ast.parsed.{Namespace, Variable}
 import colang.ast.raw.{statement => raw}
+import colang.issues.Issue
 
 private[routines] object RegisterGlobalVariables {
 

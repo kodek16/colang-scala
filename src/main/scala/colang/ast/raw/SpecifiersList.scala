@@ -3,8 +3,9 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.Success
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.issues.Error
 import colang.tokens.{Keyword, NativeKeyword}
-import colang.{Error, SourceCode, StrategyUnion, TokenStream}
+import colang.{SourceCode, StrategyUnion, TokenStream}
 
 /**
   * Represents a list of specifiers that may preceed certain symbol definitions (like 'native', etc.)

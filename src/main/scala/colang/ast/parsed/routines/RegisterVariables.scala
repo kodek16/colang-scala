@@ -4,7 +4,8 @@ import colang.ast.parsed.expression.{Expression, MethodCall, VariableReference}
 import colang.ast.parsed.statement.Statement
 import colang.ast.parsed.{Scope, Type, Variable}
 import colang.ast.raw.{statement => raw}
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 private[routines] object RegisterVariables {
 

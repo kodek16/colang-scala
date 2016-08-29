@@ -3,7 +3,8 @@ package colang.ast.parsed
 import colang.ast.parsed.expression.Expression
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.raw
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 import scala.collection.mutable.ListBuffer
 

@@ -2,7 +2,8 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed.statement.Statement
 import colang.ast.parsed.{Function, Namespace, Symbol}
-import colang.{Error, Issue, SourceCode}
+import colang.issues.{Error, Issue}
+import colang.{Error, SourceCode}
 
 private[routines] object ProcessMainFunction {
 

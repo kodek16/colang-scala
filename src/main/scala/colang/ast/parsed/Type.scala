@@ -2,7 +2,8 @@ package colang.ast.parsed
 
 import colang.ast.raw
 import colang.ast.raw.TypeDefinition
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 import scala.collection.mutable
 

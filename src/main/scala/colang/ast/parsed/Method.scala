@@ -1,7 +1,7 @@
 package colang.ast.parsed
 
-import colang.Note
 import colang.ast.raw
+import colang.issues.Note
 
 /**
   * Represents a method: a function that can only be called on an instance of some type.

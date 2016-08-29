@@ -5,6 +5,7 @@ import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.issues.{Error, Issue}
 import colang.tokens.Associativity.Associativity
 import colang.tokens._
 

@@ -3,7 +3,8 @@ package colang.ast.parsed.routines
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.parsed.{CodeBlock, Function, Type}
 import colang.ast.raw
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 private[routines] object CheckReturnStatements {
 

@@ -5,8 +5,9 @@ import colang.Strategy.Result.{NoMatch, Success}
 import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
+import colang.issues.Error
 import colang.tokens.{Assign, Comma, Identifier}
-import colang.{Error, SourceCode, TokenStream}
+import colang.{SourceCode, TokenStream}
 
 /**
   * Represents a single variable declaration site.

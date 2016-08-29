@@ -2,7 +2,8 @@ package colang.tokens
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
-import colang.{Error, SourceCode, SourceCodeStream, StrategyUnion}
+import colang.issues.{Adjectives, Error, Issues}
+import colang.{SourceCode, SourceCodeStream, StrategyUnion}
 
 /**
   * Represents a literal integer number that corresponds to a value of type 'int'
@@ -26,8 +27,8 @@ object IntLiteral {
           if (bigValue >= Int.MinValue && bigValue <= Int.MaxValue) {
             Success(IntLiteral(bigValue.toInt, source), Seq.empty, streamAfterToken)
           } else {
-            val relation = if (bigValue > 0) "big" else "small"
-            val issue = Error(source, s"the literal value is too $relation for type 'int'")
+            val relation = if (bigValue > 0) Adjectives.Big() else Adjectives.Small()
+            val issue = Issues.NumericLiteralOverflow(source, (relation, "int"))
             Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
           }
         case None => NoMatch()
@@ -69,8 +70,8 @@ object IntLiteral {
           val exponent = BigInt(m.group(2))
 
           val possibleErrorToken = IntLiteral(0, source)
-          val relation = if (significand > 0) "big" else "small"
-          val possibleError = Error(source, s"the literal value is too $relation for type 'int'")
+          val relation = if (significand > 0) Adjectives.Big() else Adjectives.Small()
+          val possibleError = Issues.NumericLiteralOverflow(source, (relation, "int"))
 
           val (token, issues) = if (exponent < 20) {
             val bigValue = significand * (BigInt(10) pow exponent.toInt)

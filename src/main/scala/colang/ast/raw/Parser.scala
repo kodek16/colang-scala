@@ -3,6 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
+import colang.issues.{Error, Issue}
 import colang.tokens._
 
 import scala.annotation.tailrec

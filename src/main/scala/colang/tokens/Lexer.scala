@@ -3,6 +3,7 @@ package colang.tokens
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
+import colang.issues.{Error, Issue}
 
 import scala.annotation.tailrec
 import scala.util.matching.Regex

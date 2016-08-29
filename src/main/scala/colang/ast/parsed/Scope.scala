@@ -1,6 +1,7 @@
 package colang.ast.parsed
 
-import colang.{Error, Issue}
+import colang.Error
+import colang.issues.{Error, Issue}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
