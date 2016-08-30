@@ -4,6 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl.{Present, identifierStrategy}
+import colang.issues.Terms
 import colang.tokens._
 
 /**
@@ -30,6 +31,7 @@ object FunctionDefinition {
   val strategy = new ParserImpl.Strategy[FunctionDefinition] {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
+      Terms.Definition of Terms.Function,
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionDefinition] = {

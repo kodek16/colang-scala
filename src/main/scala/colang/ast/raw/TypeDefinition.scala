@@ -3,6 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl._
+import colang.issues.Terms
 import colang.tokens._
 import colang.{SourceCode, TokenStream}
 
@@ -28,6 +29,7 @@ object TypeDefinition {
   val strategy = new ParserImpl.Strategy[TypeDefinition] {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
+      Terms.Definition of Terms.Type,
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, TypeDefinition] = {

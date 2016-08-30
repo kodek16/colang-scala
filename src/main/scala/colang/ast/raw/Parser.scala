@@ -3,7 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
-import colang.issues.{Error, Issue}
+import colang.issues.{Error, Issue, Issues, Term}
 import colang.tokens._
 
 import scala.annotation.tailrec
@@ -67,13 +67,13 @@ object ParserImpl {
   val identifierStrategy = new Strategy[Identifier] {
     def apply(stream: TokenStream): Result[TokenStream, Identifier] = {
       if (stream.nonEmpty) {
-        val (token, newStream) = stream.readNonWhitespace
+        val (token, streamAfterToken) = stream.readNonWhitespace
 
         token match {
-          case id: Identifier => Success(id, Seq.empty, newStream)
-          case _: Keyword =>
-            val issue = Error(token.source, s"${token.source.text} is a keyword, so it can't be used as an identifier")
-            Success(Identifier(token.source.text, token.source), Seq(issue), newStream)
+          case id: Identifier => Success(id, Seq.empty, streamAfterToken)
+          case kw: Keyword =>
+            val issue = Issues.KeywordAsIdentifier(kw.source, kw.text)
+            Success(Identifier(kw.text, kw.source), Seq(issue), streamAfterToken)
           case _ => NoMatch()
         }
       } else NoMatch()
@@ -84,7 +84,7 @@ object ParserImpl {
     * A generic method for parsing sequences of nodes of the same type, possibly separated by a mandatory separator.
     * @param stream source token stream
     * @param elementStrategy strategy for parsing a single element of the sequence
-    * @param elementDescription string describing a single element of the sequence, used in error messages
+    * @param elementDescription a term describing a single element of the sequence
     * @param mandatorySeparator specify Some(Class[Separator]) if sequence elements must be separated by some token
     * @param separatorDescription string describing the separator, if one was specified
     * @param greedy the default behavior (when 'greedy' is false) is to treat unknown tokens as the end of the sequence,
@@ -98,7 +98,7 @@ object ParserImpl {
     */
   def parseSequence[N <: Node, Separator <: Token](stream: TokenStream,
                                                    elementStrategy: Strategy[N],
-                                                   elementDescription: String,
+                                                   elementDescription: Term,
                                                    mandatorySeparator: Option[Class[Separator]] = None,
                                                    separatorDescription: String = "",
                                                    greedy: Boolean = false,
@@ -118,7 +118,7 @@ object ParserImpl {
         case NoMatch() =>
           if (greedy && stream.nonEmpty) {
             val (invalidSource, newStream) = recover(stream, stopHints = recoveryStopHints)
-            val issue = Error(invalidSource, "tokens don't form a valid " + elementDescription)
+            val issue = Issues.MalformedNode(invalidSource, elementDescription)
             parseWithoutSeparator(newStream, collectedNodes, collectedIssues :+ issue)
           } else {
             (collectedNodes, collectedIssues, stream)
@@ -140,7 +140,7 @@ object ParserImpl {
         case NoMatch() =>
           if (greedy && stream.nonEmpty) {
             val (invalidSource, newStream) = recover(stream, stopHints = recoveryStopHints :+ mandatorySeparator.get)
-            val issue = Error(invalidSource, "tokens don't form a valid " + elementDescription)
+            val issue = Issues.MalformedNode(invalidSource, elementDescription)
             (Seq.empty, Seq(issue), newStream)
           } else {
             (Seq.empty, Seq.empty, stream)
@@ -173,13 +173,13 @@ object ParserImpl {
     * A generic method for parsing sequences of nodes of the same type enclosed in some kind of delimiting tokens
     * (parentheses, braces, etc.), possibly separated by a mandatory separator.
     * @param stream source token stream
-    * @param sequenceDescription string describing the sequence as a whole, used in error messages
+    * @param sequenceDescription string describing the sequence as a whole
     * @param elementStrategy strategy for parsing a single element of the sequence
-    * @param elementDescription string describing a single element of the sequence, used in error messages
+    * @param elementDescription string describing a single element of the sequence
     * @param openingElement opening token type
-    * @param openingElementDescription string describing the opening token, used in error messages
+    * @param openingElementDescription string describing the opening token
     * @param closingElement closing token type
-    * @param closingElementDescription string describing the closing token, used in error messages
+    * @param closingElementDescription string describing the closing token
     * @param mandatorySeparator specify Some(Class[Separator]) if sequence elements must be separated by some token
     * @param separatorDescription string describing the separator, if one was specified
     * @param recoveryStopHints additional stop hints passed to recover() function
@@ -327,7 +327,7 @@ object ParserImpl {
     /**
       * Adds a new node parsing strategy to the end of the group.
       * @param strategy strategy for parsing the node
-      * @param description string describing the node, used in error messages
+      * @param description string describing the node
       * @param stopIfAbsent abort the parsing if this strategy didn't match. The default behavior is to try to parse
       *                     every node in the group, emitting error messages for missing ones, but this makes it
       *                     impossible to create recursive node strategies.

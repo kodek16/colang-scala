@@ -34,24 +34,17 @@ object Issues {
     private val code = "E0001"
 
     protected def en_US(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = args match {
-        case (adj: EnglishAdjective, name) => (adj.text, name)
-      }
-
+      val (relation, typeName) = (args._1.en_US.text, args._2)
       Error(code, source, s"the literal value is too $relation for type '$typeName'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = args match {
-        case (adj: BelarusianAdjective, name) => (adj.nominative.neuter, name)
-      }
+      val (relation, typeName) = (args._1.be_BY.neuter.nominative, args._2)
       Error(code, source, s"значэньне канстанты занадта $relation для тыпу '$typeName'", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = args match {
-        case (adj: RussianAdjective, name) => (adj.nominative.neuter, name)
-      }
+      val (relation, typeName) = (args._1.ru_RU.neuter.nominative, args._2)
       Error(code, source, s"значение константы слишком $relation для типа '$typeName'", notes = Seq.empty)
     }
   }
@@ -165,24 +158,18 @@ object Issues {
     private val code = "E0007"
 
     protected def en_US(source: SourceCode, args: (String, Term)): Error = {
-      val (specifier, context) = args match {
-        case (spec, term: EnglishTerm) => (spec, term.indefinite)
-      }
-      Error(code, source, s"$context cannot be '$specifier'", notes = Seq.empty)
+      val (specifier, context) = (args._1, args._2.en_US)
+      Error(code, source, s"${context.indefinite} cannot be '$specifier'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (String, Term)): Error = {
-      val (specifier, context) = args match {
-        case (spec, term: BelarusianTerm) => (spec, term.nominative)
-      }
-      Error(code, source, s"$context ня можа быць '$specifier'", notes = Seq.empty)
+      val (specifier, context) = (args._1, args._2.be_BY)
+      Error(code, source, s"${context.nominative} ня можа быць '$specifier'", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, args: (String, Term)): Error = {
-      val (specifier, context) = args match {
-        case (spec, term: RussianTerm) => (spec, term.nominative)
-      }
-      Error(code, source, s"$context не может быть '$specifier'", notes = Seq.empty)
+      val (specifier, context) = (args._1, args._2.ru_RU)
+      Error(code, source, s"${context.nominative} не может быть '$specifier'", notes = Seq.empty)
     }
   }
 
@@ -212,6 +199,49 @@ object Issues {
 
       Error(code, source, s"спецификатор '$specifier' повторяется", notes = Seq(
         Note(Some(firstOccurrence), "первое появление здесь")))
+    }
+  }
+
+  /**
+    * Generates an issue for a keyword that is used as an identifier.
+    * Args: keyword text
+    */
+  object KeywordAsIdentifier extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0009"
+
+    protected def en_US(source: SourceCode, keyword: String): Error = {
+      Error(code, source, s"'$keyword' is a keyword, so it can't be used as an identifier", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, keyword: String): Error = {
+      Error(code, source, s"'$keyword' - ключавое слова, яно ня можа быць ідэнтыфікатарам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, keyword: String): Error = {
+      Error(code, source, s"'$keyword' - ключевое слово, оно не может быть идентификатором", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a parsing error.
+    * Args: term describing expected node type
+    */
+  object MalformedNode extends LocaleAwareIssueFactory[Error, Term] {
+    private val code = "E0010"
+
+    protected def en_US(source: SourceCode, nodeDescription: Term): Error = {
+      val description = (Adjectives.Valid applyTo nodeDescription).en_US.indefinite
+      Error(code, source, s"tokens don't form $description", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, nodeDescription: Term): Error = {
+      val description = (Adjectives.Valid applyTo nodeDescription).be_BY
+      Error(code, source, s"код не з'яўляецца ${description.instrumental}", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, nodeDescription: Term): Error = {
+      val description = (Adjectives.Valid applyTo nodeDescription).ru_RU
+      Error(code, source, s"код не является ${description.instrumental}", notes = Seq.empty)
     }
   }
 }

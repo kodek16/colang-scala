@@ -1,35 +1,96 @@
 package colang.issues
 
-import java.util.Locale
-
 /**
-  * A common trait for all locale-specific adjective classes.
+  * A sum of all locale-specific adjective types.
   */
-trait Adjective
+abstract class Adjective {
 
-class EnglishAdjective(val text: String) extends Adjective
+  def en_US: EnglishAdjective
+  def be_BY: BelarusianAdjective
+  def ru_RU: RussianAdjective
+
+  /**
+    * Modifies the term by adding the adjective to it.
+    * @param term term to modify
+    * @return new extended term
+    */
+  def applyTo(term: Term): Term = {
+    val self = this
+
+    new Term {
+      lazy val en_US = self.en_US applyTo term.en_US
+      lazy val be_BY = self.be_BY applyTo term.be_BY
+      lazy val ru_RU = self.ru_RU applyTo term.ru_RU
+    }
+  }
+}
+
+class EnglishAdjective(val text: String) {
+
+  /**
+    * Prepends the adjective to the term.
+    * @param term term to modify
+    * @return new extended term
+    */
+  def applyTo(term: EnglishTerm): EnglishTerm = {
+    val indefiniteForm = if ((term.indefinite startsWith "a ") || (term.indefinite startsWith "an ")) {
+      val article = text.charAt(0) match {
+        case 'a' | 'i' | 'u' | 'e' | 'o' => "an"
+        case _ => "a"
+      }
+
+      article + " " + this.text + " " + (term.indefinite split " " drop 1 mkString " ")
+    } else {
+      this.text + term.indefinite
+    }
+
+    new EnglishTerm(this.text + " " + term.noDeterminer, indefiniteForm)
+  }
+}
 
 /**
   * Belarusian adjective forms are declined by cases, genders, and plurality. The constructor accepts a single string
   * literal that contains all forms, see below for usage examples.
   * @param formsTable a table containing all adjective forms
   */
-class BelarusianAdjective(formsTable: String) extends Adjective {
+class BelarusianAdjective(formsTable: String) {
   private val formsArray = formsTable.split("\\s+")
 
-  def nominative    = new PartialFormResult(0)
-  def genitive      = new PartialFormResult(4)
-  def dative        = new PartialFormResult(8)
-  def accusative    = new PartialFormResult(12)
-  def instrumental  = new PartialFormResult(16)
-  def prepositional = new PartialFormResult(20)
+  def masculine = new GenderSpecificAdjective(0)
+  def feminine  = new GenderSpecificAdjective(1)
+  def neuter    = new GenderSpecificAdjective(2)
+  def plural    = new GenderSpecificAdjective(3)
 
-  class PartialFormResult(offset: Int) {
+  class GenderSpecificAdjective(offset: Int) {
+    def nominative    = formsArray(0 + offset)
+    def genitive      = formsArray(4 + offset)
+    def dative        = formsArray(8 + offset)
+    def accusative    = formsArray(12 + offset)
+    def instrumental  = formsArray(16 + offset)
+    def prepositional = formsArray(20 + offset)
+  }
 
-    def masculine = formsArray(offset + 0)
-    def feminine  = formsArray(offset + 1)
-    def neuter    = formsArray(offset + 2)
-    def plural    = formsArray(offset + 3)
+  /**
+    * Prepends the adjective to the term.
+    * @param term term to modify
+    * @return new extended term
+    */
+  def applyTo(term: BelarusianTerm): BelarusianTerm = {
+    val genderSpecific = term.gender match {
+      case BelarusianTerm.Masculine => masculine
+      case BelarusianTerm.Feminine => feminine
+      case BelarusianTerm.Neuter => neuter
+      case BelarusianTerm.Plural => plural
+    }
+
+    new BelarusianTerm(
+      genderSpecific.nominative     + " " + term.nominative,
+      genderSpecific.genitive       + " " + term.genitive,
+      genderSpecific.dative         + " " + term.dative,
+      genderSpecific.accusative     + " " + term.accusative,
+      genderSpecific.instrumental   + " " + term.instrumental,
+      genderSpecific.prepositional  + " " + term.prepositional,
+      term.gender)
   }
 }
 
@@ -38,49 +99,53 @@ class BelarusianAdjective(formsTable: String) extends Adjective {
   * literal that contains all forms, see below for usage examples.
   * @param formsTable a table containing all adjective forms
   */
-class RussianAdjective(formsTable: String) extends Adjective {
+class RussianAdjective(formsTable: String) {
   private val formsArray = formsTable.split("\\s+")
 
-  def nominative    = new PartialFormResult(0)
-  def genitive      = new PartialFormResult(4)
-  def dative        = new PartialFormResult(8)
-  def accusative    = new PartialFormResult(12)
-  def instrumental  = new PartialFormResult(16)
-  def prepositional = new PartialFormResult(20)
+  def masculine = new GenderSpecificAdjective(0)
+  def feminine  = new GenderSpecificAdjective(1)
+  def neuter    = new GenderSpecificAdjective(2)
+  def plural    = new GenderSpecificAdjective(3)
 
-  class PartialFormResult(offset: Int) {
-
-    def masculine = formsArray(offset + 0)
-    def feminine  = formsArray(offset + 1)
-    def neuter    = formsArray(offset + 2)
-    def plural    = formsArray(offset + 3)
+  class GenderSpecificAdjective(offset: Int) {
+    def nominative    = formsArray(0 + offset)
+    def genitive      = formsArray(4 + offset)
+    def dative        = formsArray(8 + offset)
+    def accusative    = formsArray(12 + offset)
+    def instrumental  = formsArray(16 + offset)
+    def prepositional = formsArray(20 + offset)
   }
-}
 
-/**
-  * Adjective factories implement this trait by defining locale-specific generation methods. The apply() method is
-  * inherited.
-  */
-trait LocaleAwareAdjectiveFactory {
-  protected def en_US: EnglishAdjective
-  protected def be_BY: BelarusianAdjective
-  protected def ru_RU: RussianAdjective
-
-  def apply(): Adjective = {
-    Locale.getDefault.getLanguage match {
-      case "en" => en_US
-      case "be" => be_BY
-      case "ru" => ru_RU
+  /**
+    * Prepends the adjective to the term.
+    * @param term term to modify
+    * @return new extended term
+    */
+  def applyTo(term: RussianTerm): RussianTerm = {
+    val genderSpecific = term.gender match {
+      case RussianTerm.Masculine => masculine
+      case RussianTerm.Feminine => feminine
+      case RussianTerm.Neuter => neuter
+      case RussianTerm.Plural => plural
     }
+
+    new RussianTerm(
+      genderSpecific.nominative     + " " + term.nominative,
+      genderSpecific.genitive       + " " + term.genitive,
+      genderSpecific.dative         + " " + term.dative,
+      genderSpecific.accusative     + " " + term.accusative,
+      genderSpecific.instrumental   + " " + term.instrumental,
+      genderSpecific.prepositional  + " " + term.prepositional,
+      term.gender)
   }
 }
 
 object Adjectives {
 
-  object Big extends LocaleAwareAdjectiveFactory {
-    def en_US = new EnglishAdjective("big")
+  object Big extends Adjective {
+    val en_US = new EnglishAdjective("big")
 
-    def be_BY = new BelarusianAdjective(
+    val be_BY = new BelarusianAdjective(
       """вялікі   вялікая вялікае  вялікія
         |вялікага вялікай вялікага вялікіх
         |вялікаму вялікай вялікаму вялікім
@@ -89,7 +154,7 @@ object Adjectives {
         |вялікім  вялікай вялікім  вялікіх
       """.stripMargin)
 
-    def ru_RU = new RussianAdjective(
+    val ru_RU = new RussianAdjective(
       """большой  большая большое  большие
         |большого большой большого больших
         |большому большой большому большим
@@ -99,10 +164,10 @@ object Adjectives {
       """.stripMargin)
   }
 
-  object Small extends LocaleAwareAdjectiveFactory {
-    def en_US = new EnglishAdjective("small")
+  object Small extends Adjective {
+    val en_US = new EnglishAdjective("small")
 
-    def be_BY = new BelarusianAdjective(
+    val be_BY = new BelarusianAdjective(
       """малы   малая малое  малыя
         |малога малой малога малых
         |малому малой малому малым
@@ -111,13 +176,35 @@ object Adjectives {
         |малым  малой малым  малых
       """.stripMargin)
 
-    def ru_RU = new RussianAdjective(
+    val ru_RU = new RussianAdjective(
       """маленький  маленькая маленькое  маленькие
         |маленького маленькой маленького маленьких
         |маленькому маленькой маленькому маленьким
         |маленький  маленькую маленькое  маленькие
         |маленьким  маленькой маленьким  маленькими
         |маленьком  маленькой маленьком  маленьких
+      """.stripMargin)
+  }
+
+  object Valid extends Adjective {
+    val en_US = new EnglishAdjective("valid")
+
+    val be_BY = new BelarusianAdjective(
+      """карэктны   карэктная карэктнае  карэктныя
+        |карэктнага карэктнай карэктнага карэктных
+        |карэктнаму карэктнай карэктнаму карэктным
+        |карэктны   карэктную карэктнае  карэктныя
+        |карэктным  карэктнай карэктным  карэктнымі
+        |карэктным  карэктнай карэктным  карэктных
+      """.stripMargin)
+
+    val ru_RU = new RussianAdjective(
+      """корректный  корректная корректное  корректные
+        |корректного корректной корректного корректных
+        |корректному корректной корректному корректным
+        |корректный  корректную корректное  корректные
+        |корректным  корректной корректным  корректными
+        |корректном  корректной корректном  корректных
       """.stripMargin)
   }
 }
