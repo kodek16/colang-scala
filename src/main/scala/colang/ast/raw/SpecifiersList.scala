@@ -3,7 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.Success
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
-import colang.issues.{Issues, Term}
+import colang.issues.{Issues, Term, Terms}
 import colang.tokens.{Keyword, NativeKeyword}
 import colang.{SourceCode, StrategyUnion, TokenStream}
 
@@ -36,8 +36,9 @@ object SpecifiersList {
     def apply(stream: TokenStream): Result[TokenStream, SpecifiersList] = {
       ParserImpl.parseSequence(
         stream = stream,
+        sequenceDescription = Terms.List of Terms.Specifiers,
         elementStrategy = anySpecifierStrategy,
-        elementDescription = "specifier"
+        elementDescription = Terms.Specifier
       ) match {
         case (specifiers, parseIssues, streamAfterSpecifiers) =>
           val specifiersByType = specifiers groupBy { _.getClass }

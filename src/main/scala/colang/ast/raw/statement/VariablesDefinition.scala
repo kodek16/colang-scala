@@ -1,11 +1,11 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
-import colang.issues.Issues
+import colang.issues.Terms
 import colang.tokens.{Assign, Comma, Identifier}
 import colang.{SourceCode, TokenStream}
 
@@ -24,27 +24,49 @@ case class VariableDefinition(name: Identifier, initializer: Option[Expression])
 }
 
 object VariableDefinition {
+
+  private case class VariableInitializer(assign: Assign, expression: Expression) extends Node {
+    def source = assign.source + expression.source
+  }
+
+  private object VariableInitializer {
+    val strategy = new ParserImpl.Strategy[VariableInitializer] {
+
+      def apply(stream: TokenStream): Result[TokenStream, VariableInitializer] = {
+        ParserImpl.parseGroup(Terms.Initializer of Terms.Variable)
+          .definingElement(SingleTokenStrategy(classOf[Assign]))
+          .element(Expression.strategy, Terms.Expression)
+          .parse(stream)
+          .as[Assign, Expression] match {
+
+          case (Present(assign), Present(expression), issues, streamAfterInitializer) =>
+            Success(VariableInitializer(assign, expression), issues, streamAfterInitializer)
+
+          case (Present(assign), Invalid() | Absent(), issues, streamAfterInitializer) =>
+            Malformed(issues, streamAfterInitializer)
+
+          case _ => NoMatch()
+        }
+      }
+    }
+  }
+
   val strategy = new ParserImpl.Strategy[VariableDefinition] {
 
     def apply(stream: TokenStream): Result[TokenStream, VariableDefinition] = {
-      ParserImpl.parseGroup()
-        .element(identifierStrategy,                   "variable name",        stopIfAbsent = true)
-        .element(SingleTokenStrategy(classOf[Assign]), "'='",                  optional = true, stopIfAbsent = true)
-        .element(Expression.strategy,                  "variable initializer", optional = true)
+      ParserImpl.parseGroup(Terms.Definition of Terms.Variable)
+        .definingElement(identifierStrategy)
+        .optionalElement(VariableInitializer.strategy)
         .parse(stream)
-        .as[Identifier, Assign, Expression] match {
+        .as[Identifier, VariableInitializer] match {
 
-        case (Present(name), Present(_), Present(initializer), issues, streamAfterVariable) =>
-          Success(VariableDefinition(name, Some(initializer)), issues, streamAfterVariable)
+        case (Present(name), Present(initializer), issues, streamAfterVariable) =>
+          Success(VariableDefinition(name, Some(initializer.expression)), issues, streamAfterVariable)
 
-        case (Present(name), Present(assign), Invalid(), issues, streamAfterVariable) =>
+        case (Present(name), Invalid(), issues, streamAfterVariable) =>
           Success(VariableDefinition(name, None), issues, streamAfterVariable)
 
-        case (Present(name), Present(assign), Absent(), issues, streamAfterVariable) =>
-          val issue = Issues.MissingVariableInitializer(assign.source.after, name.value)
-          Success(VariableDefinition(name, None), issues :+ issue, streamAfterVariable)
-
-        case (Present(name), Absent(), _, issues, streamAfterVariable) =>
+        case (Present(name), Absent(), issues, streamAfterVariable) =>
           Success(VariableDefinition(name, None), issues, streamAfterVariable)
 
         case _ => NoMatch()
@@ -74,10 +96,11 @@ object VariablesDefinition {
       def apply(stream: TokenStream): Result[TokenStream, VariableDefinitionSequence] = {
         ParserImpl.parseSequence(
           stream = stream,
+          sequenceDescription = Terms.Definitions of Terms.Variables,
           elementStrategy = VariableDefinition.strategy,
-          elementDescription = "variable definition",
+          elementDescription = Terms.Definition of Terms.Variable,
           mandatorySeparator = Some(classOf[Comma]),
-          separatorDescription = "comma"
+          separatorDescription = Some(Terms.Comma)
         ) match {
           case (variables, issues, streamAfterVariables) if variables.nonEmpty =>
             Success(VariableDefinitionSequence(variables.toList.asInstanceOf[::[VariableDefinition]]), issues, streamAfterVariables)
@@ -87,9 +110,9 @@ object VariablesDefinition {
     }
 
     def apply(stream: TokenStream): Result[TokenStream, VariablesDefinition] = {
-      ParserImpl.parseGroup()
-        .element(Type.strategy, "variable(s) type", stopIfAbsent = true)
-        .element(varsStrategy, "new variables definition")
+      ParserImpl.parseGroup(Terms.Definition of Terms.Variables)
+        .definingElement(Type.strategy)
+        .element(varsStrategy, Terms.Definitions of Terms.Variables)
         .parse(stream)
         .as[Type, VariableDefinitionSequence] match {
 

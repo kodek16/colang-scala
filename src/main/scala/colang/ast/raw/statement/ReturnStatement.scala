@@ -6,6 +6,7 @@ import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.ast.raw.expression.Expression
+import colang.issues.Terms
 import colang.tokens.ReturnKeyword
 
 /**
@@ -21,9 +22,9 @@ object ReturnStatement {
   val strategy: ParserImpl.Strategy[ReturnStatement] = new ParserImpl.Strategy[ReturnStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, ReturnStatement] = {
-      ParserImpl.parseGroup()
-        .element(SingleTokenStrategy(classOf[ReturnKeyword]), "'return' keyword", stopIfAbsent = true)
-        .element(Expression.strategy,                         "return value",     optional = true)
+      ParserImpl.parseGroup(Terms.Statement("return"))
+        .definingElement(SingleTokenStrategy(classOf[ReturnKeyword]))
+        .optionalElement(Expression.strategy)
         .parse(stream)
         .as[ReturnKeyword, Expression] match {
 

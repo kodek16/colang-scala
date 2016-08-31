@@ -2,7 +2,7 @@ package colang.tokens
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
-import colang.issues.{Adjectives, Error, Issues}
+import colang.issues.{Adjectives, Issues}
 import colang.{SourceCode, SourceCodeStream, StrategyUnion}
 
 /**
@@ -27,7 +27,7 @@ object IntLiteral {
           if (bigValue >= Int.MinValue && bigValue <= Int.MaxValue) {
             Success(IntLiteral(bigValue.toInt, source), Seq.empty, streamAfterToken)
           } else {
-            val relation = if (bigValue > 0) Adjectives.Big() else Adjectives.Small()
+            val relation = if (bigValue > 0) Adjectives.Big else Adjectives.Small
             val issue = Issues.NumericLiteralOverflow(source, (relation, "int"))
             Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
           }
@@ -69,7 +69,7 @@ object IntLiteral {
           val exponent = BigInt(m.group(2))
 
           val possibleErrorToken = IntLiteral(0, source)
-          val relation = if (significand > 0) Adjectives.Big() else Adjectives.Small()
+          val relation = if (significand > 0) Adjectives.Big else Adjectives.Small
           val possibleError = Issues.NumericLiteralOverflow(source, (relation, "int"))
 
           val (token, issues) = if (exponent < 20) {

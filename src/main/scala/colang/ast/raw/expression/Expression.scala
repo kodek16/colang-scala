@@ -5,6 +5,7 @@ import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present}
 import colang.ast.raw.statement.Statement
 import colang.ast.raw.{Node, ParserImpl}
+import colang.issues.{Adjectives, Terms}
 import colang.{SourceCode, StrategyUnion, TokenStream}
 
 /**
@@ -54,8 +55,9 @@ object Expression {
 
         ParserImpl.parseSequence(
           stream = stream,
+          sequenceDescription = Adjectives.Postfix applyTo Terms.Operators,
           elementStrategy = postfixOperatorStrategy,
-          elementDescription = "postfix operator"
+          elementDescription = Adjectives.Postfix applyTo Terms.Operator
         ) match {
           case (operators, issues, streamAfterOps) if operators.nonEmpty =>
             Success(PostfixOperatorSequence(operators.toList.asInstanceOf[::[PostfixOperator]]), issues, streamAfterOps)
@@ -65,9 +67,9 @@ object Expression {
     }
 
     def apply(stream: TokenStream): Result[TokenStream, Expression] = {
-      ParserImpl.parseGroup()
-        .element(primaryStrategy,                 "expression",         stopIfAbsent = true)
-        .element(postfixOperatorSequenceStrategy, "postfix operators",  optional = true)
+      ParserImpl.parseGroup(Terms.Expression)
+        .definingElement(primaryStrategy)
+        .optionalElement(postfixOperatorSequenceStrategy)
         .parse(stream)
         .as[Expression, PostfixOperatorSequence] match {
 

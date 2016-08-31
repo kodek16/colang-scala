@@ -230,8 +230,8 @@ object Issues {
     private val code = "E0010"
 
     protected def en_US(source: SourceCode, nodeDescription: Term): Error = {
-      val description = (Adjectives.Valid applyTo nodeDescription).en_US.indefinite
-      Error(code, source, s"tokens don't form $description", notes = Seq.empty)
+      val description = (Adjectives.Valid applyTo nodeDescription).en_US
+      Error(code, source, s"tokens don't form ${description.indefinite}", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, nodeDescription: Term): Error = {
@@ -242,6 +242,65 @@ object Issues {
     protected def ru_RU(source: SourceCode, nodeDescription: Term): Error = {
       val description = (Adjectives.Valid applyTo nodeDescription).ru_RU
       Error(code, source, s"код не является ${description.instrumental}", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a missing expected node.
+    * Args: term describing expected node type
+    */
+  object MissingNode extends LocaleAwareIssueFactory[Error, Term] {
+    private val code = "E0011"
+
+    protected def en_US(source: SourceCode, nodeDescription: Term): Error = {
+      val description = nodeDescription.en_US
+      val verb = Verbs.IsMissing.en_US(description)
+
+      Error(code, source, s"${description.definite} $verb", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, nodeDescription: Term): Error = {
+      val description = nodeDescription.be_BY
+      val verb = Verbs.IsMissing.be_BY(description)
+
+      Error(code, source, s"$verb ${description.nominative}", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, nodeDescription: Term): Error = {
+      val description = nodeDescription.ru_RU
+      val verb = Verbs.IsMissing.ru_RU(description)
+
+      Error(code, source, s"$verb ${description.nominative}", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a missing sequence closing token (e.g. ')', '}')
+    * Args: (term describing the sequence, term describing expected element type)
+    */
+  object MissingSequenceClosingElement extends LocaleAwareIssueFactory[Error, (Term, Term)] {
+    private val code = "E0012"
+
+    protected def en_US(source: SourceCode, args: (Term, Term)): Error = {
+      val (sequence, closingElement) = (args._1.en_US, args._2.en_US)
+      val verb = Verbs.IsMissing.en_US(closingElement)
+
+      Error(code, source, s"${closingElement.noDeterminer} marking the end of ${sequence.definite} $verb",
+        notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (Term, Term)): Error = {
+      val (sequence, closingElement) = (args._1.be_BY, args._2.be_BY)
+      val verb = Verbs.IsMissing.be_BY(closingElement)
+
+      Error(code, source, s"$verb ${closingElement.nominative} на канцы ${sequence.genitive}", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (Term, Term)): Error = {
+      val (sequence, closingElement) = (args._1.ru_RU, args._2.ru_RU)
+      val verb = Verbs.IsMissing.ru_RU(closingElement)
+
+      Error(code, source, s"$verb ${closingElement.nominative} в конце ${sequence.genitive}", notes = Seq.empty)
     }
   }
 }
