@@ -1,9 +1,9 @@
 package colang.ast.parsed.routines
 
+import colang.SourceCode
 import colang.ast.parsed.statement.Statement
-import colang.ast.parsed.{Function, Namespace, Symbol}
-import colang.issues.{Error, Issue}
-import colang.{Error, SourceCode}
+import colang.ast.parsed.{Function, OverloadedFunction, RootNamespace, Symbol}
+import colang.issues.{Issue, Issues}
 
 private[routines] object ProcessMainFunction {
 
@@ -14,22 +14,38 @@ private[routines] object ProcessMainFunction {
     * @param eof source code fragment pointing to the end of source CO file
     * @return encountered issues
     */
-  def processMainFunction(rootNamespace: Namespace,
+  def processMainFunction(rootNamespace: RootNamespace,
                           globalVarInitStatements: Seq[Statement],
                           eof: SourceCode): Seq[Issue] = {
 
-    rootNamespace.resolve("main") match {
-      case Some(f: Function) if f.returnType == rootNamespace.voidType && f.parameters.isEmpty =>
+    def processExistingMainFunction(main: Function): Seq[Issue] = {
+      if (main.returnType == rootNamespace.voidType && main.parameters.isEmpty) {
         //Inject global variable initializers here
-        f.body.statements.prepend(globalVarInitStatements :_*)
+        main.body.statements.prepend(globalVarInitStatements :_*)
         Seq.empty
+      } else if (main.definitionSite.isDefined) {
+        Seq(Issues.InvalidMainFunctionSignature(main.definitionSite.get, ()))
+      } else Seq.empty
+    }
 
-      case Some(f: Function) if f.declarationSite.isDefined =>
-        Seq(Error(f.declarationSite.get, "'main' function must accept no parameters and return 'void'"))
-      case Some(s: Symbol) if s.declarationSite.isDefined =>
-        Seq(Error(s.declarationSite.get, "'main' must be a function"))
+    rootNamespace.resolve("main") match {
+      case Some(of: OverloadedFunction) =>
+        val (overload, _) = of.resolveOverload(Seq.empty, None)
+        overload match {
+          case Some(o) => processExistingMainFunction(o)
+          case None =>
+            val someDefinedMainOption = of.allOverloads.find { _.definitionSite.isDefined }
+            someDefinedMainOption match {
+              case Some(invalidMain) => Seq(Issues.InvalidMainFunctionSignature(invalidMain.definitionSite.get, ()))
+              case None => Seq(Issues.MissingMainFunction(eof, ()))
+            }
+        }
+
+      case Some(f: Function) => processExistingMainFunction(f)
+      case Some(s: Symbol) if s.definitionSite.isDefined =>
+        Seq(Issues.MainIsNotFunction(s.definitionSite.get, ()))
       case _ =>
-        Seq(Error(eof, "missing 'main' function"))
+        Seq(Issues.MissingMainFunction(eof, ()))
     }
   }
 }

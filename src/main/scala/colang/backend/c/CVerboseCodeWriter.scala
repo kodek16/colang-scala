@@ -4,6 +4,7 @@ import java.io.{File, PrintWriter}
 
 import colang.Compiler
 import colang.ast.parsed.{Function, Method, Symbol, Type}
+import colang.utils.InternalErrors
 
 import scala.collection.mutable
 import scala.io.Source
@@ -239,8 +240,7 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     * @param symbol native symbol
     */
   private def reportMissingInternalSymbol(symbol: Symbol): Nothing = {
-    System.err.println(s"internal compiler error: no native representation for symbol '${symbol.qualifiedName}'")
-    sys.exit(2)
+    InternalErrors.noNativeSymbol(symbol.qualifiedName)
   }
 
   /**
@@ -248,9 +248,8 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
     * @param method native method
     */
   private def reportMissingInternalSymbol(method: Method): Nothing = {
-    System.err.println(s"internal compiler error: no native representation for method '${method.name}'" +
-      s" of type '${method.container.qualifiedName}'")
-    sys.exit(2)
+    //TODO when methods have signature() method, use it here.
+    InternalErrors.noNativeSymbol(method.name)
   }
 
   /**

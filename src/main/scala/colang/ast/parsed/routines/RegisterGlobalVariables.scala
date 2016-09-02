@@ -1,7 +1,7 @@
 package colang.ast.parsed.routines
 
 import colang.ast.parsed.statement.Statement
-import colang.ast.parsed.{Namespace, Variable}
+import colang.ast.parsed.{RootNamespace, Variable}
 import colang.ast.raw.{statement => raw}
 import colang.issues.Issue
 
@@ -13,7 +13,7 @@ private[routines] object RegisterGlobalVariables {
     * @param rawDefs raw variables definition nodes
     * @return (new variables, initialization statements, encountered issues)
     */
-  def registerGlobalVariables(rootNamespace: Namespace,
+  def registerGlobalVariables(rootNamespace: RootNamespace,
                               rawDefs: Seq[raw.VariablesDefinition]): (Seq[Variable], Seq[Statement], Seq[Issue]) = {
 
     val result = rawDefs map { RegisterVariables.registerVariables(rootNamespace, _ )}

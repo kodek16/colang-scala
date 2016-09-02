@@ -3,8 +3,7 @@ package colang.ast.parsed
 import colang.ast.parsed.expression.Expression
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.raw
-import colang.Error
-import colang.issues.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 import scala.collection.mutable.ListBuffer
 
@@ -47,7 +46,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addIfStatement(rawStmt: raw.statement.IfStatement): Seq[Issue] = {
-    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition, "if")
 
     val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifBranch)
@@ -57,7 +56,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addIfElseStatement(rawStmt: raw.statement.IfElseStatement): Seq[Issue] = {
-    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.ifStatement.condition)
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.ifStatement.condition, "if")
 
     val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifStatement.ifBranch)
@@ -70,7 +69,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addWhileStatement(rawStmt: raw.statement.WhileStatement): Seq[Issue] = {
-    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition)
+    val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition, "while")
 
     val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
     val loopIssues = loopBlock.addStatement(rawStmt.loop)
@@ -113,17 +112,18 @@ class CodeBlock(var innerScope: Scope,
   /**
     * Analyzes the expression and also checks if it is eligible to be an 'if' or 'while' condition.
     * @param rawCond raw expression
+    * @param statementName a string describing the enclosing statement
     * @return (parsed expression, encountered issues)
     */
-  private def analyzeConditionExpression(rawCond: raw.expression.Expression): (Expression, Seq[Issue]) = {
+  private def analyzeConditionExpression(rawCond: raw.expression.Expression,
+                                         statementName: String): (Expression, Seq[Issue]) = {
     val (condition, conditionIssues) = Expression.analyze(innerScope, rawCond)
 
     val conditionTypeIssues = if (condition.type_ == innerScope.root.boolType) {
       Seq.empty
     } else {
-      val typeStr = condition.type_.qualifiedName
-      val issue = Error(rawCond.source,
-        s"condition must have type 'bool', but has type '$typeStr'.")
+      val conditionTypeStr = condition.type_.qualifiedName
+      val issue = Issues.InvalidConditionType(rawCond.source, (statementName, conditionTypeStr))
       Seq(issue)
     }
 

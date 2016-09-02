@@ -1,15 +1,15 @@
 package colang.ast.parsed
 
-import colang.issues.{Error, Issue, Note}
-import colang.{Error, Note, SourceCode}
+import colang.SourceCode
+import colang.issues.{Issue, Issues, Terms}
 
 import scala.collection.mutable.ListBuffer
 
 class OverloadedFunction(val name: String,
                          val scope: Some[Scope]) extends Symbol {
 
-  val description = "multiple function overloads"
-  val declarationSite = None
+  val description = Terms.OverloadedFunction
+  val definitionSite = None
 
   private val overloads = ListBuffer.empty[Function]
 
@@ -27,8 +27,8 @@ class OverloadedFunction(val name: String,
 
     existingOverloadOption match {
       case Some(existingOverload) =>
-        val issue = Error(newOverload.definition.get.prototypeSource, "there is already a function with the same name " +
-          "and parameter types in the current scope.", existingOverload.declarationSiteNotes)
+        val issue = Issues.DuplicateFunctionDefinition(newOverload.definition.get.prototypeSource,
+          existingOverload.definitionSite)
         Seq(issue)
       case None =>
         overloads += newOverload
@@ -55,16 +55,12 @@ class OverloadedFunction(val name: String,
           (Some(overload), Seq.empty)
         case None =>
           val notes = candidates map { candidate =>
-            val declaration = candidate.definition match {
-              case Some(fd) => Some(fd.prototypeSource)
-              case None => None
-            }
-
-            Note(declaration, s"it can mean ${candidate.signatureString}")
+            Issues.AmbiguousOverloadedFunctionCall.note(candidate.signatureString,
+              candidate.definition map { _.prototypeSource })
           }
 
           val issues = callSource match {
-            case Some(cs) => Seq(Error(cs, "overloaded function call is ambiguous", notes))
+            case Some(cs) => Seq(Issues.AmbiguousOverloadedFunctionCall(cs, notes))
             case None => Seq.empty
           }
 
@@ -72,9 +68,7 @@ class OverloadedFunction(val name: String,
       }
     } else {
       val issues = callSource match {
-        case Some(cs) =>
-          val argTypes = argumentTypes map { _.qualifiedName } mkString ", "
-          Seq(Error(cs, s"function can't be applied to arguments with types: $argTypes"))
+        case Some(cs) => Seq(Issues.InvalidFunctionArguments(cs, argumentTypes map { _.qualifiedName }))
         case None => Seq.empty
       }
 

@@ -33,7 +33,32 @@ class EnglishAdjective(val text: String) {
     * @return new extended term
     */
   def applyTo(term: EnglishTerm): EnglishTerm = {
-    new EnglishTerm(this.text + " " + term.noDeterminer, term.number)
+    val self = this
+
+    new EnglishTerm(this.text + " " + term.noDeterminer, term.number) {
+      override lazy val indefinite: String = {
+        val aRe = "a (.*)".r
+        val anRe = "an (.*)".r
+
+        val adjWithArticle = (self.text.charAt(0) match {
+          case 'a' | 'i' | 'o' | 'e' | 'u' => "an "
+          case _ => "a "
+        }) + self.text
+
+        term.indefinite match {
+          case aRe(tail) => s"$adjWithArticle $tail"
+          case anRe(tail) => s"$adjWithArticle $tail"
+          case _ => s"${self.text} ${term.indefinite}"
+        }
+      }
+
+      override def definite: String = {
+        val theRe = "the (.*)".r
+        term.definite match {
+          case theRe(tail) => s"the ${self.text} $tail"
+        }
+      }
+    }
   }
 }
 

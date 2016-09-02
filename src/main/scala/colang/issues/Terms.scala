@@ -393,7 +393,7 @@ object Terms {
       "открывающей '('",
       RussianTerm.Feminine)
   }
-  
+
   object ClosingParen extends Term {
     val en_US = new EnglishTerm("closing ')'", EnglishTerm.Singular)
 
@@ -590,7 +590,7 @@ object Terms {
       "инструкцией",
       "инструкции",
       RussianTerm.Feminine)
-    
+
     def apply(statementType: String) = new Term {
       val en_US = new EnglishTerm(s"'$statementType' statement", EnglishTerm.Singular)
 
@@ -844,7 +844,7 @@ object Terms {
       "імені",
       "імені",
       "імя",
-      "іменем",
+      "імем",
       "імені",
       BelarusianTerm.Neuter)
 
@@ -988,5 +988,49 @@ object Terms {
       "методом",
       "методе",
       RussianTerm.Masculine)
+  }
+
+  object Namespace extends Term {
+    val en_US = new EnglishTerm("namespace", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "прастора імёнаў",
+      "прасторы імёнаў",
+      "прасторы імёнаў",
+      "прастору імёнаў",
+      "прасторай імёнаў",
+      "прасторы імёнаў",
+      BelarusianTerm.Feminine)
+
+    val ru_RU = new RussianTerm(
+      "пространство имён",
+      "пространства имён",
+      "пространству имён",
+      "пространство имён",
+      "пространством имён",
+      "пространстве имён",
+      RussianTerm.Neuter)
+  }
+
+  object OverloadedFunction extends Term {
+    val en_US = new EnglishTerm("overloaded function", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "перагружаная функцыя",
+      "перагружанай функцыі",
+      "перагружанай функцыі",
+      "перагружаную функцыю",
+      "перагружанай функцыяй",
+      "перагружанай функцыі",
+      BelarusianTerm.Feminine)
+
+    val ru_RU = new RussianTerm(
+      "перегруженная функция",
+      "перегруженной функции",
+      "перегруженной функции",
+      "перегруженную функцию",
+      "перегруженной функцией",
+      "перегруженной функции",
+      RussianTerm.Feminine)
   }
 }

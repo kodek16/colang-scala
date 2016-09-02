@@ -4,8 +4,7 @@ import colang.ast.parsed.expression.{Expression, MethodCall, VariableReference}
 import colang.ast.parsed.statement.Statement
 import colang.ast.parsed.{Scope, Type, Variable}
 import colang.ast.raw.{statement => raw}
-import colang.Error
-import colang.issues.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 private[routines] object RegisterVariables {
 
@@ -25,7 +24,7 @@ private[routines] object RegisterVariables {
         type_ = type_,
         definition = Some(rawDef))
 
-      val varIssues = scope.tryAdd(variable).toSeq
+      val varIssues = scope.tryAdd(variable)
 
       val (initStatement, initIssues) = rawDef.initializer match {
         case Some(rawInit) =>
@@ -36,15 +35,13 @@ private[routines] object RegisterVariables {
           if (assignMethod.canBeAppliedTo(Seq(init.type_))) {
             val initStatement = MethodCall(assignMethod, VariableReference(variable, None), Seq(init), Some(rawDef))
             (Some(initStatement), initIssues)
-
           } else {
             val initTypeStr = init.type_.qualifiedName
             val varTypeStr = variable.type_.qualifiedName
-            val issue = Error(rawInit.source,
-              s"initializer has type '$initTypeStr', which is incompatible with variable type '$varTypeStr'")
-
+            val issue = Issues.IncompatibleVariableInitializer(rawInit.source, (initTypeStr, varTypeStr))
             (None, initIssues :+ issue)
           }
+
         case None => (None, Seq.empty)
       }
 

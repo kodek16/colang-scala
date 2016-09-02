@@ -2,8 +2,7 @@ package colang.ast.parsed
 
 import colang.ast.raw
 import colang.ast.raw.TypeDefinition
-import colang.Error
-import colang.issues.{Error, Issue}
+import colang.issues.{Issue, Issues, Terms}
 
 import scala.collection.mutable
 
@@ -20,11 +19,12 @@ class Type(val name: String,
            val native: Boolean = false) extends Symbol with Scope {
 
   val parent = scope
-  val declarationSite = definition match {
+  val definitionSite = definition match {
     case Some(td) => Some(td.headSource)
     case None => None
   }
-  val description = "type"
+
+  val description = Terms.Type
 
   private val methods: mutable.LinkedHashMap[String, Method] = mutable.LinkedHashMap.empty
 
@@ -66,10 +66,7 @@ class Type(val name: String,
   def tryAddMethod(method: Method): Option[Issue] = {
     methods get method.name match {
       case Some(existingMethod) if !existingMethod.native =>
-        val issue = Error(method.declarationSite.get,
-          s"there is already a method with the same name for this type",
-          existingMethod.declarationSiteNotes)
-
+        val issue = Issues.DuplicateMethodDefinition(method.definitionSite.get, existingMethod.definitionSite)
         Some(issue)
 
       case None =>
@@ -111,15 +108,11 @@ object Type {
     scope.resolve(rawType.name.value) match {
       case Some(type_ : Type) => (type_, Seq.empty)
       case Some(otherSymbol) =>
-        val issue = Error(
-          rawType.source,
-          s"${rawType.name.value} is not a type, but a ${otherSymbol.description}",
-          otherSymbol.declarationSiteNotes)
-
+        val issue = Issues.InvalidReferenceAsType(rawType.source, otherSymbol.description)
         (scope.root.unknownType, Seq(issue))
 
       case None =>
-        val issue = Error(rawType.source, s"there is no type named ${rawType.name.value} is this scope", Seq.empty)
+        val issue = Issues.UnknownName(rawType.source, ())
         (scope.root.unknownType, Seq(issue))
     }
   }

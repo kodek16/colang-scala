@@ -63,7 +63,7 @@ object InfixOperator {
                 case Malformed(rhsIssues, streamAfterRhs) =>
                   (lhs, collectedIssues ++ operatorIssues ++ rhsIssues, streamAfterRhs)
                 case NoMatch() =>
-                  val issue = Issues.MissingRightOperand(operator.source.after, operator.text)
+                  val issue = Issues.MissingRightOperand(operator.source.after, operator.name)
                   (lhs, collectedIssues ++ operatorIssues :+ issue, streamAfterOperator)
               }
             }

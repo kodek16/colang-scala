@@ -10,7 +10,7 @@ import colang.tokens.{Assign, Comma, Identifier}
 import colang.{SourceCode, TokenStream}
 
 /**
-  * Represents a single variable declaration site.
+  * Represents a single variable definition site.
   * @param name variable name
   * @param initializer optional initializer expression
   */
@@ -76,7 +76,7 @@ object VariableDefinition {
 }
 
 /**
-  * Represents a variable(s) declaration statement, which may also appear at the top-level.
+  * Represents a variable(s) definition statement, which may also appear at the top-level.
   * @param type_ variable(s) type
   * @param variables individual variable definitions
   */

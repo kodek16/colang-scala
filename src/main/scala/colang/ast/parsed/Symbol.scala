@@ -1,7 +1,7 @@
 package colang.ast.parsed
 
 import colang.SourceCode
-import colang.issues.Note
+import colang.issues.Term
 
 /**
   * Represents a stable named and scoped entity in the program.
@@ -14,9 +14,9 @@ trait Symbol {
   def name: String
 
   /**
-    * Optionally a code fragment pointing to the symbol declaration.
+    * Optionally a code fragment pointing to the symbol definition.
     */
-  def declarationSite: Option[SourceCode]
+  def definitionSite: Option[SourceCode]
 
   /**
     * Enclosing scope. Can only be None for the root namespace.
@@ -24,9 +24,9 @@ trait Symbol {
   def scope: Option[Scope]
 
   /**
-    * A short string describing what type of symbol the object is.
+    * A term describing what type of symbol the object is.
     */
-  def description: String
+  def description: Term
 
   /**
     * For global symbols: a full name that can be used to refer to this symbol from the root namespace.
@@ -39,16 +39,6 @@ trait Symbol {
     }
 
     prefix + name
-  }
-
-  /**
-    * A convenience method for optionally constructing a note pointing to the declaration site.
-    */
-  def declarationSiteNotes: Seq[Note] = {
-    declarationSite match {
-      case Some(site) => Seq(Note(Some(site), "declared here"))
-      case None => Seq.empty
-    }
   }
 }
 

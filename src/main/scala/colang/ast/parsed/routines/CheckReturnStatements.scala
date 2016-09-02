@@ -3,8 +3,7 @@ package colang.ast.parsed.routines
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
 import colang.ast.parsed.{CodeBlock, Function, Type}
 import colang.ast.raw
-import colang.Error
-import colang.issues.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 private[routines] object CheckReturnStatements {
 
@@ -22,7 +21,7 @@ private[routines] object CheckReturnStatements {
         case WontReturn(_) if function.returnType != function.scope.get.root.voidType =>
           function.definition match {
             case Some(raw.FunctionDefinition(_, _, _, _, Some(rawBody))) =>
-              Seq(Error(rawBody.rightBrace.source.before, "missing 'return' statement"))
+              Seq(Issues.MissingReturnStatement(rawBody.rightBrace.source.before, ()))
             case _ => Seq.empty
           }
         case _ => Seq.empty
@@ -81,8 +80,7 @@ private[routines] object CheckReturnStatements {
               case Some(rawStmt) =>
                 val actualTypeStr = returnValue.type_.qualifiedName
                 val returnTypeStr = expectedReturnType.qualifiedName
-                val issues = Seq(Error(rawStmt.source, s"a value of type '$actualTypeStr' cannot be returned from " +
-                  s"a function returning '$returnTypeStr'"))
+                val issues = Seq(Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, returnTypeStr)))
 
                 (None, issues)
               case None => (None, Seq.empty)
@@ -96,8 +94,7 @@ private[routines] object CheckReturnStatements {
           val issues = if (expectedReturnType != expectedReturnType.scope.get.root.voidType) {
             rawStmtOption match {
               case Some(rawStmt) =>
-                Seq(Error(rawStmt.source,
-                  s"must return a value from a function returning '${expectedReturnType.qualifiedName}"))
+                Seq(Issues.FunctionReturnWithoutValue(rawStmt.source, expectedReturnType.qualifiedName))
               case None => Seq.empty
             }
           } else Seq.empty
@@ -111,7 +108,7 @@ private[routines] object CheckReturnStatements {
         (previousResult, statementResult) match {
           case (WillReturn(retValType, previousIssues), (rawStmt, _)) =>
             val issue = rawStmt match {
-              case Some(r) => Some(Error(r.source, "code after 'return' statement will never be executed"))
+              case Some(r) => Some(Issues.UnreachableCode(r.source, ()))
               case None => None
             }
 

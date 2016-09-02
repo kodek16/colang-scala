@@ -1,9 +1,8 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, Namespace, OverloadedFunction, Scope, Type, Variable}
+import colang.ast.parsed.{Function, OverloadedFunction, Scope, Symbol, Variable}
 import colang.ast.raw.{expression => raw}
-import colang.Error
-import colang.issues.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 /**
   * Represents a function reference.
@@ -39,13 +38,12 @@ object SymbolReference {
       case Some(f: Function) => (FunctionReference(f, Some(rawExpr)), Seq.empty)
       case Some(of: OverloadedFunction) => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
 
-      case Some(s @ (_: Type | _: Namespace)) =>
-        val issue = Error(rawExpr.source, s"expected an expression, but got a ${s.description} reference")
+      case Some(s: Symbol) =>
+        val issue = Issues.InvalidReferenceAsExpression(rawExpr.source, s.description)
         (InvalidExpression(), Seq(issue))
 
-      case Some(_) => throw new RuntimeException("unhandled symbol type")
       case None =>
-        val issue = Error(rawExpr.source, "there are no symbols with this name in the current scope")
+        val issue = Issues.UnknownName(rawExpr.source, ())
         (InvalidExpression(), Seq(issue))
     }
   }

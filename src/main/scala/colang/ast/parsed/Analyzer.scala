@@ -16,7 +16,7 @@ trait Analyzer {
     * @param eof source code fragment pointing to the end of source CO file
     * @return (populated root namespace, found issues)
     */
-  def analyze(symbolDefs: Seq[raw.GlobalSymbolDefinition], eof: SourceCode): (Namespace, Seq[Issue])
+  def analyze(symbolDefs: Seq[raw.GlobalSymbolDefinition], eof: SourceCode): (RootNamespace, Seq[Issue])
 }
 
 /**
@@ -31,7 +31,7 @@ trait Analyzer {
   * reference it. Symbol in this state is called "detached".
   */
 class AnalyzerImpl extends Analyzer {
-  def analyze(symbolDefs: Seq[raw.GlobalSymbolDefinition], eof: SourceCode): (Namespace, Seq[Issue]) = {
+  def analyze(symbolDefs: Seq[raw.GlobalSymbolDefinition], eof: SourceCode): (RootNamespace, Seq[Issue]) = {
     val typeDefs = (symbolDefs filter { _.isInstanceOf[raw.TypeDefinition] }).
       asInstanceOf[Seq[raw.TypeDefinition]]
     val funcDefs = (symbolDefs filter { _.isInstanceOf[raw.FunctionDefinition] }).
@@ -39,10 +39,7 @@ class AnalyzerImpl extends Analyzer {
     val varDefs = (symbolDefs filter { _.isInstanceOf[raw.statement.VariablesDefinition] }).
       asInstanceOf[Seq[raw.statement.VariablesDefinition]]
 
-    val rootNamespace = new Namespace(
-      name = "",
-      declarationSite = None,
-      parent = None)
+    val rootNamespace = new RootNamespace()
 
     val (types, typesIssues) = routines.registerTypes(rootNamespace, typeDefs)
     val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)

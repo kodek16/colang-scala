@@ -2,6 +2,7 @@ package colang.tokens
 
 import colang.{SourceCode, UnitSpec}
 import colang.TestUtils._
+import colang.issues.Error
 import org.scalatest.LoneElement._
 
 class LexerImplSpec extends UnitSpec {
@@ -30,7 +31,7 @@ class LexerImplSpec extends UnitSpec {
         Whitespace(true, _),
         RightBrace(_)) => }
 
-      issues.loneElement should matchPattern { case Error(SourceCode(`sourceFile`, 1, 4, 1, 9), _, _) => }
+      issues.loneElement should matchPattern { case Error(_, SourceCode(`sourceFile`, 1, 4, 1, 9), _, _) => }
     }
   }
 }
