@@ -1,7 +1,7 @@
 package colang.ast.parsed
 
-import colang.ast.raw
 import colang.SourceCode
+import colang.ast.raw
 import colang.issues.Issue
 
 /**
