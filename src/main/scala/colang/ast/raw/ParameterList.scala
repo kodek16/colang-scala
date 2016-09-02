@@ -3,6 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
+import colang.issues.Terms
 import colang.tokens.{Comma, Identifier, LeftParen, RightParen}
 import colang.{SourceCode, TokenStream}
 
@@ -19,9 +20,9 @@ object FunctionParameter {
   val strategy = new ParserImpl.Strategy[FunctionParameter] {
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionParameter] = {
-      ParserImpl.parseGroup()
-        .element(Type.strategy,                             "parameter type", stopIfAbsent = true)
-        .element(SingleTokenStrategy(classOf[Identifier]),  "parameter name")
+      ParserImpl.parseGroup(Terms.Definition of Terms.Parameter)
+        .definingElement(Type.strategy)
+        .element(SingleTokenStrategy(classOf[Identifier]), Terms.Name of Terms.Parameter)
         .parse(stream)
         .as[Type, Identifier] match {
 
@@ -51,15 +52,14 @@ object ParameterList {
     def apply(stream: TokenStream): Result[TokenStream, ParameterList] = {
       ParserImpl.parseEnclosedSequence(
         stream = stream,
-        sequenceDescription = "parameter list",
+        sequenceDescription = Terms.List of Terms.Parameters,
         elementStrategy = FunctionParameter.strategy,
-        elementDescription = "parameter",
+        elementDescription = Terms.Definition of Terms.Parameter,
         openingElement = classOf[LeftParen],
-        openingElementDescription = "opening '('",
         closingElement = classOf[RightParen],
-        closingElementDescription = "closing ')'",
+        closingElementDescription = Terms.ClosingParen,
         mandatorySeparator = Some(classOf[Comma]),
-        separatorDescription = "comma"
+        separatorDescription = Some(Terms.Comma)
       ) match {
         case Some((leftParen, params, rightParenOption, issues, streamAfterParams)) =>
           val rightParen = rightParenOption match {

@@ -2,7 +2,8 @@ package colang.tokens
 
 import colang.Strategy.Result.{Malformed, NoMatch}
 import colang.TestUtils._
-import colang.{Error, SourceCodeStream, UnitSpec}
+import colang.issues.Error
+import colang.{SourceCodeStream, UnitSpec}
 
 class UnknownTokenStrategySpec extends UnitSpec {
 

@@ -1,6 +1,6 @@
 package colang.ast.parsed
 
-import colang.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -61,10 +61,8 @@ trait Scope {
         issues
 
       case Some(existingSymbol) =>
-        val issue = Error(symbol.declarationSite.get,
-          s"there is already a ${existingSymbol.description} with the same name in this scope",
-          existingSymbol.declarationSiteNotes)
-
+        val issue = Issues.SymbolNameTaken(symbol.definitionSite.get,
+          (existingSymbol.description, existingSymbol.definitionSite))
         Seq(issue)
 
       case None =>
@@ -82,10 +80,10 @@ trait Scope {
   /**
     * A reference to the root namespace.
     */
-  lazy val root: Namespace = {
+  lazy val root: RootNamespace = {
     parent match {
       case Some(scope) => scope.root
-      case None => this.asInstanceOf[Namespace]
+      case None => this.asInstanceOf[RootNamespace]
     }
   }
 }

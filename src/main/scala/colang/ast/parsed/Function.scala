@@ -1,6 +1,7 @@
 package colang.ast.parsed
 
 import colang.ast.raw
+import colang.issues.Terms
 
 /**
   * Represents a function: an independent callable code unit.
@@ -20,11 +21,12 @@ class Function(val name: String,
                val definition: Option[raw.FunctionDefinition],
                val native: Boolean = false) extends Symbol with Applicable {
 
-  val declarationSite = definition match {
+  val definitionSite = definition match {
     case Some(fd) => Some(fd.prototypeSource)
     case None => None
   }
-  val description = "function"
+
+  val description = Terms.Function
 
   /**
     * Constructs a string from a function signature: its return type, name, and parameter types.

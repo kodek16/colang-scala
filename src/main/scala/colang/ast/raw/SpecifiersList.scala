@@ -3,8 +3,9 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.Success
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.issues.{Issues, Term, Terms}
 import colang.tokens.{Keyword, NativeKeyword}
-import colang.{Error, SourceCode, StrategyUnion, TokenStream}
+import colang.{SourceCode, StrategyUnion, TokenStream}
 
 /**
   * Represents a list of specifiers that may preceed certain symbol definitions (like 'native', etc.)
@@ -21,9 +22,11 @@ object SpecifiersList {
 
   /**
     * A strategy template for parsing specifier lists.
+    * @param contextDescription a term that describes the node containing this specifier list.
     * @param allowedSpecifiers specifier types that are allowed in this context
     */
-  class Strategy(allowedSpecifiers: Class[_ <: Keyword]*) extends ParserImpl.Strategy[SpecifiersList] {
+  class Strategy(contextDescription: Term,
+                 allowedSpecifiers: Class[_ <: Keyword]*) extends ParserImpl.Strategy[SpecifiersList] {
 
     private val allSpecifiers = Seq(
       classOf[NativeKeyword])
@@ -33,17 +36,18 @@ object SpecifiersList {
     def apply(stream: TokenStream): Result[TokenStream, SpecifiersList] = {
       ParserImpl.parseSequence(
         stream = stream,
+        sequenceDescription = Terms.List of Terms.Specifiers,
         elementStrategy = anySpecifierStrategy,
-        elementDescription = "specifier"
+        elementDescription = Terms.Specifier
       ) match {
         case (specifiers, parseIssues, streamAfterSpecifiers) =>
           val specifiersByType = specifiers groupBy { _.getClass }
 
           val issues = specifiersByType flatMap { case (specifierType, specs) =>
             if (!(allowedSpecifiers contains specifierType)) {
-              specs map { spec => Error(spec.source, "specifier not allowed here") }
+              specs map { spec => Issues.MisplacedSpecifier(spec.source, (spec.text, contextDescription)) }
             } else {
-              specs.tail map { spec => Error(spec.source, "repeated specifiers are not allowed") }
+              specs.tail map { spec => Issues.RepeatedSpecifier(spec.source, (spec.text, specs.head.source)) }
             }
           }
 

@@ -3,6 +3,7 @@ package colang.tokens
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
+import colang.issues.{Issue, Issues}
 
 import scala.annotation.tailrec
 import scala.util.matching.Regex
@@ -135,7 +136,7 @@ object LexerImpl {
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
-          val issue = Error(source, "unknown character sequence")
+          val issue = Issues.UnknownCharacterSequence(source, ())
           Malformed(Seq(issue), streamAfterToken)
         case None => NoMatch()
       }
@@ -153,7 +154,7 @@ object LexerImpl {
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
-          val issue = Error(source, "unknown number format")
+          val issue = Issues.UnknownNumberFormat(source, ())
           Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
         case None => NoMatch()
       }

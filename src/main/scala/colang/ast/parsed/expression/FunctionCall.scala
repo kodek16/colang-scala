@@ -2,7 +2,7 @@ package colang.ast.parsed.expression
 
 import colang.ast.parsed.{Function, Scope}
 import colang.ast.raw.{expression => raw}
-import colang.{Error, Issue}
+import colang.issues.{Issue, Issues}
 
 /**
   * Represents a function call.
@@ -40,12 +40,11 @@ object FunctionCall {
         (FunctionCall(f, parsedArgs, Some(rawExpr)), functionIssues ++ argsIssues)
 
       case FunctionReference(f, _) =>
-        val argTypes = parsedArgs map { _.type_.qualifiedName } mkString ", "
-        val issue = Error(rawExpr.arguments.source, s"function cannot be applied to arguments with types: $argTypes")
+        val issue = Issues.InvalidFunctionArguments(rawExpr.source, parsedArgs map { _.type_.qualifiedName })
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
       case _ =>
-        val issue = Error(function.source, "non-direct function calls aren't supported yet")
+        val issue = Issues.ExpressionIsNotCallable(function.source, ())
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
     }
   }

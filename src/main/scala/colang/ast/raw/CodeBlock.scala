@@ -4,6 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
 import colang._
 import colang.ast.raw.statement.Statement
+import colang.issues.Terms
 import colang.tokens.{LeftBrace, RightBrace, Semicolon}
 
 /**
@@ -22,13 +23,12 @@ object CodeBlock {
     def apply(stream: TokenStream): Result[TokenStream, CodeBlock] = {
       ParserImpl.parseEnclosedSequence(
         stream = stream,
-        sequenceDescription = "code block",
+        sequenceDescription = Terms.Block of Terms.Code,
         elementStrategy = Statement.strategy,
-        elementDescription = "statement",
+        elementDescription = Terms.Statement,
         openingElement = classOf[LeftBrace],
-        openingElementDescription = "opening '{'",
         closingElement = classOf[RightBrace],
-        closingElementDescription = "closing '}'",
+        closingElementDescription = Terms.ClosingBrace,
         recoveryStopHints = Seq(classOf[Semicolon])
       ) match {
         case Some((leftBrace, elements, rightBraceOption, issues, streamAfterBlock)) =>
