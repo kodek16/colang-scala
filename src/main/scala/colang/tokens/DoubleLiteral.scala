@@ -39,20 +39,16 @@ object DoubleLiteral {
     */
   val scientificStrategy = new LexerImpl.Strategy[DoubleLiteral] {
     def apply(stream: SourceCodeStream): Result[SourceCodeStream, DoubleLiteral] = {
-      val re = """(-?\d+\.\d+)[eE](\+|\-|)(\d+(\.\d+)?)(?![\w\.])""".r("significand", "exp-sign", "exponent")
+      val re = """(-?\d+\.\d+)[eE](-?\d+(\.\d+)?)(?![\w\.])""".r("significand", "exponent")
 
       re findPrefixMatchOf stream match {
         case Some(m) =>
           val (source, streamAfterToken) = stream.take(m.toString)
 
           val significand = numberFormat.parse(m.group("significand")).doubleValue()
-          val expSign = m.group("exp-sign") match {
-            case "-" => -1
-            case _ => 1
-          }
           val exponent = numberFormat.parse(m.group("exponent")).doubleValue()
 
-          val value = significand * Math.pow(10, expSign * exponent)
+          val value = significand * Math.pow(10, exponent)
           val token = DoubleLiteral(value, source)
           Success(token, Seq.empty, streamAfterToken)
         case None => NoMatch()

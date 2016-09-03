@@ -1,16 +1,21 @@
 package colang.ast.parsed
 
 import colang.SourceCode
+import colang.issues.Terms
+import colang.utils.InternalErrors
 
 class Namespace(val name: String,
-                val declarationSite: Option[SourceCode],
+                val definitionSite: Option[SourceCode],
                 val parent: Option[Namespace]) extends Symbol with Scope {
 
   val scope = parent
-  val description = "namespace"
+  val description = Terms.Namespace
+}
 
-  //Following methods should be only used on a root namespace instance:
-  //TODO actually, implement a RootNamespace subclass and put them there.
+/**
+  * Represents a root namespace and provides some convenient accessors.
+  */
+class RootNamespace extends Namespace("", None, None) {
 
   /**
     * A type assigned to values that failed analysis.
@@ -37,15 +42,8 @@ class Namespace(val name: String,
   private def getPrimitiveType(name: String): Type = {
     members get name match {
       case Some(t: Type) => t
-      case Some(_) =>
-        System.err.println(s"Error: '$name' is not a type in the standard library. Please check if your CO installation " +
-          s"is correct and up-to-date.")
-        sys.exit(2)
-      case None =>
-        System.err.println(s"Error: '$name' type declaration not found in the standard library. Please check if your " +
-          s"CO installation is correct and up-to-date.")
-        sys.exit(2)
+      case Some(_) => InternalErrors.primitiveTypeIsNotAType(name)
+      case None => InternalErrors.missingPrimitiveType(name)
     }
   }
 }
-

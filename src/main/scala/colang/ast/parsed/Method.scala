@@ -1,6 +1,5 @@
 package colang.ast.parsed
 
-import colang.Note
 import colang.ast.raw
 
 /**
@@ -21,18 +20,8 @@ class Method(val name: String,
              val definition: Option[raw.FunctionDefinition],
              val native: Boolean = false) extends Applicable {
 
-  val declarationSite = definition match {
+  val definitionSite = definition match {
     case Some(fd) => Some(fd.prototypeSource)
     case None => None
-  }
-
-  /**
-    * A convenience method for optionally constructing a note pointing to the declaration site.
-    */
-  def declarationSiteNotes: Seq[Note] = {
-    declarationSite match {
-      case Some(site) => Seq(Note(Some(site), "declared here"))
-      case None => Seq.empty
-    }
   }
 }

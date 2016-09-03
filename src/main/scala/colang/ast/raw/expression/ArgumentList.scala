@@ -3,6 +3,7 @@ package colang.ast.raw.expression
 import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
 import colang.ast.raw.{Node, ParserImpl}
+import colang.issues.Terms
 import colang.tokens.{Comma, LeftParen, RightParen}
 import colang.{SourceCode, TokenStream}
 
@@ -22,15 +23,14 @@ object ArgumentList {
     def apply(stream: TokenStream): Result[TokenStream, ArgumentList] = {
       ParserImpl.parseEnclosedSequence(
         stream = stream,
-        sequenceDescription = "argument list",
+        sequenceDescription = Terms.List of Terms.Arguments,
         elementStrategy = Expression.strategy,
-        elementDescription = "argument",
+        elementDescription = Terms.Argument,
         openingElement = classOf[LeftParen],
-        openingElementDescription = "opening (",
         closingElement = classOf[RightParen],
-        closingElementDescription = "closing )",
+        closingElementDescription = Terms.ClosingParen,
         mandatorySeparator = Some(classOf[Comma]),
-        separatorDescription = "comma"
+        separatorDescription = Some(Terms.Comma)
       ) match {
         case Some((leftParen, args, rightParenOption, issues, streamAfterNode)) =>
           val rightParen = rightParenOption match {

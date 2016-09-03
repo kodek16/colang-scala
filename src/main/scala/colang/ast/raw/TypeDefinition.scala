@@ -3,6 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl._
+import colang.issues.Terms
 import colang.tokens._
 import colang.{SourceCode, TokenStream}
 
@@ -28,14 +29,15 @@ object TypeDefinition {
   val strategy = new ParserImpl.Strategy[TypeDefinition] {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
+      Terms.Definition of Terms.Type,
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, TypeDefinition] = {
-      ParserImpl.parseGroup()
-        .element(specifiersStrategy,                          "type specifiers")
-        .element(SingleTokenStrategy(classOf[StructKeyword]), "struct keyword",  stopIfAbsent = true)
-        .element(identifierStrategy,                          "type name")
-        .element(TypeBody.strategy,                           "type body",       optional = true)
+      ParserImpl.parseGroup(Terms.Definition of Terms.Type)
+        .optionalElement(specifiersStrategy)    //Actually always present rather than optional.
+        .definingElement(SingleTokenStrategy(classOf[StructKeyword]))
+        .element(identifierStrategy, Terms.Name of Terms.Type)
+        .optionalElement(TypeBody.strategy)
         .parse(stream)
         .as[SpecifiersList, Keyword, Identifier, TypeBody] match {
 
@@ -66,13 +68,12 @@ object TypeBody {
     def apply(stream: TokenStream): Result[TokenStream, TypeBody] = {
       ParserImpl.parseEnclosedSequence(
         stream = stream,
-        sequenceDescription = "type body",
+        sequenceDescription = Terms.Body of Terms.Type,
         elementStrategy = FunctionDefinition.strategy,
-        elementDescription = "method definition",
+        elementDescription = Terms.Definition of Terms.Method,
         openingElement = classOf[LeftBrace],
-        openingElementDescription = "opening '{'",
         closingElement = classOf[RightBrace],
-        closingElementDescription = "closing '}'"
+        closingElementDescription = Terms.ClosingBrace
       ) match {
         case Some((leftBrace, elements, rightBraceOption, issues, streamAfterBlock)) =>
           val rightBrace = rightBraceOption match {

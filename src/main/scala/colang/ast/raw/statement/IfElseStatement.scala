@@ -5,6 +5,7 @@ import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
+import colang.issues.Terms
 import colang.tokens.ElseKeyword
 
 /**
@@ -24,10 +25,10 @@ object IfElseStatement {
   val strategy: ParserImpl.Strategy[IfElseStatement] = new ParserImpl.Strategy[IfElseStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, IfElseStatement] = {
-      ParserImpl.parseGroup()
-        .element(IfStatement.strategy,                      "'if' statement",         stopIfAbsent = true)
-        .element(SingleTokenStrategy(classOf[ElseKeyword]), "'else' keyword",         stopIfAbsent = true)
-        .element(Statement.strategy,                        "'else' branch statement")
+      ParserImpl.parseGroup(Terms.Statement("if-else"))
+        .definingElement(IfStatement.strategy)
+        .definingElement(SingleTokenStrategy(classOf[ElseKeyword]))
+        .element(Statement.strategy, Terms.Branch("else"))
         .parse(stream)
         .as[IfStatement, ElseKeyword, Statement] match {
 

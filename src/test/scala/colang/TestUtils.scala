@@ -2,6 +2,7 @@ package colang
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.issues.{Issue, Warning}
 
 @Deprecated
 object TestUtils {
@@ -11,7 +12,7 @@ object TestUtils {
 
   val emptySourceFile = new InlineSourceFile("empty.co", "")
 
-  def makeWarning(message: String) = Warning(SourceCode(emptySourceFile, 0, 0, 0, 0), message)
+  def makeWarning(message: String) = Warning("", SourceCode(emptySourceFile, 0, 0, 0, 0), message, Seq.empty)
 
   def makeSuccessfulStrategy[Stream, T](result: T, issues: Seq[Issue], newStream: Stream) = new Strategy[Stream, T] {
     def apply(stream: Stream): Result[Stream, T] = Success(result, issues, newStream)

@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
-import colang.Issue
 import colang.ast.parsed._
 import colang.ast.raw
+import colang.issues.Issue
 import colang.tokens.NativeKeyword
 
 private[routines] object RegisterMethods {

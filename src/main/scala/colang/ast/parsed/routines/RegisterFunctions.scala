@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
-import colang.Issue
-import colang.ast.parsed.{CodeBlock, Function, LocalScope, Namespace, Type, Variable}
+import colang.ast.parsed.{CodeBlock, Function, LocalScope, RootNamespace, Type, Variable}
 import colang.ast.raw
+import colang.issues.Issue
 import colang.tokens.NativeKeyword
 
 private[routines] object RegisterFunctions {
@@ -13,7 +13,7 @@ private[routines] object RegisterFunctions {
     * @param funcDefs function definitions
     * @return (new functions, encountered issues)
     */
-  def registerFunctions(rootNamespace: Namespace, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
+  def registerFunctions(rootNamespace: RootNamespace, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
     val result = funcDefs map { funcDef =>
       val (returnType, returnTypeIssues) = Type.resolve(rootNamespace, funcDef.returnType)
 

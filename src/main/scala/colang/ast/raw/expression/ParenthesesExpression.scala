@@ -5,6 +5,7 @@ import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
+import colang.issues.Terms
 import colang.tokens.{LeftParen, RightParen}
 
 /**
@@ -23,10 +24,10 @@ object ParenthesesExpression {
   val strategy = new ParserImpl.Strategy[ParenthesesExpression] {
 
     def apply(stream: TokenStream): Result[TokenStream, ParenthesesExpression] = {
-      ParserImpl.parseGroup()
-        .element(SingleTokenStrategy(classOf[LeftParen]),   "opening '('", stopIfAbsent = true)
-        .element(Expression.strategy,                       "expression inside parentheses")
-        .element(SingleTokenStrategy(classOf[RightParen]),  "closing ')'")
+      ParserImpl.parseGroup(Terms.Expression in Terms.Parentheses)
+        .definingElement(SingleTokenStrategy(classOf[LeftParen]))
+        .element(Expression.strategy, Terms.Expression)
+        .element(SingleTokenStrategy(classOf[RightParen]), Terms.ClosingParen)
         .parse(stream)
         .as[LeftParen, Expression, RightParen] match {
 

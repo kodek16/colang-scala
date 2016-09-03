@@ -1,12 +1,15 @@
 package colang
 
 import java.io.File
+import java.util.Locale
 
 import colang.ast.parsed.{Analyzer, AnalyzerImpl}
 import colang.ast.raw._
 import colang.backend.Backend
 import colang.backend.c.{CCodeGenerator, CVerboseCodeWriter}
+import colang.issues.{Error, Issue, Note, Warning}
 import colang.tokens.{Lexer, LexerImpl}
+import colang.utils.InternalErrors
 import colang.utils.StringImplicits._
 
 /**
@@ -72,8 +75,7 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
     } else if (rootFile.exists()) {
       rootFile
     } else {
-      System.err.println("Error: 'prelude.co' not found. Please install CO standard library.")
-      sys.exit(2)
+      InternalErrors.missingPrelude
     }
   }
 
@@ -98,8 +100,8 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
     def colorError(s: String) = Console.RED + s + Console.RESET
 
     val (issueType, color, source, message, notes) = issue match {
-      case Warning(s, m, n) => ("warning", colorWarning _, s, m, n)
-      case Error(s, m, n) => ("error", colorError _, s, m, n)
+      case Warning(_, s, m, n) => (localizedWarning, colorWarning _, s, m, n)
+      case Error(_, s, m, n) => (localizedError, colorError _, s, m, n)
     }
 
     val heading = s"${source.file.name}:${source.startLine + 1}:${source.startChar + 1}: ${color(issueType)}: $message"
@@ -124,7 +126,7 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
 
         printSourceFragment(source, colorNote)
       case None =>
-        System.err.println(s"${colorNote("note")}: ${note.message}")
+        System.err.println(s"${colorNote(localizedNote)}: ${note.message}")
     }
   }
 
@@ -153,6 +155,30 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
     } mkString "\n"
 
     System.err.println(listing)
+  }
+
+  private def localizedError: String = {
+    Locale.getDefault.getLanguage match {
+      case "be" => "памылка"
+      case "ru" => "ошибка"
+      case "en" | _ => "error"
+    }
+  }
+
+  private def localizedWarning: String = {
+    Locale.getDefault.getLanguage match {
+      case "be" => "папярэджаньне"
+      case "ru" => "предупреждение"
+      case "en" | _ => "warning"
+    }
+  }
+
+  private def localizedNote: String = {
+    Locale.getDefault.getLanguage match {
+      case "be" => "увага"
+      case "ru" => "примечание"
+      case "en" | _ => "note"
+    }
   }
 }
 

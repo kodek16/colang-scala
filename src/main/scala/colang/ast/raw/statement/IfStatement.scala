@@ -6,6 +6,7 @@ import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.ast.raw.expression.Expression
+import colang.issues.{Adjectives, Terms}
 import colang.tokens.{IfKeyword, LeftParen, RightParen}
 
 /**
@@ -29,12 +30,12 @@ object IfStatement {
   val strategy: ParserImpl.Strategy[IfStatement] = new ParserImpl.Strategy[IfStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, IfStatement] = {
-      ParserImpl.parseGroup()
-        .element(SingleTokenStrategy(classOf[IfKeyword]),  "'if' keyword",        stopIfAbsent = true)
-        .element(SingleTokenStrategy(classOf[LeftParen]),  "opening '('")
-        .element(Expression.strategy,                      "condition expression")
-        .element(SingleTokenStrategy(classOf[RightParen]), "closing ')'")
-        .element(Statement.strategy,                       "'if' branch statement")
+      ParserImpl.parseGroup(Terms.Statement("if"))
+        .definingElement(SingleTokenStrategy(classOf[IfKeyword]))
+        .element(SingleTokenStrategy(classOf[LeftParen]), Terms.OpeningParen)
+        .element(Expression.strategy, Adjectives.Conditional applyTo Terms.Expression)
+        .element(SingleTokenStrategy(classOf[RightParen]), Terms.ClosingParen)
+        .element(Statement.strategy, Terms.Branch("if"))
         .parse(stream)
         .as[IfKeyword, LeftParen, Expression, RightParen, Statement] match {
 

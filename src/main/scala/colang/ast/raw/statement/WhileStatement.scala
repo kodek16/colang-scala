@@ -6,6 +6,7 @@ import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.ast.raw.expression.Expression
+import colang.issues.{Adjectives, Terms}
 import colang.tokens.{LeftParen, RightParen, WhileKeyword}
 
 /**
@@ -29,12 +30,12 @@ object WhileStatement {
   val strategy: ParserImpl.Strategy[WhileStatement] = new ParserImpl.Strategy[WhileStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, WhileStatement] = {
-      ParserImpl.parseGroup()
-        .element(SingleTokenStrategy(classOf[WhileKeyword]), "'while' keyword",       stopIfAbsent = true)
-        .element(SingleTokenStrategy(classOf[LeftParen]),    "opening '('")
-        .element(Expression.strategy,                        "'while' loop condition")
-        .element(SingleTokenStrategy(classOf[RightParen]),   "closing ')")
-        .element(Statement.strategy,                         "'while' loop body")
+      ParserImpl.parseGroup(Terms.Statement("while"))
+        .definingElement(SingleTokenStrategy(classOf[WhileKeyword]))
+        .element(SingleTokenStrategy(classOf[LeftParen]), Terms.OpeningParen)
+        .element(Expression.strategy, Adjectives.Conditional applyTo Terms.Expression)
+        .element(SingleTokenStrategy(classOf[RightParen]), Terms.ClosingParen)
+        .element(Statement.strategy, Terms.Body of Terms.Loop)
         .parse(stream)
         .as[WhileKeyword, LeftParen, Expression, RightParen, Statement] match {
 

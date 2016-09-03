@@ -4,6 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl.{Present, identifierStrategy}
+import colang.issues.Terms
 import colang.tokens._
 
 /**
@@ -30,15 +31,16 @@ object FunctionDefinition {
   val strategy = new ParserImpl.Strategy[FunctionDefinition] {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
+      Terms.Definition of Terms.Function,
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionDefinition] = {
-      ParserImpl.parseGroup()
-        .element(specifiersStrategy,                          "function specifiers")
-        .element(Type.strategy,                               "function return type",     stopIfAbsent = true)
-        .element(identifierStrategy,                          "function name",            stopIfAbsent = true)
-        .element(ParameterList.strategy,                      "function parameter list",  stopIfAbsent = true)
-        .element(CodeBlock.strategy,                          "function body",            optional = true)
+      ParserImpl.parseGroup(Terms.Definition of Terms.Function)
+        .optionalElement(specifiersStrategy)    //Actually always present rather than optional.
+        .definingElement(Type.strategy)
+        .definingElement(identifierStrategy)
+        .definingElement(ParameterList.strategy)
+        .optionalElement(CodeBlock.strategy)
         .parse(stream)
         .as[SpecifiersList, Type, Identifier, ParameterList, CodeBlock] match {
 

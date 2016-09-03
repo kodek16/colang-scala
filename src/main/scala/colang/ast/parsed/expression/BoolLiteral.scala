@@ -1,8 +1,8 @@
 package colang.ast.parsed.expression
 
-import colang.Issue
 import colang.ast.parsed.Scope
 import colang.ast.raw.{expression => raw}
+import colang.issues.Issue
 
 /**
   * Represents a literal logical value of type 'bool'.

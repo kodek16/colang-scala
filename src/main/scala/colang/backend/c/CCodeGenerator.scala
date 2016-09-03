@@ -2,7 +2,7 @@ package colang.backend.c
 
 import colang.ast.parsed.expression._
 import colang.ast.parsed.statement.{IfElseStatement, ReturnStatement, Statement, WhileStatement}
-import colang.ast.parsed.{CodeBlock, Function, Method, Namespace, OverloadedFunction, Symbol, Type, Variable}
+import colang.ast.parsed.{CodeBlock, Function, Method, OverloadedFunction, RootNamespace, Symbol, Type, Variable}
 import colang.backend.Backend
 import colang.utils.SeqUtils
 
@@ -14,7 +14,7 @@ import scala.annotation.tailrec
   */
 class CCodeGenerator(writer: CCodeWriter) extends Backend {
 
-  def process(rootNamespace: Namespace): Unit = {
+  def process(rootNamespace: RootNamespace): Unit = {
     val typeDefs = generateTypeDefinitions(rootNamespace)
     val varDefs = generateVariableDefinitions(rootNamespace)
     val funcProtos = generateFunctionPrototypes(rootNamespace)
@@ -31,7 +31,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     * @param rootNamespace root namespace
     * @return C struct definitions
     */
-  private def generateTypeDefinitions(rootNamespace: Namespace): Seq[CTypeDefinition] = {
+  private def generateTypeDefinitions(rootNamespace: RootNamespace): Seq[CTypeDefinition] = {
     @tailrec
     def generateTypeDefs(symbols: Seq[Symbol],
                          generatedDefs: Vector[CTypeDefinition] = Vector.empty): Vector[CTypeDefinition] = {
@@ -51,7 +51,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     * @param rootNamespace root namespace
     * @return C function prototypes
     */
-  private def generateFunctionPrototypes(rootNamespace: Namespace): Seq[CSimpleStatement] = {
+  private def generateFunctionPrototypes(rootNamespace: RootNamespace): Seq[CSimpleStatement] = {
     @tailrec
     def generateFuncProtos(symbols: Seq[Symbol],
                            generatedProtos: Vector[CSimpleStatement] = Vector.empty): Vector[CSimpleStatement] = {
@@ -80,7 +80,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     * @param rootNamespace root namespace
     * @return extracted variables
     */
-  private def generateVariableDefinitions(rootNamespace: Namespace): Seq[Variable] = {
+  private def generateVariableDefinitions(rootNamespace: RootNamespace): Seq[Variable] = {
     (rootNamespace.allMembers filter { _.isInstanceOf[Variable] }).asInstanceOf[Seq[Variable]]
   }
 
@@ -89,7 +89,7 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     * @param rootNamespace root namespace
     * @return C function definitions
     */
-  private def generateFunctionDefinitions(rootNamespace: Namespace): Seq[CBlock] = {
+  private def generateFunctionDefinitions(rootNamespace: RootNamespace): Seq[CBlock] = {
     def generateFuncDef(function: Function): CBlock = {
       val proto = generateFunctionPrototype(function)
       val body = generateCodeBlock(function.body, ignoredVariables = function.parameters)

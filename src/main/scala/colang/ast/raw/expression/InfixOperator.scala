@@ -5,6 +5,7 @@ import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang._
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
+import colang.issues.{Issue, Issues}
 import colang.tokens.Associativity.Associativity
 import colang.tokens._
 
@@ -62,7 +63,7 @@ object InfixOperator {
                 case Malformed(rhsIssues, streamAfterRhs) =>
                   (lhs, collectedIssues ++ operatorIssues ++ rhsIssues, streamAfterRhs)
                 case NoMatch() =>
-                  val issue = Error(operator.source.after, "missing right operand")
+                  val issue = Issues.MissingRightOperand(operator.source.after, operator.name)
                   (lhs, collectedIssues ++ operatorIssues :+ issue, streamAfterOperator)
               }
             }
