@@ -33,9 +33,9 @@ object VariableDefinition {
     val strategy = new ParserImpl.Strategy[VariableInitializer] {
 
       def apply(stream: TokenStream): Result[TokenStream, VariableInitializer] = {
-        ParserImpl.parseGroup(Terms.Initializer of Terms.Variable)
+        ParserImpl.parseGroup()
           .definingElement(SingleTokenStrategy(classOf[Assign]))
-          .element(Expression.strategy, Terms.Expression)
+          .element(Expression.strategy, Terms.Initializer of Terms.Variable)
           .parse(stream)
           .as[Assign, Expression] match {
 
@@ -54,7 +54,7 @@ object VariableDefinition {
   val strategy = new ParserImpl.Strategy[VariableDefinition] {
 
     def apply(stream: TokenStream): Result[TokenStream, VariableDefinition] = {
-      ParserImpl.parseGroup(Terms.Definition of Terms.Variable)
+      ParserImpl.parseGroup()
         .definingElement(identifierStrategy)
         .optionalElement(VariableInitializer.strategy)
         .parse(stream)
@@ -96,7 +96,6 @@ object VariablesDefinition {
       def apply(stream: TokenStream): Result[TokenStream, VariableDefinitionSequence] = {
         ParserImpl.parseSequence(
           stream = stream,
-          sequenceDescription = Terms.Definitions of Terms.Variables,
           elementStrategy = VariableDefinition.strategy,
           elementDescription = Terms.Definition of Terms.Variable,
           mandatorySeparator = Some(classOf[Comma]),
@@ -110,7 +109,7 @@ object VariablesDefinition {
     }
 
     def apply(stream: TokenStream): Result[TokenStream, VariablesDefinition] = {
-      ParserImpl.parseGroup(Terms.Definition of Terms.Variables)
+      ParserImpl.parseGroup()
         .definingElement(Type.strategy)
         .element(varsStrategy, Terms.Definitions of Terms.Variables)
         .parse(stream)

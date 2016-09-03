@@ -83,7 +83,6 @@ object ParserImpl {
   /**
     * A generic method for parsing sequences of nodes of the same type, possibly separated by a mandatory separator.
     * @param stream source token stream
-    * @param sequenceDescription a term describing the sequence as a whole
     * @param elementStrategy strategy for parsing a single element of the sequence
     * @param elementDescription a term describing a single element of the sequence
     * @param mandatorySeparator specify Some(Class[Separator]) if sequence elements must be separated by some token
@@ -98,7 +97,6 @@ object ParserImpl {
     * @return (sequence elements, encountered issues, stream after the sequence)
     */
   def parseSequence[N <: Node, Separator <: Token](stream: TokenStream,
-                                                   sequenceDescription: Term,
                                                    elementStrategy: Strategy[N],
                                                    elementDescription: Term,
                                                    mandatorySeparator: Option[Class[Separator]] = None,
@@ -120,7 +118,7 @@ object ParserImpl {
         case NoMatch() =>
           if (greedy && stream.nonEmpty) {
             val (invalidSource, streamAfterInvalidTokens) = recover(stream, stopHints = recoveryStopHints)
-            val issue = Issues.MalformedNode(invalidSource, elementDescription in sequenceDescription)
+            val issue = Issues.MalformedNode(invalidSource, elementDescription)
             parseWithoutSeparator(streamAfterInvalidTokens, collectedElements, collectedIssues :+ issue)
           } else {
             (collectedElements, collectedIssues, stream)
@@ -144,7 +142,7 @@ object ParserImpl {
             val (invalidSource, streamAfterInvalidTokens) =
               recover(stream, stopHints = recoveryStopHints :+ separatorType)
 
-            val issue = Issues.MalformedNode(invalidSource, elementDescription in sequenceDescription)
+            val issue = Issues.MalformedNode(invalidSource, elementDescription)
             (Seq.empty, Seq(issue), streamAfterInvalidTokens)
           } else {
             (Seq.empty, Seq.empty, stream)
@@ -169,7 +167,7 @@ object ParserImpl {
 
         case NoMatch() =>
           if (greedy && streamAfterElement.nonEmpty) {
-            val separatorTerm = (Adjectives.Separating applyTo separatorDescription.get) in sequenceDescription
+            val separatorTerm = Adjectives.Separating applyTo separatorDescription.get
             val issue = Issues.MissingNode(streamAfterElement.beforeNext, separatorTerm)
 
             parseWithSeparator(
@@ -233,7 +231,6 @@ object ParserImpl {
 
         val (elements, elementIssues, limitedStreamOnEnd) = parseSequence(
           limitedStream,
-          sequenceDescription,
           elementStrategy,
           elementDescription,
           mandatorySeparator,
@@ -341,17 +338,16 @@ object ParserImpl {
     * in a much better way if Scala had variadic templates, but we have to work with what we have.
     * See the GroupParseBuilder and GroupParseResult for detailed explanation and every second non-trivial node class
     * for usage examples.
-    * @param groupDescription a term describing the group as a whole
     * @return a GroupParseBuilder object
     */
-  def parseGroup(groupDescription: Term) = new GroupParseBuilder(groupDescription, Vector.empty)
+  def parseGroup() = new GroupParseBuilder(Vector.empty)
 
   private case class GroupElement(strategy: Strategy[Node],
                                   description: Option[Term],
                                   stopIfAbsent: Boolean = false,
                                   optional: Boolean = false)
 
-  class GroupParseBuilder private[ParserImpl] (groupDescription: Term, elements: Vector[GroupElement]) {
+  class GroupParseBuilder private[ParserImpl] (elements: Vector[GroupElement]) {
 
     /**
       * Adds a new node parsing strategy to the end of the group.
@@ -361,7 +357,7 @@ object ParserImpl {
       */
     def element(strategy: Strategy[Node],
                 description: Term) = {
-      new GroupParseBuilder(groupDescription, elements :+ GroupElement(strategy, Some(description)))
+      new GroupParseBuilder(elements :+ GroupElement(strategy, Some(description)))
     }
 
     /**
@@ -371,7 +367,7 @@ object ParserImpl {
       * @return a GroupParseBuilder object
       */
     def definingElement(strategy: Strategy[Node]) = {
-      new GroupParseBuilder(groupDescription, elements :+ GroupElement(strategy, None, stopIfAbsent = true))
+      new GroupParseBuilder(elements :+ GroupElement(strategy, None, stopIfAbsent = true))
     }
 
     /**
@@ -381,7 +377,7 @@ object ParserImpl {
       * @return a GroupParseBuilder object
       */
     def optionalElement(strategy: Strategy[Node]) = {
-      new GroupParseBuilder(groupDescription, elements :+ GroupElement(strategy, None, optional = true))
+      new GroupParseBuilder(elements :+ GroupElement(strategy, None, optional = true))
     }
 
     /**
@@ -408,7 +404,7 @@ object ParserImpl {
                 if (element.optional) {
                   doIt(tail, stream, collectedNodes :+ Absent(), collectedIssues)
                 } else {
-                  val issue = Issues.MissingNode(stream.beforeNext, element.description.get in groupDescription)
+                  val issue = Issues.MissingNode(stream.beforeNext, element.description.get)
                   doIt(tail, stream, collectedNodes :+ Absent(), collectedIssues :+ issue)
                 }
               case _ =>

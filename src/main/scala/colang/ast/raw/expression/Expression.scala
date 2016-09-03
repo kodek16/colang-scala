@@ -55,7 +55,6 @@ object Expression {
 
         ParserImpl.parseSequence(
           stream = stream,
-          sequenceDescription = Adjectives.Postfix applyTo Terms.Operators,
           elementStrategy = postfixOperatorStrategy,
           elementDescription = Adjectives.Postfix applyTo Terms.Operator
         ) match {
@@ -67,7 +66,7 @@ object Expression {
     }
 
     def apply(stream: TokenStream): Result[TokenStream, Expression] = {
-      ParserImpl.parseGroup(Terms.Expression)
+      ParserImpl.parseGroup()
         .definingElement(primaryStrategy)
         .optionalElement(postfixOperatorSequenceStrategy)
         .parse(stream)

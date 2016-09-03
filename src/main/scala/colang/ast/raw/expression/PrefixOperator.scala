@@ -25,7 +25,7 @@ object PrefixOperator {
       SingleTokenStrategy(classOf[Minus]))
 
     def apply(stream: TokenStream): Result[TokenStream, PrefixOperator] = {
-      ParserImpl.parseGroup(Terms.Expression)
+      ParserImpl.parseGroup()
         .definingElement(operatorStrategy)
         .element(Expression.primaryStrategy, Terms.Expression)
         .parse(stream)

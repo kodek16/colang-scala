@@ -29,9 +29,8 @@ object TranslationUnit {
     def apply(stream: TokenStream): Success[TokenStream, TranslationUnit] = {
       ParserImpl.parseSequence(
         stream = stream,
-        sequenceDescription = Adjectives.Global applyTo Terms.Context,
         elementStrategy = globalSymbolStrategy,
-        elementDescription = Terms.Definition of Terms.Symbol,
+        elementDescription = Terms.Definition of (Adjectives.Global applyTo Terms.Symbol),
         greedy = true
       ) match {
         case (symbols, issues, newStream) => Success(TranslationUnit(symbols), issues, newStream)

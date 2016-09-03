@@ -33,7 +33,7 @@ object TypeDefinition {
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, TypeDefinition] = {
-      ParserImpl.parseGroup(Terms.Definition of Terms.Type)
+      ParserImpl.parseGroup()
         .optionalElement(specifiersStrategy)    //Actually always present rather than optional.
         .definingElement(SingleTokenStrategy(classOf[StructKeyword]))
         .element(identifierStrategy, Terms.Name of Terms.Type)
