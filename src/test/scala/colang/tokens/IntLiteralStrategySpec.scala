@@ -23,29 +23,29 @@ class IntLiteralStrategySpec extends LexerUnitSpec {
       }
     }
 
-    it("should generate an error for \"integers\" with non-natural exponents (like 1e-5.6)") {
-      IntLiteral.strategy shouldSucceedOn "1e-5.6" withOneError()
+    it("should generate an error for \"integers\" with non-natural exponents (like 1e-5)") {
+      IntLiteral.strategy shouldSucceedOn "1e-5" withOneError "E0002"
     }
 
     it("should generate an error for integers that are outside 'int' type value range") {
-      IntLiteral.strategy shouldSucceedOn "12345678901" withOneError()
-      IntLiteral.strategy shouldSucceedOn "-12345678901" withOneError()
+      IntLiteral.strategy shouldSucceedOn "12345678901" withOneError "E0001"
+      IntLiteral.strategy shouldSucceedOn "-12345678901" withOneError "E0001"
     }
 
     it("should generate an error for integers in scientific notation that are outside of 'int' value range") {
-      IntLiteral.strategy shouldSucceedOn "2e10" withOneError()
-      IntLiteral.strategy shouldSucceedOn "-2e10" withOneError()
+      IntLiteral.strategy shouldSucceedOn "2e10" withOneError "E0001"
+      IntLiteral.strategy shouldSucceedOn "-2e10" withOneError "E0001"
     }
 
     it("should process corner cases (INT_MIN - 1, INT_MIN, INT_MAX, INT_MAX + 1) correctly") {
-      IntLiteral.strategy shouldSucceedOn "-2147483649" withOneError()
+      IntLiteral.strategy shouldSucceedOn "-2147483649" withOneError "E0001"
       IntLiteral.strategy shouldSucceedOn "-2147483648" withoutIssues() andInProduced { token =>
         token.value should be (-2147483648)
       }
       IntLiteral.strategy shouldSucceedOn "2147483647" withoutIssues() andInProduced { token =>
         token.value should be (2147483647)
       }
-      IntLiteral.strategy shouldSucceedOn "2147483648" withOneError()
+      IntLiteral.strategy shouldSucceedOn "2147483648" withOneError "E0001"
     }
   }
 }

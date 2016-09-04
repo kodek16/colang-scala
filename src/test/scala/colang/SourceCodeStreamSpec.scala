@@ -1,13 +1,11 @@
 package colang
 
-import colang.TestUtils.InlineSourceFile
+class SourceCodeStreamSpec extends LexerUnitSpec {
 
-class SourceCodeStreamSpec extends UnitSpec {
-
-  val sourceFile = new InlineSourceFile("sum.co", """void main() {
-                                                    |    read int x, y
-                                                    |    println(x + y)
-                                                    |}""".stripMargin)
+  val sourceFile = new InlineSourceFile("""void main() {
+                                        |    read int x, y
+                                        |    println(x + y)
+                                        |}""".stripMargin)
 
   val nonEmptyStream = new SourceCodeStream(sourceFile, 5, 0, 5)
   val emptyStream = new SourceCodeStream(sourceFile, 52, 3, 1)

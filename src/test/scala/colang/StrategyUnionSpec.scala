@@ -1,12 +1,14 @@
 package colang
 
-import colang.TestUtils._
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.issues.Warning
 
-class StrategyUnionSpec extends UnitSpec {
+class StrategyUnionSpec extends LexerUnitSpec {
 
-  val issueOne = makeWarning("some warning")
-  val issueTwo = makeWarning("other warning")
+  private val file = new InlineSourceFile("")
+
+  private val issueOne = Warning("W0001", SourceCode(file, 0, 0, 0, 0), "", Seq.empty)
+  private val issueTwo = Warning("W0002", SourceCode(file, 0, 0, 0, 0), "", Seq.empty)
 
   describe("A strategy union") {
     it("should choose first successful strategy") {
