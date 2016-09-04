@@ -805,4 +805,27 @@ object Issues {
       Error(code, source, s"${symbol.nominative} не может быть типом", notes = Seq.empty)
     }
   }
+
+  /**
+    * Generates an issue for an overreferenced type (like 'int&&').
+    * Args: referenced type name (in the above case: 'int&')
+    */
+  object OverreferencedType extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0035"
+
+    protected def en_US(source: SourceCode, referencedType: String): Error = {
+      Error(code, source, s"type '$referencedType', which is itself a reference, cannot be referenced again.",
+        notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, referencedType: String): Error = {
+      Error(code, source, s"нельга спасылацца на тып '$referencedType', які ўжо з'яўляецца спасылкай.",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, referencedType: String): Error = {
+      Error(code, source, s"нельзя ссылаться на тип '$referencedType', который сам по себе является ссылкой.",
+        notes = Seq.empty)
+    }
+  }
 }

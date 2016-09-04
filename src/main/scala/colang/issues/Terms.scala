@@ -1033,4 +1033,26 @@ object Terms {
       "перегруженной функции",
       RussianTerm.Feminine)
   }
+
+  object Ampersand extends Term {
+    val en_US = new EnglishTerm("ampersand", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "амперсанд",
+      "амперсанда",
+      "амперсанду",
+      "амперсанд",
+      "амперсандам",
+      "амперсандзе",
+      BelarusianTerm.Masculine)
+
+    val ru_RU = new RussianTerm(
+      "амперсанд",
+      "амперсанда",
+      "амперсанду",
+      "амперсанд",
+      "амперсандом",
+      "амперсанде",
+      RussianTerm.Masculine)
+  }
 }

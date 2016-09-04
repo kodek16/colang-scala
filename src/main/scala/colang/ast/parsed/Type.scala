@@ -105,15 +105,20 @@ class Type(val name: String,
 object Type {
 
   def resolve(scope: Scope, rawType: raw.Type): (Type, Seq[Issue]) = {
-    scope.resolve(rawType.name.value) match {
-      case Some(type_ : Type) => (type_, Seq.empty)
-      case Some(otherSymbol) =>
-        val issue = Issues.InvalidReferenceAsType(rawType.source, otherSymbol.description)
-        (scope.root.unknownType, Seq(issue))
+    rawType match {
+      case r: raw.SimpleType =>
+        scope.resolve(r.name.value) match {
+          case Some(type_ : Type) => (type_, Seq.empty)
+          case Some(otherSymbol) =>
+            val issue = Issues.InvalidReferenceAsType(rawType.source, otherSymbol.description)
+            (scope.root.unknownType, Seq(issue))
 
-      case None =>
-        val issue = Issues.UnknownName(rawType.source, ())
-        (scope.root.unknownType, Seq(issue))
+          case None =>
+            val issue = Issues.UnknownName(rawType.source, ())
+            (scope.root.unknownType, Seq(issue))
+        }
+
+      case r: raw.ReferenceType => ???
     }
   }
 
