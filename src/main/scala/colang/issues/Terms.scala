@@ -1012,28 +1012,6 @@ object Terms {
       RussianTerm.Neuter)
   }
 
-  object OverloadedFunction extends Term {
-    val en_US = new EnglishTerm("overloaded function", EnglishTerm.Singular)
-
-    val be_BY = new BelarusianTerm(
-      "перагружаная функцыя",
-      "перагружанай функцыі",
-      "перагружанай функцыі",
-      "перагружаную функцыю",
-      "перагружанай функцыяй",
-      "перагружанай функцыі",
-      BelarusianTerm.Feminine)
-
-    val ru_RU = new RussianTerm(
-      "перегруженная функция",
-      "перегруженной функции",
-      "перегруженной функции",
-      "перегруженную функцию",
-      "перегруженной функцией",
-      "перегруженной функции",
-      RussianTerm.Feminine)
-  }
-
   object Ampersand extends Term {
     val en_US = new EnglishTerm("ampersand", EnglishTerm.Singular)
 
@@ -1053,6 +1031,28 @@ object Terms {
       "амперсанд",
       "амперсандом",
       "амперсанде",
+      RussianTerm.Masculine)
+  }
+
+  object Constructor extends Term {
+    val en_US = new EnglishTerm("constructor", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "канструктар",
+      "канструктара",
+      "канструктару",
+      "канструктар",
+      "канструктарам",
+      "канструктару",
+      BelarusianTerm.Masculine)
+
+    val ru_RU = new RussianTerm(
+      "конструктор",
+      "конструктора",
+      "конструктору",
+      "конструктор",
+      "конструктором",
+      "конструкторе",
       RussianTerm.Masculine)
   }
 }

@@ -4,8 +4,6 @@ import colang.ast.raw
 import colang.ast.raw.TypeDefinition
 import colang.issues.{Issue, Issues, Terms}
 
-import scala.collection.mutable
-
 /**
   * Represents a type.
   * @param name type name
@@ -16,7 +14,7 @@ import scala.collection.mutable
 class Type(val name: String,
            val scope: Some[Scope],
            val definition: Option[TypeDefinition],
-           val native: Boolean = false) extends Symbol with Scope {
+           val native: Boolean = false) extends Symbol with Scope with ObjectMemberContainer with ConstructorContainer {
 
   val parent = scope
   val definitionSite = definition match {
@@ -26,14 +24,29 @@ class Type(val name: String,
 
   val description = Terms.Type
 
-  private val methods: mutable.LinkedHashMap[String, Method] = mutable.LinkedHashMap.empty
-
   /**
-    * A default assign method is generated for every type.
+    * Returns a reference type for this type.
+    * @return reference type
     */
-  methods("assign") = defaultAssignMethod
+  lazy val reference: ReferenceType = new ReferenceType(this)
 
-  private def defaultAssignMethod: Method = {
+  // A default constructor is added for every type (it shouldn't, need to check if the type is Plain)
+  addConstructor(defaultConstructor)
+
+  // A copy constructor is added for every type.
+  addConstructor(copyConstructor)
+
+  private def defaultConstructor: Constructor = {
+    val body = new CodeBlock(new LocalScope(Some(this)), None)
+
+    new Constructor(
+      type_ = this,
+      parameters = Seq.empty,
+      body = body,
+      native = true)
+  }
+
+  private def copyConstructor: Constructor = {
     val body = new CodeBlock(new LocalScope(Some(this)), None)
     val params = Seq(new Variable(
       name = "other",
@@ -41,45 +54,12 @@ class Type(val name: String,
       type_ = this,
       definition = None))
 
-    new Method(
-      name = "assign",
-      container = this,
-      returnType = this,
+    new Constructor(
+      type_ = this,
       parameters = params,
       body = body,
-      definition = None,
       native = true)
   }
-
-  /**
-    * Resolves a method name.
-    * @param name method name
-    * @return the method with given name, or None if it doesn't exist
-    */
-  def resolveMethod(name: String): Option[Method] = methods get name
-
-  /**
-    * Tries to register a method in the type.
-    * @param method detached method
-    * @return an issue if registration failed
-    */
-  def tryAddMethod(method: Method): Option[Issue] = {
-    methods get method.name match {
-      case Some(existingMethod) if !existingMethod.native =>
-        val issue = Issues.DuplicateMethodDefinition(method.definitionSite.get, existingMethod.definitionSite)
-        Some(issue)
-
-      case None =>
-        methods(method.name) = method
-        None
-    }
-  }
-
-  /**
-    * Returns a Seq containing all methods of this type.
-    * @return all methods in a Seq
-    */
-  def allMethods: Seq[Method] = methods.values.toSeq
 
   /**
     * Returns true if a type can be implicitly converted to another type.
@@ -99,6 +79,41 @@ class Type(val name: String,
     } else if (other isImplicitlyConvertibleTo this) {
       Some(this)
     } else None
+  }
+}
+
+/**
+  * Represents a reference type.
+  * Never construct those manually, use Type reference method instead.
+  * @param referenced referenced type.
+  */
+class ReferenceType(val referenced: Type) extends Type(
+  name = referenced + "&",
+  scope = referenced.scope,
+  definition = None,
+  native = true) {
+
+  override lazy val reference: ReferenceType = throw new IllegalArgumentException("cannot reference a reference type")
+
+  // A default assign method is generated for every reference type.
+  addMethod(defaultAssignMethod)
+
+  private def defaultAssignMethod: Method = {
+    val body = new CodeBlock(new LocalScope(Some(this)), None)
+    val params = Seq(new Variable(
+      name = "other",
+      scope = Some(body.innerScope),
+      type_ = referenced,
+      definition = None))
+
+    new Method(
+      name = "assign",
+      container = this,
+      returnType = this,
+      parameters = params,
+      body = body,
+      definition = None,
+      native = true)
   }
 }
 

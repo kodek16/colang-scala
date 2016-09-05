@@ -50,18 +50,3 @@ class Function(val name: String,
       definition = None)
   }
 }
-
-object Function {
-
-  /**
-    * Checks if two functions have the same parameter types.
-    * @param f first function
-    * @param g second function
-    * @return true if functions have the same parameter types.
-    */
-  def sameParameterTypes(f: Function, g: Function): Boolean = {
-    if (f.parameters.size == g.parameters.size) {
-      (f.parameters map { _.type_ }) zip (g.parameters map { _.type_ }) map { ts => ts._1 == ts._2 } reduce { _ && _ }
-    } else false
-  }
-}

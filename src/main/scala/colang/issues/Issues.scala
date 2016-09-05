@@ -287,37 +287,40 @@ object Issues {
   }
 
   /**
-    * Generates an issue for a function call with incompatible arguments.
-    * Args: Seq of argument types
+    * Generates an issue for a call with incompatible arguments.
+    * Args: (applicable entity type, Seq of argument types)
     */
-  object InvalidFunctionArguments extends LocaleAwareIssueFactory[Error, Seq[String]] {
+  object InvalidCallArguments extends LocaleAwareIssueFactory[Error, (Term, Seq[String])] {
     private val code = "E0013"
 
-    protected def en_US(source: SourceCode, args: Seq[String]): Error = {
-      val arguments = if (args.size == 1) {
-        s"an argument of type '${args.head}'"
+    protected def en_US(source: SourceCode, args: (Term, Seq[String])): Error = {
+      val applicable = args._1.en_US
+      val arguments = if (args._2.size == 1) {
+        s"an argument of type '${args._2.head}'"
       } else {
-        s"arguments of types '${args mkString ", "}'"
+        s"arguments of types '${args._2 mkString ", "}'"
       }
-      Error(code, source, s"the function can't be applied to $arguments", notes = Seq.empty)
+      Error(code, source, s"${applicable.definite} can't be applied to $arguments", notes = Seq.empty)
     }
 
-    protected def be_BY(source: SourceCode, args: Seq[String]): Error = {
-      val arguments = if (args.size == 1) {
-        s"аргумента тыпу '${args.head}'"
+    protected def be_BY(source: SourceCode, args: (Term, Seq[String])): Error = {
+      val applicable = args._1.be_BY
+      val arguments = if (args._2.size == 1) {
+        s"аргумента тыпу '${args._2.head}'"
       } else {
-        s"аргументаў тыпаў '${args mkString ", "}'"
+        s"аргументаў тыпаў '${args._2 mkString ", "}'"
       }
-      Error(code, source, s"немагчыма прымяніць функцыю да $arguments", notes = Seq.empty)
+      Error(code, source, s"немагчыма прымяніць ${applicable.accusative} да $arguments", notes = Seq.empty)
     }
 
-    protected def ru_RU(source: SourceCode, args: Seq[String]): Error = {
-      val arguments = if (args.size == 1) {
-        s"аргументу типа '${args.head}'"
+    protected def ru_RU(source: SourceCode, args: (Term, Seq[String])): Error = {
+      val applicable = args._1.ru_RU
+      val arguments = if (args._2.size == 1) {
+        s"аргументу типа '${args._2.head}'"
       } else {
-        s"аргументам типов '${args mkString ", "}'"
+        s"аргументам типов '${args._2 mkString ", "}'"
       }
-      Error(code, source, s"невозможно применить функцию к $arguments", notes = Seq.empty)
+      Error(code, source, s"невозможно применить ${applicable.accusative} к $arguments", notes = Seq.empty)
     }
   }
 
@@ -681,22 +684,28 @@ object Issues {
   }
 
   /**
-    * Generates an issue for an ambiguous overloaded function call.
-    * Args: Seq of notes: use note methods to generate them.
+    * Generates an issue for an ambiguous overloaded applicable entity call.
+    * Args: (applicable entity type, Seq of notes: use note methods to generate them)
     */
-  object AmbiguousOverloadedFunctionCall extends LocaleAwareIssueFactory[Error, Seq[Note]] {
+  object AmbiguousOverloadedCall extends LocaleAwareIssueFactory[Error, (Term, Seq[Note])] {
     private val code = "E0031"
 
-    protected def en_US(source: SourceCode, notes: Seq[Note]): Error = {
-      Error(code, source, "the overloaded function call is ambiguous", notes)
+    protected def en_US(source: SourceCode, args: (Term, Seq[Note])): Error = {
+      val applicable = args._1.en_US
+      val notes = args._2
+      Error(code, source, s"the overloaded ${applicable.noDeterminer} call is ambiguous", notes)
     }
 
-    protected def be_BY(source: SourceCode, notes: Seq[Note]): Error = {
-      Error(code, source, "выклік перагружанай функцыі можна трактаваць па-рознаму", notes)
+    protected def be_BY(source: SourceCode, args: (Term, Seq[Note])): Error = {
+      val applicable = (Adjectives.Overloaded applyTo args._1).be_BY
+      val notes = args._2
+      Error(code, source, s"выклік ${applicable.genitive} можна трактаваць па-рознаму", notes)
     }
 
-    protected def ru_RU(source: SourceCode, notes: Seq[Note]): Error = {
-      Error(code, source, "вызов перегруженной функции можно понимать по-разному", notes)
+    protected def ru_RU(source: SourceCode, args: (Term, Seq[Note])): Error = {
+      val applicable = (Adjectives.Overloaded applyTo args._1).ru_RU
+      val notes = args._2
+      Error(code, source, s"вызов ${applicable.genitive} можно понимать по-разному", notes)
     }
 
     def note(signature: String, definition: Option[SourceCode]): Note = {
@@ -826,6 +835,42 @@ object Issues {
     protected def ru_RU(source: SourceCode, referencedType: String): Error = {
       Error(code, source, s"нельзя ссылаться на тип '$referencedType', который сам по себе является ссылкой.",
         notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a duplicate constructor definition (same parameter types).
+    * Args: optionally definition site of the original constructor
+    */
+  object DuplicateConstructorDefinition extends LocaleAwareIssueFactory[Error, Option[SourceCode]] {
+    private val code = "E0036"
+
+    protected def en_US(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "defined here"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "there is already a constructor with the same parameter types for this type",
+        notes)
+    }
+
+    protected def be_BY(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "акрэсьлены тут"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для гэтага тыпу ўжо акрэсьлены канструктар з такімі самымі тыпамі параметраў", notes)
+    }
+
+    protected def ru_RU(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "определённый здесь"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для этого типа уже определён конструктор с такими же типами параметров", notes)
     }
   }
 }

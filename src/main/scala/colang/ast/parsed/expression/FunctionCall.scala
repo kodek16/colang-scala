@@ -2,7 +2,7 @@ package colang.ast.parsed.expression
 
 import colang.ast.parsed.{Function, Scope}
 import colang.ast.raw.{expression => raw}
-import colang.issues.{Issue, Issues}
+import colang.issues.{Issue, Issues, Terms}
 
 /**
   * Represents a function call.
@@ -40,7 +40,8 @@ object FunctionCall {
         (FunctionCall(f, parsedArgs, Some(rawExpr)), functionIssues ++ argsIssues)
 
       case FunctionReference(f, _) =>
-        val issue = Issues.InvalidFunctionArguments(rawExpr.source, parsedArgs map { _.type_.qualifiedName })
+        val argTypeNames = parsedArgs map { _.type_.qualifiedName }
+        val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Function, argTypeNames))
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
       case _ =>
