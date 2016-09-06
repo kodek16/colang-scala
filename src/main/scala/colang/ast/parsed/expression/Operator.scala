@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.Scope
+import colang.ast.parsed.{Scope, Type}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 import colang.tokens
@@ -34,7 +34,8 @@ object Operator {
 
     lhs.type_ resolveMethod methodName match {
       case Some(m) if m.canBeAppliedTo(Seq(rhs.type_)) =>
-        (MethodCall(m, lhs, Seq(rhs), Some(rawExpr)), lhsIssues ++ rhsIssues)
+        val operatorArgs = Type.performImplicitConversions(Seq(rhs), m.parameters map { _.type_ })
+        (MethodCall(m, lhs, operatorArgs, Some(rawExpr)), lhsIssues ++ rhsIssues)
 
       case _ =>
         val argTypes = Seq(lhs.type_.qualifiedName, rhs.type_.qualifiedName)

@@ -199,8 +199,13 @@ class CCodeGenerator(writer: CCodeWriter) extends Backend {
     */
   private def generateExpression(expression: Expression): CExpression = {
     expression match {
+      case ImplicitConversion(expr, to) if expr.type_ == to.reference =>
+        CExpression(CLiteralToken("*") +: generateExpression(expr).tokens)
+
       case FunctionReference(function, _) => CExpression(Seq(CSymbolReferenceToken(function)))
-      case VariableReference(variable, _) => CExpression(Seq(CSymbolReferenceToken(variable)))
+
+      case rvr: ReferenceVariableReference => CExpression(Seq(CSymbolReferenceToken(rvr.variable)))
+      case v: VariableReference => CExpression(Seq(CLiteralToken("&"), CSymbolReferenceToken(v.variable)))
 
       case IntLiteral(value, _) => CExpression(Seq(CLiteralToken(value.toString)))
       case BoolLiteral(value, _) => CExpression(Seq(CLiteralToken(if (value) "1" else "0")))

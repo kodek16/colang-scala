@@ -21,7 +21,7 @@ private[routines] object RegisterFunctions {
 
       val paramsResult = funcDef.parameterList.params map { rawParam =>
         val (paramType, paramTypeIssues) = Type.resolve(rootNamespace, rawParam.type_)
-        val param = new Variable(
+        val param = Variable(
           name = rawParam.name.value,
           scope = Some(functionBody.innerScope),
           type_ = paramType,

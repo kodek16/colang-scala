@@ -37,7 +37,7 @@ private[routines] object RegisterMethods {
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>
       val (paramType, paramTypeIssues) = Type.resolve(type_, rawParam.type_)
-      val param = new Variable(
+      val param = Variable(
         name = rawParam.name.value,
         scope = Some(methodBody.innerScope),
         type_ = paramType,

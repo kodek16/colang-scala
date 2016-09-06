@@ -823,17 +823,17 @@ object Issues {
     private val code = "E0035"
 
     protected def en_US(source: SourceCode, referencedType: String): Error = {
-      Error(code, source, s"type '$referencedType', which is itself a reference, cannot be referenced again.",
+      Error(code, source, s"type '$referencedType', which is itself a reference, cannot be referenced again",
         notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, referencedType: String): Error = {
-      Error(code, source, s"нельга спасылацца на тып '$referencedType', які ўжо з'яўляецца спасылкай.",
+      Error(code, source, s"нельга спасылацца на тып '$referencedType', які ўжо з'яўляецца спасылкай",
         notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, referencedType: String): Error = {
-      Error(code, source, s"нельзя ссылаться на тип '$referencedType', который сам по себе является ссылкой.",
+      Error(code, source, s"нельзя ссылаться на тип '$referencedType', который сам по себе является ссылкой",
         notes = Seq.empty)
     }
   }
@@ -871,6 +871,30 @@ object Issues {
       }
 
       Error(code, source, "для этого типа уже определён конструктор с такими же типами параметров", notes)
+    }
+  }
+
+  /**
+    * Generates an issue for a variable definition of non-plain type without initializer
+    * Args: variable type
+    */
+  object NonPlainVariableWithoutInitializer extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0037"
+
+    protected def en_US(source: SourceCode, variableType: String): Error = {
+      Error(code, source, s"cannot create a variable of type '$variableType' without explicit initializer: the type has " +
+        "no default constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, variableType: String): Error = {
+      Error(code, source, s"немагчыма стварыць зьменную тыпу '$variableType' бяз яўнага ініцыялізатара: для тыпу няма " +
+        s" змоўчнага канструктара",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, variableType: String): Error = {
+      Error(code, source, s"невозможно создать переменную типа '$variableType' без явного инициализатора: для типа не " +
+        s"определён конструктор по умолчанию", notes = Seq.empty)
     }
   }
 }

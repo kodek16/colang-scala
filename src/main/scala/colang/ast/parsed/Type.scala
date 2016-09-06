@@ -1,5 +1,6 @@
 package colang.ast.parsed
 
+import colang.ast.parsed.expression.{Expression, ImplicitConversion}
 import colang.ast.raw
 import colang.ast.raw.TypeDefinition
 import colang.issues.{Issue, Issues, Terms}
@@ -30,25 +31,26 @@ class Type(val name: String,
     */
   lazy val reference: ReferenceType = new ReferenceType(this)
 
-  // A default constructor is added for every type (it shouldn't, need to check if the type is Plain)
-  addConstructor(defaultConstructor)
+  // A default constructor is added for every type (it shouldn't be, need to check if the type is Plain)
+  defaultConstructor foreach addConstructor
 
   // A copy constructor is added for every type.
   addConstructor(copyConstructor)
 
-  private def defaultConstructor: Constructor = {
+  // TODO return None if the type isn't plain
+  lazy val defaultConstructor: Option[Constructor] = {
     val body = new CodeBlock(new LocalScope(Some(this)), None)
 
-    new Constructor(
+    Some(new Constructor(
       type_ = this,
       parameters = Seq.empty,
       body = body,
-      native = true)
+      native = true))
   }
 
-  private def copyConstructor: Constructor = {
+  lazy val copyConstructor: Constructor = {
     val body = new CodeBlock(new LocalScope(Some(this)), None)
-    val params = Seq(new Variable(
+    val params = Seq(Variable(
       name = "other",
       scope = Some(body.innerScope),
       type_ = this,
@@ -63,6 +65,7 @@ class Type(val name: String,
 
   /**
     * Returns true if a type can be implicitly converted to another type.
+    * Note that subclasses may often override this method. This, for example, is the case with ReferenceType.
     * @param other target type
     * @return whether implicit conversion is possible
     */
@@ -100,7 +103,7 @@ class ReferenceType(val referenced: Type) extends Type(
 
   private def defaultAssignMethod: Method = {
     val body = new CodeBlock(new LocalScope(Some(this)), None)
-    val params = Seq(new Variable(
+    val params = Seq(Variable(
       name = "other",
       scope = Some(body.innerScope),
       type_ = referenced,
@@ -114,6 +117,12 @@ class ReferenceType(val referenced: Type) extends Type(
       body = body,
       definition = None,
       native = true)
+  }
+
+  // References can be implicitly converted to their referenced types,
+  // AND to types they can be implicitly converted to.
+  override def isImplicitlyConvertibleTo(other: Type): Boolean = {
+    (this eq other) || (referenced isImplicitlyConvertibleTo other)
   }
 }
 
@@ -151,6 +160,27 @@ object Type {
           case Some(lhs) => lhs leastUpperBound rhs
           case None => None
         }
+      }
+    }
+  }
+
+  /**
+    * Coerces expressions to given types, performing implicit type conversions where necessary.
+    * This function should only be called when expressions are checked to be implicitly convertible.
+    * @param from expressions to convert
+    * @param to target types
+    * @return resulting expressions
+    */
+  def performImplicitConversions(from: Seq[Expression], to: Seq[Type]): Seq[Expression] = {
+    if (from.size != to.size) {
+      throw new IllegalArgumentException("source and target lists have different length")
+    }
+
+    (from zip to) map { case (expression, targetType) =>
+      if (expression.type_ eq targetType) {
+        expression
+      } else {
+        ImplicitConversion(expression, targetType)
       }
     }
   }

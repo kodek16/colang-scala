@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, Scope}
+import colang.ast.parsed.{Function, Scope, Type}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues, Terms}
 
@@ -31,13 +31,17 @@ object FunctionCall {
       case OverloadedFunctionReference(of, _) =>
         val (overloadOption, overloadingIssues) = of.resolveOverload(parsedArgs map { _.type_ }, Some(rawExpr.source))
         val result = overloadOption match {
-          case Some(overload) => FunctionCall(overload, parsedArgs, Some(rawExpr))
+          case Some(overload) =>
+            val functionArgs = Type.performImplicitConversions(parsedArgs, overload.parameters map { _.type_ })
+            FunctionCall(overload, functionArgs, Some(rawExpr))
+
           case None => InvalidExpression()
         }
         (result, functionIssues ++ argsIssues ++ overloadingIssues)
 
       case FunctionReference(f, _) if f.canBeAppliedTo(parsedArgs map { _.type_ }) =>
-        (FunctionCall(f, parsedArgs, Some(rawExpr)), functionIssues ++ argsIssues)
+        val functionArgs = Type.performImplicitConversions(parsedArgs, f.parameters map { _.type_ })
+        (FunctionCall(f, functionArgs, Some(rawExpr)), functionIssues ++ argsIssues)
 
       case FunctionReference(f, _) =>
         val argTypeNames = parsedArgs map { _.type_.qualifiedName }

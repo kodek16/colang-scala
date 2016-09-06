@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, OverloadedFunction, Scope, Symbol, Variable}
+import colang.ast.parsed.{Function, OverloadedFunction, ReferenceVariable, Scope, Symbol, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 
@@ -22,11 +22,34 @@ case class OverloadedFunctionReference(overloadedFunction: OverloadedFunction,
   val type_ = overloadedFunction.scope.get.root.overloadedFunctionType
 }
 
+object VariableReference {
+
+  /**
+    * A factory method for instantiating the correct Expression class.
+    */
+  def apply(variable: Variable, rawNode: Option[raw.SymbolReference]): Expression = {
+    variable match {
+      case rv: ReferenceVariable => new ReferenceVariableReference(rv, rawNode)
+      case v: Variable => new VariableReference(v, rawNode)
+    }
+  }
+}
+
 /**
   * Represents a variable reference.
   * @param variable referenced variable
   */
-case class VariableReference(variable: Variable, rawNode: Option[raw.SymbolReference]) extends Expression {
+class VariableReference private (val variable: Variable,
+                                 val rawNode: Option[raw.SymbolReference]) extends Expression {
+  val type_ = variable.type_.reference
+}
+
+/**
+  * Represents a "reference variable" reference.
+  * @param variable referenced reference variable
+  */
+class ReferenceVariableReference(val variable: ReferenceVariable,
+                                 val rawNode: Option[raw.SymbolReference]) extends Expression {
   val type_ = variable.type_
 }
 
