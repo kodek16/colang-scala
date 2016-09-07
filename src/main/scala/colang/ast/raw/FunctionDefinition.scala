@@ -35,7 +35,7 @@ object FunctionDefinition {
       classOf[NativeKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionDefinition] = {
-      ParserImpl.parseGroup(Terms.Definition of Terms.Function)
+      ParserImpl.parseGroup()
         .optionalElement(specifiersStrategy)    //Actually always present rather than optional.
         .definingElement(Type.strategy)
         .definingElement(identifierStrategy)

@@ -1,18 +1,18 @@
 package colang
 
-import colang.TestUtils._
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.issues.Warning
 
-class MappedStrategySpec extends UnitSpec {
+class MappedStrategySpec extends LexerUnitSpec {
 
-  case class WrappedValue[T](value: T)
-  def wrap[T](t: T) = WrappedValue(t)
+  private case class WrappedValue[T](value: T)
+  private def wrap[T](t: T) = WrappedValue(t)
 
-  val issue = makeWarning("some warning")
+  private val issue = Warning("W0001", SourceCode(new InlineSourceFile(""), 0, 0, 0, 0), "", Seq.empty)
 
-  val successfulStrategy = makeSuccessfulStrategy(4, Seq(issue), "new stream")
-  val malformedStrategy = makeMalformedStrategy[String, Int](Seq(issue), "new stream")
-  val noMatchStrategy = makeNonMatchingStrategy[String, Int]
+  private val successfulStrategy = makeSuccessfulStrategy(4, Seq(issue), "new stream")
+  private val malformedStrategy = makeMalformedStrategy[String, Int](Seq(issue), "new stream")
+  private val noMatchStrategy = makeNonMatchingStrategy[String, Int]
 
   describe("A mapped strategy") {
     it("should wrap objects produced by underlying strategy") {

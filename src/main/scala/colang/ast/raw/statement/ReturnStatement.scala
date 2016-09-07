@@ -22,7 +22,7 @@ object ReturnStatement {
   val strategy: ParserImpl.Strategy[ReturnStatement] = new ParserImpl.Strategy[ReturnStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, ReturnStatement] = {
-      ParserImpl.parseGroup(Terms.Statement("return"))
+      ParserImpl.parseGroup()
         .definingElement(SingleTokenStrategy(classOf[ReturnKeyword]))
         .optionalElement(Expression.strategy)
         .parse(stream)

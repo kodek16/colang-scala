@@ -36,7 +36,6 @@ object SpecifiersList {
     def apply(stream: TokenStream): Result[TokenStream, SpecifiersList] = {
       ParserImpl.parseSequence(
         stream = stream,
-        sequenceDescription = Terms.List of Terms.Specifiers,
         elementStrategy = anySpecifierStrategy,
         elementDescription = Terms.Specifier
       ) match {

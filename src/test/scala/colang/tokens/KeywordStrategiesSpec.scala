@@ -1,44 +1,27 @@
 package colang.tokens
 
-import colang.Strategy.Result.{NoMatch, Success}
-import colang.TestUtils._
-import colang.{SourceCode, SourceCodeStream, UnitSpec}
+import colang.LexerUnitSpec
 
-class KeywordStrategiesSpec extends UnitSpec {
+class KeywordStrategiesSpec extends LexerUnitSpec {
 
   def describeKeywordStrategy[K <: Keyword](keywordText: String,
-                                            keywordClass: Class[K],
                                             keywordStrategy: LexerImpl.StatelessTokenStrategy[K]): Unit = {
 
-    val sourceFile = new InlineSourceFile("keywords.co", s"$keywordText ${keywordText}abc")
-
     describe(s"'$keywordText' keyword lexer strategy") {
-      it(s"should match '$keywordText' words") {
-        val streamAtKeyword = new SourceCodeStream(sourceFile, 0, 0, 0)
-        inside(keywordStrategy(streamAtKeyword)) { case Success(token, issues, newStream) =>
-          token.getClass should be (keywordClass)
-
-          val endChar = keywordText.length - 1
-          token.source should matchPattern { case SourceCode(`sourceFile`, 0, 0, 0, `endChar`) => }
-
-          issues shouldBe empty
-
-          newStream.file should be (sourceFile)
-          newStream.startChar should be (keywordText.length)
-        }
+      it(s"should match single '$keywordText' words") {
+        keywordStrategy shouldSucceedOn keywordText withoutIssues()
       }
 
       it(s"should not match other identifiers that '$keywordText' is a prefix of") {
-        val streamAtIdentifier = new SourceCodeStream(sourceFile, keywordText.length + 1, 0, keywordText.length + 1)
-        keywordStrategy(streamAtIdentifier) should matchPattern { case NoMatch() => }
+        keywordStrategy shouldNotMatch  (keywordText + "abc")
       }
     }
   }
 
-  describeKeywordStrategy("native", classOf[NativeKeyword], NativeKeyword.strategy)
-  describeKeywordStrategy("struct", classOf[StructKeyword], StructKeyword.strategy)
-  describeKeywordStrategy("if", classOf[IfKeyword], IfKeyword.strategy)
-  describeKeywordStrategy("else", classOf[ElseKeyword], ElseKeyword.strategy)
-  describeKeywordStrategy("while", classOf[WhileKeyword], WhileKeyword.strategy)
-  describeKeywordStrategy("return", classOf[ReturnKeyword], ReturnKeyword.strategy)
+  describeKeywordStrategy("native", NativeKeyword.strategy)
+  describeKeywordStrategy("struct", StructKeyword.strategy)
+  describeKeywordStrategy("if", IfKeyword.strategy)
+  describeKeywordStrategy("else", ElseKeyword.strategy)
+  describeKeywordStrategy("while", WhileKeyword.strategy)
+  describeKeywordStrategy("return", ReturnKeyword.strategy)
 }

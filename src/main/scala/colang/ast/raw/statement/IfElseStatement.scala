@@ -25,7 +25,7 @@ object IfElseStatement {
   val strategy: ParserImpl.Strategy[IfElseStatement] = new ParserImpl.Strategy[IfElseStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, IfElseStatement] = {
-      ParserImpl.parseGroup(Terms.Statement("if-else"))
+      ParserImpl.parseGroup()
         .definingElement(IfStatement.strategy)
         .definingElement(SingleTokenStrategy(classOf[ElseKeyword]))
         .element(Statement.strategy, Terms.Branch("else"))

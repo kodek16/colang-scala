@@ -20,7 +20,7 @@ object FunctionParameter {
   val strategy = new ParserImpl.Strategy[FunctionParameter] {
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionParameter] = {
-      ParserImpl.parseGroup(Terms.Definition of Terms.Parameter)
+      ParserImpl.parseGroup()
         .definingElement(Type.strategy)
         .element(SingleTokenStrategy(classOf[Identifier]), Terms.Name of Terms.Parameter)
         .parse(stream)

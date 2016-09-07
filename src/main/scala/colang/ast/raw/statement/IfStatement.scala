@@ -30,7 +30,7 @@ object IfStatement {
   val strategy: ParserImpl.Strategy[IfStatement] = new ParserImpl.Strategy[IfStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, IfStatement] = {
-      ParserImpl.parseGroup(Terms.Statement("if"))
+      ParserImpl.parseGroup()
         .definingElement(SingleTokenStrategy(classOf[IfKeyword]))
         .element(SingleTokenStrategy(classOf[LeftParen]), Terms.OpeningParen)
         .element(Expression.strategy, Adjectives.Conditional applyTo Terms.Expression)

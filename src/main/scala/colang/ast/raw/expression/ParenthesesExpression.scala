@@ -24,9 +24,9 @@ object ParenthesesExpression {
   val strategy = new ParserImpl.Strategy[ParenthesesExpression] {
 
     def apply(stream: TokenStream): Result[TokenStream, ParenthesesExpression] = {
-      ParserImpl.parseGroup(Terms.Expression in Terms.Parentheses)
+      ParserImpl.parseGroup()
         .definingElement(SingleTokenStrategy(classOf[LeftParen]))
-        .element(Expression.strategy, Terms.Expression)
+        .element(Expression.strategy, Terms.Expression in Terms.Parentheses)
         .element(SingleTokenStrategy(classOf[RightParen]), Terms.ClosingParen)
         .parse(stream)
         .as[LeftParen, Expression, RightParen] match {

@@ -1,13 +1,11 @@
 package colang
 
-import colang.TestUtils._
+class SourceCodeSpec extends LexerUnitSpec {
 
-class SourceCodeSpec extends UnitSpec {
-
-  val sourceFile = new InlineSourceFile("sum.co", """void main() {
-                                                    |    read int x, y
-                                                    |    println(x + y)
-                                                    |}""".stripMargin)
+  val sourceFile = new InlineSourceFile("""void main() {
+                                        |    read int x, y
+                                        |    println(x + y)
+                                        |}""".stripMargin)
 
   describe("A source code fragment") {
     val singleLineSource = SourceCode(sourceFile, 0, 3, 0, 7)
@@ -39,7 +37,7 @@ class SourceCodeSpec extends UnitSpec {
     }
 
     it("should throw IllegalArgumentException on attempt to add a fragment from another file") {
-      val otherFileSource = SourceCode(emptySourceFile, 0, 0, 0, 0)
+      val otherFileSource = SourceCode(new InlineSourceFile(""), 0, 0, 0, 0)
       an [IllegalArgumentException] should be thrownBy (singleLineSource + otherFileSource)
       an [IllegalArgumentException] should be thrownBy (otherFileSource + singleLineSource)
     }

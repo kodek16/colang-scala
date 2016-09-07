@@ -8,10 +8,11 @@ abstract class LexerUnitSpec extends UnitSpec {
 
   /**
     * A source file mock for inline construction.
-    * @param text raw source code
+    * @param rawText raw source code
     */
-  class InlineSourceFile(val text: String) extends SourceFile {
+  class InlineSourceFile(rawText: String) extends SourceFile {
     val name = "<inlined source>"
+    val text = rawText.replaceAll("\r\n", "\n")
   }
 
   implicit class StrategyWrapper[T <: Token](strategy: LexerImpl.Strategy[T]) {
@@ -28,22 +29,38 @@ abstract class LexerUnitSpec extends UnitSpec {
 
       strategy(stream) match {
         case Success(token, issues, streamAfterToken) =>
-          val lastChar = source.length - 1
-
-          token.source match {
-            case SourceCode(`sourceFile`, 0, 0, 0, `lastChar`) => ()
-            case _ =>
-              fail("Strategy didn't match the whole character sequence.")
-          }
-
           streamAfterToken.file should be (sourceFile)
-          streamAfterToken.startChar should be (lastChar + 1)
+          if (streamAfterToken.startChar != source.length) {
+            fail("Strategy didn't match the whole character sequence.")
+          }
 
           new SuccessWrapper(token, issues)
         case Malformed(_, _) =>
           fail("Strategy matched with Malformed when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
+      }
+    }
+
+    /**
+      * Asserts that the strategy matches a source code fragment completely and returns Malformed with a correct
+      * new stream. Further checks are usually chained on the return value, see MalformedWrapper.
+      * @param source source code that the strategy should match with Malformed
+      * @return MalformedWrapper
+      */
+    def shouldMatchMalformedOn(source: String): MalformedWrapper = {
+      val sourceFile = new InlineSourceFile(source)
+      val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
+
+      strategy(stream) match {
+        case Success(_, _, _) =>
+          fail("Strategy succeeded when it was expected to match with Malformed.")
+        case Malformed(issues, streamAfterToken) =>
+          streamAfterToken.file should be (sourceFile)
+          streamAfterToken.startChar should be (source.length)
+          new MalformedWrapper(issues)
+        case NoMatch() =>
+          fail("Strategy didn't match though it was supposed to match with Malformed.")
       }
     }
 
@@ -70,6 +87,15 @@ abstract class LexerUnitSpec extends UnitSpec {
       * @return PartialSuccessClause
       */
     def shouldOnlySucceedOn(tokenText: String) = new PartialSuccessClause(strategy, tokenText)
+
+    /**
+      * Asserts that the strategy only matches a prefix of given source text and returns Malformed with a correct
+      * new stream. Use it like 'strategy shouldOnlyMatchMalformedOn "prefix" from "prefix some other code".
+      * Other MalformedWrapper assertions may follow.
+      * @param tokenText token text that the strategy should match
+      * @return PartialMalformedClause
+      */
+    def shouldOnlyMatchMalformedOn(tokenText: String) = new PartialMalformedClause(strategy, tokenText)
   }
 
   /**
@@ -98,17 +124,60 @@ abstract class LexerUnitSpec extends UnitSpec {
     }
 
     /**
-      * Asserts that there was exactly one error. Scala syntax requires that empty parentheses are present when calling
-      * this method.
+      * Asserts that there was exactly one error with a given code.
+      * @param errorCode expected error code
       * @return
       */
-    def withOneError(): SuccessWrapper[T] = {
+    def withOneError(errorCode: String): SuccessWrapper[T] = {
       val errorCount = issues count { _.isInstanceOf[Error] }
       if (errorCount == 0) {
         fail("Strategy matched successfully without any errors though it was supposed to generate one error.")
       }
       if (errorCount >= 2) {
         fail("Strategy matched successfully with multiple errors though it was supposed to generate only one.")
+      }
+      val actualCode = issues.find { _.isInstanceOf[Error] }.get.code
+      if (actualCode != errorCode) {
+        fail(s"Expected error $errorCode, but got $actualCode.")
+      }
+      this
+    }
+  }
+
+  /**
+    * Wraps a Malformed result allowing additional issue checks.
+    * @param issues encountered issues
+    */
+  class MalformedWrapper(issues: Seq[Issue]) {
+
+    /**
+      * Asserts that there were no issues. Scala syntax requires that empty parentheses are present when calling this
+      * method.
+      * @return this
+      */
+    def withoutIssues(): MalformedWrapper = {
+      if (issues.nonEmpty) {
+        fail("Strategy matched with Malformed, but produced issues though it was not supposed to.")
+      }
+      this
+    }
+
+    /**
+      * Asserts that there was exactly one error with given code.
+      * @param errorCode expected error code
+      * @return
+      */
+    def withOneError(errorCode: String): MalformedWrapper = {
+      val errorCount = issues count { _.isInstanceOf[Error] }
+      if (errorCount == 0) {
+        fail("Strategy matched without any errors though it was supposed to generate one error.")
+      }
+      if (errorCount >= 2) {
+        fail("Strategy matched with multiple errors though it was supposed to generate only one.")
+      }
+      val actualCode = issues.find { _.isInstanceOf[Error] }.get.code
+      if (actualCode != errorCode) {
+        fail(s"Expected error $errorCode, but got $actualCode.")
       }
       this
     }
@@ -121,24 +190,36 @@ abstract class LexerUnitSpec extends UnitSpec {
 
       strategy(stream) match {
         case Success(token, issues, streamAfterToken) =>
-          val expectedlastChar = tokenText.length - 1
-
-          token.source match {
-            case SourceCode(`sourceFile`, 0, 0, 0, `expectedlastChar`) => ()
-            case SourceCode(`sourceFile`, 0, 0, 0, actualLastChar) if actualLastChar == source.length - 1 =>
-              fail("Strategy matched the whole sequence instead of only a part of it.")
-            case _ =>
-              fail("Strategy didn't match the whole character sequence.")
-          }
-
           streamAfterToken.file should be (sourceFile)
-          streamAfterToken.startChar should be (expectedlastChar + 1)
+          if (streamAfterToken.startChar == source.length) {
+            fail("Strategy matched the whole sequence instead of only a part of it.")
+          } else if (streamAfterToken.startChar != tokenText.length) {
+            fail("Strategy didn't match the whole character sequence.")
+          }
 
           new SuccessWrapper(token, issues)
         case Malformed(_, _) =>
           fail("Strategy matched with Malformed when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
+      }
+    }
+  }
+
+  class PartialMalformedClause[T <: Token](strategy: LexerImpl.Strategy[T], tokenText: String) {
+    def from(source: String): MalformedWrapper = {
+      val sourceFile = new InlineSourceFile(source)
+      val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
+
+      strategy(stream) match {
+        case Success(_, _, _) =>
+          fail("Strategy succeeded when it was expected to match with Malformed.")
+        case Malformed(issues, streamAfterToken) =>
+          streamAfterToken.file should be (sourceFile)
+          streamAfterToken.startChar should be (tokenText.length)
+          new MalformedWrapper(issues)
+        case NoMatch() =>
+          fail("Strategy didn't match though it was supposed to match with Malformed.")
       }
     }
   }

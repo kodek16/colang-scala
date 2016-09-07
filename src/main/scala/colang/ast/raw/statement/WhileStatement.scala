@@ -30,7 +30,7 @@ object WhileStatement {
   val strategy: ParserImpl.Strategy[WhileStatement] = new ParserImpl.Strategy[WhileStatement] {
 
     def apply(stream: TokenStream): Result[TokenStream, WhileStatement] = {
-      ParserImpl.parseGroup(Terms.Statement("while"))
+      ParserImpl.parseGroup()
         .definingElement(SingleTokenStrategy(classOf[WhileKeyword]))
         .element(SingleTokenStrategy(classOf[LeftParen]), Terms.OpeningParen)
         .element(Expression.strategy, Adjectives.Conditional applyTo Terms.Expression)
