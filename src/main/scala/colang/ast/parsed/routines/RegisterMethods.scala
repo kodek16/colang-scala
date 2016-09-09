@@ -2,7 +2,7 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed._
 import colang.ast.raw
-import colang.issues.Issue
+import colang.issues.{Issue, Terms}
 import colang.tokens.NativeKeyword
 
 private[routines] object RegisterMethods {
@@ -33,7 +33,8 @@ private[routines] object RegisterMethods {
   private def registerMethod(type_ : Type, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
     val (returnType, returnTypeIssues) = Type.resolve(type_, methodDef.returnType)
 
-    val methodBody = new CodeBlock(new LocalScope(Some(type_)), methodDef.body)
+    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = returnType)
+    val methodBody = new CodeBlock(new LocalScope(Some(type_)), localContext, methodDef.body)
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>
       val (paramType, paramTypeIssues) = Type.resolve(type_, rawParam.type_)

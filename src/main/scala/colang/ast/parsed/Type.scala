@@ -1,12 +1,12 @@
 package colang.ast.parsed
 
-import colang.ast.parsed.expression.{Expression, ImplicitConversion}
+import colang.ast.parsed.expression.{Expression, ImplicitDereferencing}
 import colang.ast.raw
 import colang.ast.raw.TypeDefinition
 import colang.issues.{Issue, Issues, Terms}
 
 /**
-  * Represents a type.
+  * Represents a type. Different type aspects are defined in separate traits to keep the file smaller.
   * @param name type name
   * @param scope enclosing scope
   * @param definition raw type definition
@@ -25,8 +25,11 @@ class Type(val name: String,
 
   val description = Terms.Type
 
+  // TODO ReferenceType throwing here is not the best solution, it should be probably eventually refactored using traits
+  // TODO and templates
   /**
     * Returns a reference type for this type.
+    * WARNING: This will throw when used on ReferenceType, because of overrefencing. Be careful when you use it.
     * @return reference type
     */
   lazy val reference: ReferenceType = new ReferenceType(this)
@@ -39,7 +42,13 @@ class Type(val name: String,
 
   // TODO return None if the type isn't plain
   lazy val defaultConstructor: Option[Constructor] = {
-    val body = new CodeBlock(new LocalScope(Some(this)), None)
+    // HACK: the LocalContext object has 'this' as expectedReturnType. Semantically for constructors it should be
+    // 'void', but if we specify 'root.voidType' problems will arise because 'void' type may be not defined yet.
+    // The LocalContext object is never used in native functions (since they have no body to parse with this context),
+    // so it should be OK.
+    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = this)
+
+    val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
 
     Some(new Constructor(
       type_ = this,
@@ -49,7 +58,12 @@ class Type(val name: String,
   }
 
   lazy val copyConstructor: Constructor = {
-    val body = new CodeBlock(new LocalScope(Some(this)), None)
+    // HACK: the LocalContext object has 'this' as expectedReturnType. Semantically for constructors it should be
+    // 'void', but if we specify 'root.voidType' problems will arise because 'void' type may be not defined yet.
+    // The LocalContext object is never used in native functions (since they have no body to parse with this context),
+    // so it should be OK.
+    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = this)
+    val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
     val params = Seq(Variable(
       name = "other",
       scope = Some(body.innerScope),
@@ -91,7 +105,7 @@ class Type(val name: String,
   * @param referenced referenced type.
   */
 class ReferenceType(val referenced: Type) extends Type(
-  name = referenced + "&",
+  name = referenced.name + "&",
   scope = referenced.scope,
   definition = None,
   native = true) {
@@ -102,7 +116,8 @@ class ReferenceType(val referenced: Type) extends Type(
   addMethod(defaultAssignMethod)
 
   private def defaultAssignMethod: Method = {
-    val body = new CodeBlock(new LocalScope(Some(this)), None)
+    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = this)
+    val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
     val params = Seq(Variable(
       name = "other",
       scope = Some(body.innerScope),
@@ -142,7 +157,9 @@ object Type {
             (scope.root.unknownType, Seq(issue))
         }
 
-      case r: raw.ReferenceType => ???
+      case r: raw.ReferenceType =>
+        val (referenced, referencedIssues) = Type.resolve(scope, r.referenced)
+        (referenced.reference, referencedIssues)
     }
   }
 
@@ -165,6 +182,21 @@ object Type {
   }
 
   /**
+    * Coerces the expression into given types, performing type conversion if necessary.
+    * This function should only be called when implicit conversion was checked to be possible.
+    * @param from expression to convert
+    * @param to target type
+    * @return resulting expression
+    */
+  def performImplicitConversion(from: Expression, to: Type): Expression = {
+    from.type_ match {
+      case `to` => from
+      case rt: ReferenceType if rt.referenced == to => ImplicitDereferencing(from)
+      case _ => throw new IllegalArgumentException("can't perform implicit conversion")
+    }
+  }
+
+  /**
     * Coerces expressions to given types, performing implicit type conversions where necessary.
     * This function should only be called when expressions are checked to be implicitly convertible.
     * @param from expressions to convert
@@ -176,12 +208,6 @@ object Type {
       throw new IllegalArgumentException("source and target lists have different length")
     }
 
-    (from zip to) map { case (expression, targetType) =>
-      if (expression.type_ eq targetType) {
-        expression
-      } else {
-        ImplicitConversion(expression, targetType)
-      }
-    }
+    (from zip to) map (performImplicitConversion _).tupled
   }
 }

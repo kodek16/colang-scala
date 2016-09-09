@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
-import colang.ast.parsed.{CodeBlock, Function, LocalScope, RootNamespace, Type, Variable}
+import colang.ast.parsed.{CodeBlock, Function, LocalContext, LocalScope, RootNamespace, Type, Variable}
 import colang.ast.raw
-import colang.issues.Issue
+import colang.issues.{Issue, Terms}
 import colang.tokens.NativeKeyword
 
 private[routines] object RegisterFunctions {
@@ -17,7 +17,8 @@ private[routines] object RegisterFunctions {
     val result = funcDefs map { funcDef =>
       val (returnType, returnTypeIssues) = Type.resolve(rootNamespace, funcDef.returnType)
 
-      val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), funcDef.body)
+      val localContext = LocalContext(applicableKind = Terms.Function, expectedReturnType = returnType)
+      val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), localContext, funcDef.body)
 
       val paramsResult = funcDef.parameterList.params map { rawParam =>
         val (paramType, paramTypeIssues) = Type.resolve(rootNamespace, rawParam.type_)

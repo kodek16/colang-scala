@@ -352,7 +352,7 @@ object Issues {
       val types = if (argumentTypes.size == 1) {
         s"type ${argumentTypes.head}"
       } else if (argumentTypes.size == 2) {
-        s"types '${argumentTypes.head}' and ${argumentTypes.last}"
+        s"types '${argumentTypes.head}' and '${argumentTypes.last}'"
       } else throw new IllegalArgumentException("encountered an operator with unexpected arity")
 
       Error(code, source, s"operator '$operator' is not defined for $types", notes = Seq.empty)
@@ -363,7 +363,7 @@ object Issues {
       val types = if (argumentTypes.size == 1) {
         s"тыпу ${argumentTypes.head}"
       } else if (argumentTypes.size == 2) {
-        s"тыпаў '${argumentTypes.head}' і ${argumentTypes.last}"
+        s"тыпаў '${argumentTypes.head}' і '${argumentTypes.last}'"
       } else throw new IllegalArgumentException("encountered an operator with unexpected arity")
 
       Error(code, source, s"аператар '$operator' не акрэсьлены для $types", notes = Seq.empty)
@@ -374,7 +374,7 @@ object Issues {
       val types = if (argumentTypes.size == 1) {
         s"типа ${argumentTypes.head}"
       } else if (argumentTypes.size == 2) {
-        s"типов '${argumentTypes.head}' и ${argumentTypes.last}"
+        s"типов '${argumentTypes.head}' и '${argumentTypes.last}'"
       } else throw new IllegalArgumentException("encountered an operator with unexpected arity")
 
       Error(code, source, s"оператор '$operator' не определён для $types", notes = Seq.empty)

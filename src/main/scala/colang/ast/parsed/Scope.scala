@@ -78,6 +78,17 @@ trait Scope {
   def allMembers: Seq[Symbol] = members.values.toSeq
 
   /**
+    * Returns a Seq containing all variables in this scope.
+    * @return all members in a Seq
+    */
+  def allVariables: Seq[Variable] = {
+    members.values.toSeq flatMap {
+      case v: Variable => Some(v)
+      case _ => None
+    }
+  }
+
+  /**
     * A reference to the root namespace.
     */
   lazy val root: RootNamespace = {

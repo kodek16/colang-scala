@@ -6,7 +6,7 @@ import java.util.Locale
 import colang.ast.parsed.{Analyzer, AnalyzerImpl}
 import colang.ast.raw._
 import colang.backend.Backend
-import colang.backend.c.{CCodeGenerator, CVerboseCodeWriter}
+import colang.backend.c.{CCodeGenerator, CVerboseNameGenerator}
 import colang.issues.{Error, Issue, Note, Warning}
 import colang.tokens.{Lexer, LexerImpl}
 import colang.utils.InternalErrors
@@ -221,7 +221,7 @@ object Compiler {
         val lexer = new LexerImpl
         val parser = new ParserImpl
         val analyzer = new AnalyzerImpl
-        val backend = new CCodeGenerator(new CVerboseCodeWriter(inFile, outFile))
+        val backend = new CCodeGenerator(inFile, outFile, new CVerboseNameGenerator())
         new Compiler(inFile, outFile, lexer, parser, analyzer, backend).compile()
 
       case None => sys.exit(2)

@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, OverloadedFunction, ReferenceVariable, Scope, Symbol, Variable}
+import colang.ast.parsed.{Function, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Type, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 
@@ -23,34 +23,33 @@ case class OverloadedFunctionReference(overloadedFunction: OverloadedFunction,
 }
 
 object VariableReference {
+  def apply(variable: Variable, rawNode: Option[raw.SymbolReference]) = new VariableReference(variable, rawNode)
+  def unapply(arg: VariableReference): Option[Variable] = Some(arg.variable)
+}
+
+object ReferenceVariableReference {
 
   /**
-    * A factory method for instantiating the correct Expression class.
+    * A special extractor for "reference variable" references
     */
-  def apply(variable: Variable, rawNode: Option[raw.SymbolReference]): Expression = {
-    variable match {
-      case rv: ReferenceVariable => new ReferenceVariableReference(rv, rawNode)
-      case v: Variable => new VariableReference(v, rawNode)
-    }
+  def unapply(arg: VariableReference): Option[(Variable, ReferenceType)] = arg match {
+    case VariableReference(rv @ ReferenceVariable(_, rt)) => Some(rv, rt)
+    case _ => None
   }
 }
 
 /**
   * Represents a variable reference.
+  * Note that there is an additional ReferenceVariableReference extractor for cases when you care whether the referenced
+  * variable has reference type.
   * @param variable referenced variable
   */
 class VariableReference private (val variable: Variable,
                                  val rawNode: Option[raw.SymbolReference]) extends Expression {
-  val type_ = variable.type_.reference
-}
-
-/**
-  * Represents a "reference variable" reference.
-  * @param variable referenced reference variable
-  */
-class ReferenceVariableReference(val variable: ReferenceVariable,
-                                 val rawNode: Option[raw.SymbolReference]) extends Expression {
-  val type_ = variable.type_
+  val type_ = variable.type_ match {
+    case rt: ReferenceType => rt
+    case t: Type => t.reference
+  }
 }
 
 object SymbolReference {

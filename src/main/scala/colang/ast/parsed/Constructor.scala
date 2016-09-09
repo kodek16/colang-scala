@@ -15,6 +15,16 @@ class Constructor(val type_ : Type,
   val definitionSite = None
 
   /**
+    * Checks if the constructor is a copy constructor
+    */
+  def isCopyConstructor: Boolean = (parameters map { _.type_ }) == Seq(type_)
+
+  /**
+    * Checks if the constructor is default constructor.
+    */
+  def isDefaultConstructor: Boolean = parameters.isEmpty
+
+  /**
     * Constructs a string from the constructor's signature: its parameter types.
     * @return signature string
     */

@@ -2,7 +2,7 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed._
 import colang.ast.parsed.expression.{Expression, VariableReference}
-import colang.ast.parsed.statement.{ConstructorCall, Statement}
+import colang.ast.parsed.statement.{VariableConstructorCall, Statement}
 import colang.ast.raw.{statement => raw}
 import colang.issues.{Issue, Issues}
 
@@ -34,9 +34,9 @@ private[routines] object RegisterVariables {
           if (copyConstructor.canBeAppliedTo(Seq(init.type_))) {
             val constructorArgs = Type.performImplicitConversions(Seq(init), copyConstructor.parameters map { _.type_ })
 
-            val constructStatement = ConstructorCall(
+            val constructStatement = VariableConstructorCall(
               copyConstructor,
-              VariableReference(variable, None),
+              variable,
               constructorArgs,
               None)
 
@@ -52,9 +52,9 @@ private[routines] object RegisterVariables {
         case None =>
           variable.type_.defaultConstructor match {
             case Some(defaultConstructor) =>
-              val constructStatement = ConstructorCall(
+              val constructStatement = VariableConstructorCall(
                 defaultConstructor,
-                VariableReference(variable, None),
+                variable,
                 Seq.empty,
                 None)
 

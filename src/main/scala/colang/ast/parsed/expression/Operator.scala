@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Scope, Type}
+import colang.ast.parsed.{ReferenceType, Scope, Type}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 import colang.tokens
@@ -32,10 +32,8 @@ object Operator {
     val (lhs, lhsIssues) = Expression.analyze(scope, rawLhs)
     val (rhs, rhsIssues) = Expression.analyze(scope, rawRhs)
 
-    lhs.type_ resolveMethod methodName match {
-      case Some(m) if m.canBeAppliedTo(Seq(rhs.type_)) =>
-        val operatorArgs = Type.performImplicitConversions(Seq(rhs), m.parameters map { _.type_ })
-        (MethodCall(m, lhs, operatorArgs, Some(rawExpr)), lhsIssues ++ rhsIssues)
+    MethodCall.tryConstruct(lhs, methodName, Seq(rhs), Some(rawExpr)) match {
+      case Some(methodCall) => (methodCall, lhsIssues ++ rhsIssues)
 
       case _ =>
         val argTypes = Seq(lhs.type_.qualifiedName, rhs.type_.qualifiedName)
@@ -52,9 +50,8 @@ object Operator {
 
     val (expr, exprIssues) = Expression.analyze(scope, rawExpr.expression)
 
-    expr.type_ resolveMethod methodName match {
-      case Some(m) if m.canBeAppliedTo(Seq.empty) =>
-        (MethodCall(m, expr, Seq.empty, Some(rawExpr)), exprIssues)
+    MethodCall.tryConstruct(expr, methodName, Seq.empty, Some(rawExpr)) match {
+      case Some(methodCall) => (methodCall, exprIssues)
 
       case _ =>
         val argTypes = Seq(expr.type_.qualifiedName)
