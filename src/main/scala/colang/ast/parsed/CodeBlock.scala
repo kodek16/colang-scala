@@ -13,9 +13,11 @@ import scala.collection.mutable.ListBuffer
   * variables and statements (function parameters, 'for' loop iterators, etc.), and then call instance methods
   * to populate the block and generate issues.
   * @param innerScope block scope
+  * @param localContext local context outside the block
   * @param statements statements in block
   */
 class CodeBlock(var innerScope: Scope,
+                val localContext: LocalContext,
                 val rawNode: Option[raw.CodeBlock],
                 val statements: ListBuffer[Statement] = ListBuffer.empty) extends Statement {
 
@@ -48,7 +50,7 @@ class CodeBlock(var innerScope: Scope,
   def addIfStatement(rawStmt: raw.statement.IfStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition, "if")
 
-    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
+    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), localContext, None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifBranch)
 
     statements += IfElseStatement(condition, ifBranchBlock, None, Some(rawStmt))
@@ -58,10 +60,10 @@ class CodeBlock(var innerScope: Scope,
   def addIfElseStatement(rawStmt: raw.statement.IfElseStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.ifStatement.condition, "if")
 
-    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
+    val ifBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), localContext, None)
     val ifBranchIssues = ifBranchBlock.addStatement(rawStmt.ifStatement.ifBranch)
 
-    val elseBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
+    val elseBranchBlock = new CodeBlock(new LocalScope(Some(innerScope)), localContext, None)
     val elseBranchIssues = elseBranchBlock.addStatement(rawStmt.elseBranch)
 
     statements += IfElseStatement(condition, ifBranchBlock, Some(elseBranchBlock), Some(rawStmt))
@@ -71,7 +73,7 @@ class CodeBlock(var innerScope: Scope,
   def addWhileStatement(rawStmt: raw.statement.WhileStatement): Seq[Issue] = {
     val (condition, conditionIssues) = analyzeConditionExpression(rawStmt.condition, "while")
 
-    val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)), None)
+    val loopBlock = new CodeBlock(new LocalScope(Some(innerScope)), localContext, None)
     val loopIssues = loopBlock.addStatement(rawStmt.loop)
 
     statements += WhileStatement(condition, loopBlock, Some(rawStmt))
@@ -81,8 +83,19 @@ class CodeBlock(var innerScope: Scope,
   def addReturnStatement(rawStmt: raw.statement.ReturnStatement): Seq[Issue] = {
     val (returnValue, retValIssues) = rawStmt.expression match {
       case Some(rawValue) =>
-        val (returnValue, retValIssues) = Expression.analyze(innerScope, rawValue)
-        (Some(returnValue), retValIssues)
+        Expression.analyze(innerScope, rawValue) match {
+          case (retVal, issues) if retVal.type_ isImplicitlyConvertibleTo localContext.expectedReturnType =>
+            val convertedRetVal = Type.performImplicitConversion(retVal, localContext.expectedReturnType)
+            (Some(convertedRetVal), issues)
+
+          case (retVal, issues) =>
+            val actualTypeStr = retVal.type_.qualifiedName
+            val expectedTypeStr = localContext.expectedReturnType.qualifiedName
+
+            // TODO when we have methods and constructors use different issue here.
+            val issue = Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, expectedTypeStr))
+            (Some(retVal), issues :+ issue)
+        }
       case None => (None, Seq.empty)
     }
 
@@ -97,7 +110,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addCodeBlock(rawStmt: raw.CodeBlock): Seq[Issue] = {
-    val childBlock = new CodeBlock(new LocalScope(Some(innerScope)), Some(rawStmt))
+    val childBlock = new CodeBlock(new LocalScope(Some(innerScope)), localContext, Some(rawStmt))
     val blockIssues = childBlock.addStatementsFromBlock(rawStmt)
     statements += childBlock
     blockIssues
@@ -117,16 +130,16 @@ class CodeBlock(var innerScope: Scope,
     */
   private def analyzeConditionExpression(rawCond: raw.expression.Expression,
                                          statementName: String): (Expression, Seq[Issue]) = {
-    val (condition, conditionIssues) = Expression.analyze(innerScope, rawCond)
 
-    val conditionTypeIssues = if (condition.type_ == innerScope.root.boolType) {
-      Seq.empty
-    } else {
-      val conditionTypeStr = condition.type_.qualifiedName
-      val issue = Issues.InvalidConditionType(rawCond.source, (statementName, conditionTypeStr))
-      Seq(issue)
+    Expression.analyze(innerScope, rawCond) match {
+      case (condition, conditionIssues) if condition.type_ isImplicitlyConvertibleTo innerScope.root.boolType =>
+        val convertedCondtion = Type.performImplicitConversion(condition, innerScope.root.boolType)
+        (convertedCondtion, conditionIssues)
+
+      case (condition, conditionIssues) =>
+        val conditionTypeStr = condition.type_.qualifiedName
+        val issue = Issues.InvalidConditionType(rawCond.source, (statementName, conditionTypeStr))
+        (condition, conditionIssues :+ issue)
     }
-
-    (condition, conditionIssues ++ conditionTypeIssues)
   }
 }

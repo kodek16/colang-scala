@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
-import colang.ast.parsed.expression.{Expression, MethodCall, VariableReference}
-import colang.ast.parsed.statement.Statement
-import colang.ast.parsed.{Scope, Type, Variable}
+import colang.ast.parsed._
+import colang.ast.parsed.expression.{Expression, VariableReference}
+import colang.ast.parsed.statement.{VariableConstructorCall, Statement}
 import colang.ast.raw.{statement => raw}
 import colang.issues.{Issue, Issues}
 
@@ -18,7 +18,7 @@ private[routines] object RegisterVariables {
     val (type_, typeIssues) = Type.resolve(scope, rawDefs.type_)
 
     def registerOne(rawDef: raw.VariableDefinition): (Variable, Seq[Statement], Seq[Issue]) = {
-      val variable = new Variable(
+      val variable = Variable(
         name = rawDef.name.value,
         scope = Some(scope),
         type_ = type_,
@@ -29,12 +29,19 @@ private[routines] object RegisterVariables {
       val (initStatement, initIssues) = rawDef.initializer match {
         case Some(rawInit) =>
           val (init, initIssues) = Expression.analyze(scope, rawInit)
+          val copyConstructor = variable.type_.copyConstructor
 
-          val assignMethod = variable.type_.resolveMethod("assign").get
+          if (copyConstructor.canBeAppliedTo(Seq(init.type_))) {
+            val constructorArgs = Type.performImplicitConversions(Seq(init), copyConstructor.parameters map { _.type_ })
 
-          if (assignMethod.canBeAppliedTo(Seq(init.type_))) {
-            val initStatement = MethodCall(assignMethod, VariableReference(variable, None), Seq(init), Some(rawDef))
-            (Some(initStatement), initIssues)
+            val constructStatement = VariableConstructorCall(
+              copyConstructor,
+              variable,
+              constructorArgs,
+              None)
+
+            (Some(constructStatement), initIssues)
+
           } else {
             val initTypeStr = init.type_.qualifiedName
             val varTypeStr = variable.type_.qualifiedName
@@ -42,7 +49,21 @@ private[routines] object RegisterVariables {
             (None, initIssues :+ issue)
           }
 
-        case None => (None, Seq.empty)
+        case None =>
+          variable.type_.defaultConstructor match {
+            case Some(defaultConstructor) =>
+              val constructStatement = VariableConstructorCall(
+                defaultConstructor,
+                variable,
+                Seq.empty,
+                None)
+
+              (Some(constructStatement), Seq.empty)
+
+            case None =>
+              val issue = Issues.NonPlainVariableWithoutInitializer(rawDef.source, variable.type_.qualifiedName)
+              (None, Seq(issue))
+          }
       }
 
       (variable, initStatement.toSeq, varIssues ++ initIssues)

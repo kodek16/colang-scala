@@ -24,4 +24,15 @@ class PunctuationStrategiesSpec extends LexerUnitSpec {
   describePunctuationStrategy("}", RightBrace.strategy)
   describePunctuationStrategy(",", Comma.strategy)
   describePunctuationStrategy(";", Semicolon.strategy)
+
+  // '&' strategy is different because it doesn't match sequential tokens.
+  describe("'&' lexer strategy") {
+    it("should match single '&' tokens") {
+      Ampersand.strategy shouldSucceedOn "&" withoutIssues()
+    }
+
+    it("should not match '&&' tokens") {
+      Ampersand.strategy shouldNotMatch "&&"
+    }
+  }
 }
