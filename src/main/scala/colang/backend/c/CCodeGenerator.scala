@@ -295,6 +295,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "unaryMinus" -> "_neg",
     "times" -> "_mul",
     "div"   -> "_div",
+    "mod"   -> "_mod",
     "plus" -> "_add",
     "minus" -> "_sub",
     "lessThan" -> "_lt",
