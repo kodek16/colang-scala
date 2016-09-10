@@ -47,6 +47,9 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     """#define _dbl_ctor(a) (*(a) = 0.0)""",
     """#define _bool_ctor(a) (*(a) = 0)""")
 
+  private val NATIVE_FUNCTION_DEFS = Seq(
+    """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""")
+
   def process(rootNamespace: RootNamespace): Unit = {
     val (types, variables, functions, methods, constructors) = pickUsedEntities(rootNamespace)
 
@@ -57,6 +60,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
     val headers = HEADERS map { "#include <" + _ + ">" } mkString "\n"
     val macros = MACROS mkString "\n"
+    val nativeFunctionDefs = NATIVE_FUNCTION_DEFS mkString "\n"
 
     val typeDefinitions = types flatMap generateTypeDefinition mkString "\n\n"
     val variableDefinitions = variables flatMap generateVariableDefinition mkString "\n"
@@ -74,6 +78,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
       sourceCodeString,
       headers,
       macros,
+      nativeFunctionDefs,
       typeDefinitions,
       variableDefinitions,
       functionPrototypes,
@@ -258,7 +263,8 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "void read(int&)" -> "_readInt",
     "void read(double&)" -> "_readDbl",
     "void println(int)" -> "_writeIntLn",
-    "void println(double)" -> "_writeDblLn")
+    "void println(double)" -> "_writeDblLn",
+    "void assert(bool)" -> "_assert")
 
   private def generateFunctionPrototype(function: Function): Option[String] = {
     if (function.native) {
