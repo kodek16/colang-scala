@@ -16,6 +16,7 @@ object Operator {
     val methodName = operator match {
       case tokens.Multiply(_) => "times"
       case tokens.Divide(_) => "div"
+      case tokens.Mod(_) => "mod"
       case tokens.Plus(_) => "plus"
       case tokens.Minus(_) => "minus"
       case tokens.Less(_) => "lessThan"

@@ -208,6 +208,7 @@ class CVerboseCodeWriter(inFile: File, outFile: File) extends CCodeWriter {
   private val internalBinaryOperatorNames: Map[String, String] = Map(
     "times" -> "_mul",
     "div"   -> "_div",
+    "mod"   -> "_mod",
     "plus" -> "_add",
     "minus" -> "_sub",
     "lessThan" -> "_lt",

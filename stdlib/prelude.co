@@ -5,6 +5,7 @@ native struct int {
 
     native int times(int other)
     native int div(int other)
+    native int mod(int other)
     native int plus(int other)
     native int minus(int other)
 

@@ -69,6 +69,15 @@ object Divide {
   val strategy = new StatelessTokenStrategy(Divide.apply, """\/(?!\/)""".r)
 }
 
+case class Mod(source: SourceCode) extends InfixOperator {
+  val precedence = 70
+  val associativity = Associativity.LEFT
+  val name = "%"
+}
+object Mod {
+  val strategy = new StatelessTokenStrategy(Mod.apply, """%(?!%)""".r)
+}
+
 case class Plus(source: SourceCode) extends InfixOperator {
   val precedence = 60
   val associativity = Associativity.LEFT
