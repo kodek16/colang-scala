@@ -5,6 +5,7 @@ import colang.ast.parsed.{CodeBlock, Function, Type}
 import colang.ast.raw
 import colang.issues.{Issue, Issues}
 
+// TODO remove all kinds of type checking here, they belong to earlier analysis steps.
 private[routines] object CheckReturnStatements {
 
   /**
@@ -75,19 +76,7 @@ private[routines] object CheckReturnStatements {
       retValOption match {
         //If this is a 'return-value' statement.
         case Some(returnValue) =>
-          val (returnType, issues) = if (!returnValue.type_.isImplicitlyConvertibleTo(expectedReturnType)) {
-            rawStmtOption match {
-              case Some(rawStmt) =>
-                val actualTypeStr = returnValue.type_.qualifiedName
-                val returnTypeStr = expectedReturnType.qualifiedName
-                val issues = Seq(Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, returnTypeStr)))
-
-                (None, issues)
-              case None => (None, Seq.empty)
-            }
-          } else (Some(returnValue.type_), Seq.empty)
-
-          WillReturn(returnType, issues)
+          WillReturn(Some(returnValue.type_), Seq.empty)
 
         //If this is a 'return-void' statement.
         case None =>

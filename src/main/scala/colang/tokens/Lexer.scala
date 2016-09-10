@@ -55,6 +55,7 @@ class LexerImpl extends Lexer {
     RightBrace.strategy,
     Comma.strategy,
     Semicolon.strategy,
+    Ampersand.strategy,
 
     LogicalNot.strategy,
     Multiply.strategy,

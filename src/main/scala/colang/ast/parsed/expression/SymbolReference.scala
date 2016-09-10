@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, OverloadedFunction, Scope, Symbol, Variable}
+import colang.ast.parsed.{Function, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Type, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 
@@ -22,12 +22,34 @@ case class OverloadedFunctionReference(overloadedFunction: OverloadedFunction,
   val type_ = overloadedFunction.scope.get.root.overloadedFunctionType
 }
 
+object VariableReference {
+  def apply(variable: Variable, rawNode: Option[raw.SymbolReference]) = new VariableReference(variable, rawNode)
+  def unapply(arg: VariableReference): Option[Variable] = Some(arg.variable)
+}
+
+object ReferenceVariableReference {
+
+  /**
+    * A special extractor for "reference variable" references
+    */
+  def unapply(arg: VariableReference): Option[(Variable, ReferenceType)] = arg match {
+    case VariableReference(rv @ ReferenceVariable(_, rt)) => Some(rv, rt)
+    case _ => None
+  }
+}
+
 /**
   * Represents a variable reference.
+  * Note that there is an additional ReferenceVariableReference extractor for cases when you care whether the referenced
+  * variable has reference type.
   * @param variable referenced variable
   */
-case class VariableReference(variable: Variable, rawNode: Option[raw.SymbolReference]) extends Expression {
-  val type_ = variable.type_
+class VariableReference private (val variable: Variable,
+                                 val rawNode: Option[raw.SymbolReference]) extends Expression {
+  val type_ = variable.type_ match {
+    case rt: ReferenceType => rt
+    case t: Type => t.reference
+  }
 }
 
 object SymbolReference {

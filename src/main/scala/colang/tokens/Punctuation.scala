@@ -50,3 +50,11 @@ case class Semicolon(source: SourceCode) extends Token
 object Semicolon {
   val strategy = new StatelessTokenStrategy(Semicolon.apply, """;""".r)
 }
+
+/**
+  * '&' token (not '&&' or longer).
+  */
+case class Ampersand(source: SourceCode) extends Token
+object Ampersand {
+  val strategy = new StatelessTokenStrategy(Ampersand.apply, """&(?!&)""".r)
+}

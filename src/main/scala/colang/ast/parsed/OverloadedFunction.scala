@@ -1,14 +1,15 @@
 package colang.ast.parsed
 
 import colang.SourceCode
-import colang.issues.{Issue, Issues, Terms}
+import colang.ast.parsed.Applicable.{AmbiguousOverloadsFound, NoOverloadsFound, OverloadFound}
+import colang.issues.{Adjectives, Issue, Issues, Terms}
 
 import scala.collection.mutable.ListBuffer
 
 class OverloadedFunction(val name: String,
                          val scope: Some[Scope]) extends Symbol {
 
-  val description = Terms.OverloadedFunction
+  val description = Adjectives.Overloaded applyTo Terms.Function
   val definitionSite = None
 
   private val overloads = ListBuffer.empty[Function]
@@ -23,7 +24,7 @@ class OverloadedFunction(val name: String,
       throw new IllegalArgumentException("can't add unrelated overload to a function")
     }
 
-    val existingOverloadOption = overloads find { Function.sameParameterTypes(_, newOverload )}
+    val existingOverloadOption = overloads find { Applicable.sameParameterTypes(_, newOverload )}
 
     existingOverloadOption match {
       case Some(existingOverload) =>
@@ -44,35 +45,30 @@ class OverloadedFunction(val name: String,
     * @return (Some(overload) if successful, encountered issues)
     */
   def resolveOverload(argumentTypes: Seq[Type], callSource: Option[SourceCode]): (Option[Function], Seq[Issue]) = {
-    val candidates = overloads filter { _ canBeAppliedTo argumentTypes }
-    if (candidates.nonEmpty) {
-      val nonAmbiguousResult = candidates find { candidate =>
-        (candidates - candidate) forall { _ canBeAppliedTo (candidate.parameters map { _.type_ }) }
-      }
+    Applicable.resolveOverload(overloads, argumentTypes) match {
+      case OverloadFound(overload) => (Some(overload), Seq.empty)
 
-      nonAmbiguousResult match {
-        case Some(overload) =>
-          (Some(overload), Seq.empty)
-        case None =>
-          val notes = candidates map { candidate =>
-            Issues.AmbiguousOverloadedFunctionCall.note(candidate.signatureString,
-              candidate.definition map { _.prototypeSource })
-          }
+      case AmbiguousOverloadsFound(candidates) =>
+        val notes = candidates map { candidate =>
+          Issues.AmbiguousOverloadedCall.note(candidate.signatureString, candidate.definitionSite)
+        }
 
-          val issues = callSource match {
-            case Some(cs) => Seq(Issues.AmbiguousOverloadedFunctionCall(cs, notes))
-            case None => Seq.empty
-          }
+        val issues = callSource match {
+          case Some(cs) => Seq(Issues.AmbiguousOverloadedCall(cs, (Terms.Function, notes)))
+          case None => Seq.empty
+        }
 
-          (None, issues)
-      }
-    } else {
-      val issues = callSource match {
-        case Some(cs) => Seq(Issues.InvalidFunctionArguments(cs, argumentTypes map { _.qualifiedName }))
-        case None => Seq.empty
-      }
+        (None, issues)
 
-      (None, issues)
+      case NoOverloadsFound() =>
+        val issues = callSource match {
+          case Some(cs) =>
+            val argTypeNames = argumentTypes map { _.qualifiedName }
+            Seq(Issues.InvalidCallArguments(cs, (Terms.Function, argTypeNames)))
+          case None => Seq.empty
+        }
+
+        (None, issues)
     }
   }
 
