@@ -1,5 +1,7 @@
 lazy val compiler = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
+  configs(Configs.EndToEndTest).
+  settings(Testing.settings :_*).
   settings(
     organization := "colang",
     name := "colang",
