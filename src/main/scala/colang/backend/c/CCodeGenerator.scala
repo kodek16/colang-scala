@@ -28,6 +28,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     """#define _neg(a) (-(a))""",
     """#define _mul(a, b) ((a) * (b))""",
     """#define _div(a, b) ((a) / (b))""",
+    """#define _mod(a, b) ((a) % (b))""",
     """#define _add(a, b) ((a) + (b))""",
     """#define _sub(a, b) ((a) - (b))""",
     """#define _lt(a, b) ((a) < (b))""",
