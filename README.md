@@ -18,10 +18,15 @@ version with `sbt assembly`. It will produce an executable standalone JAR file u
 colang depends on the CO standard library that must be present at any of the following
 locations: `~/.colang-libs/`, `/usr/local/lib/colang`, `/usr/lib/colang`, `/lib/colang`.
 The standard library is included in this repo (the `stdlib` directory), so the most simple
-installation method (on Unix-like systems) is creating a symlink from `~/.colang-libs/`
-to the `stdlib` directory:
+and reliable installation method is creating a symlink from `~/.colang-libs/` to the `stdlib`
+directory. On Unix-like systems this can be done like this:
 ```
 ln -s path/to/repo/stdlib ~/.colang-libs
+```
+
+On Windows, run `cmd.exe` as administrator and in your home directory (`C:\Users\<you>\`) execute
+```
+mklink /D .colang-libs\ path\to\repo\stdlib
 ```
 
 You can now compile and execute the solution to the A + B problem:
