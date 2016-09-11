@@ -13,6 +13,9 @@ lazy val compiler = (project in file(".")).
     buildInfoPackage := "colang"
   )
 
+// This line makes assembly task run E2E tests.
+test in assembly <<= (test in assembly).dependsOn(test in Configs.EndToEndTest)
+
 scalacOptions ++= Seq("-feature", "-language:postfixOps")
 
 resolvers += Resolver.sonatypeRepo("public")
