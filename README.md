@@ -11,19 +11,31 @@ colang is in early development stage, so it can't do much yet. This section will
 when most core language features will be implemented, so stay tuned!
 
 ## Building
-If you still want to try it out right now, grab the source, install SBT, and build the latest
-version with `sbt assembly`. It will produce an executable standalone JAR file under
-`target/scala-2.11`.
-
+If you still want to try it out right now, grab the source, install SBT, and prepare your build
+environment. You need two things to successfully build colang: CO standard library and GCC binary
+on your `PATH`.
+ 
+### CO standard library 
 colang depends on the CO standard library that must be present at any of the following
 locations: `~/.colang-libs/`, `/usr/local/lib/colang`, `/usr/lib/colang`, `/lib/colang`.
 The standard library is included in this repo (the `stdlib` directory), so the most simple
-installation method (on Unix-like systems) is creating a symlink from `~/.colang-libs/`
-to the `stdlib` directory:
+and reliable installation method is creating a symlink from `~/.colang-libs/` to the `stdlib`
+directory. On Unix-like systems this can be done like this:
+
 ```
 ln -s path/to/repo/stdlib ~/.colang-libs
 ```
 
+On Windows, run `cmd.exe` as administrator and in your home directory (`C:\Users\<you>\`) execute
+```
+mklink /D .colang-libs\ path\to\repo\stdlib
+```
+
+### Assembly
+Once you have GCC and CO stdlib ready, build the compiler with `sbt assembly`. It will produce an
+executable standalone JAR file under `target/scala-2.11`.
+
+## Compiling and running programs
 You can now compile and execute the solution to the A + B problem:
 ```java
 void main() {

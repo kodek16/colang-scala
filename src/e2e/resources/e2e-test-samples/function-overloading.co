@@ -1,0 +1,12 @@
+int f(int x) {
+    return 1
+}
+
+double f(double x) {
+    return 2.0
+}
+
+void main() {
+    assert(f(42) == 1)
+    assert(f(4.2) == 2.0)
+}

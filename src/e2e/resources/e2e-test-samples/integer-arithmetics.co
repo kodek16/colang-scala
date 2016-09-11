@@ -1,0 +1,16 @@
+void main() {
+    assert(1 + 1 == 2)
+    assert(46 + 14 == 60)
+
+    assert(8 - 5 == 3)
+    assert(0 - 0 == 0)
+
+    assert(2 * 2 == 4)
+    assert(10 * 0 == 0)
+    assert(12 * 11 == 132)
+
+    assert(4 / 2 == 2)
+    assert(15 / 3 == 5)
+    assert(5 / 2 == 2)
+    assert(-3 / 5 == 0)
+}
