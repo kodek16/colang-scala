@@ -7,3 +7,4 @@ import colang.issues.Term
   * of some statements ('return', eventually also 'break' and 'continue').
   */
 case class LocalContext(applicableKind: Term, expectedReturnType: Type)
+
