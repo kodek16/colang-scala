@@ -26,14 +26,22 @@ case class Config(out: Option[File] = None, source: Option[File] = None)
   * @param outFile target C file
   * @param lexer lexer implementation to use
   * @param parser parser implementation to use
+  * @param silent if true, errors are not logged
   */
-class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyzer: Analyzer, backend: Backend) {
+class Compiler(inFile: File,
+               outFile: File,
+               lexer: Lexer,
+               parser: Parser,
+               analyzer: Analyzer,
+               backend: Backend,
+               silent: Boolean = false) {
 
   /**
     * Compiles the source file, writing any issues to stderr. If no errors were encountered, creates and populates
     * target C file.
+    * @return all encountered issues
     */
-  def compile(): Unit = {
+  def compile(): Seq[Issue] = {
     val sourceFile = new RealSourceFile(inFile)
     val preludeFile = new RealSourceFile(locatePrelude)
 
@@ -47,11 +55,16 @@ class Compiler(inFile: File, outFile: File, lexer: Lexer, parser: Parser, analyz
     val issues = preludeIssues ++ sourceIssues ++ analyzerIssues
 
     val sortedIssues = issues sortBy { i => (i.source.startLine, i.source.startChar, -i.source.endLine, -i.source.endChar) }
-    sortedIssues foreach printIssue
+
+    if (!silent) {
+      sortedIssues foreach printIssue
+    }
 
     if (!(issues exists { _.isInstanceOf[Error] })) {
       backend.process(rootNamespace)
     }
+
+    sortedIssues
   }
 
   /**

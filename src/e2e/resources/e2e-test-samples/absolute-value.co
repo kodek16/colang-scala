@@ -1,0 +1,24 @@
+int abs(int x) {
+    if (x >= 0) {
+        return x
+    } else {
+        return -x
+    }
+}
+
+double abs(double x) {
+    if (x >= 0.0) {
+        return x
+    } else {
+        return -x
+    }
+}
+
+void main() {
+    assert(abs(6) == 6)
+    assert(abs(0) == 0)
+    assert(abs(-3) == 3)
+
+    assert(abs(6.2) == 6.2)
+    assert(abs(-4.46) == 4.46)
+}

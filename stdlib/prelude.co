@@ -50,3 +50,5 @@ native void read(double& x)
 
 native void println(int x)
 native void println(double x)
+
+native void assert(bool condition)

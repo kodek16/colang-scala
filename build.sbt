@@ -1,5 +1,7 @@
 lazy val compiler = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
+  configs(Configs.EndToEndTest).
+  settings(Testing.settings :_*).
   settings(
     organization := "colang",
     name := "colang",
@@ -10,6 +12,9 @@ lazy val compiler = (project in file(".")).
     buildInfoKeys := Seq[BuildInfoKey](version),
     buildInfoPackage := "colang"
   )
+
+// This line makes assembly task run E2E tests.
+test in assembly <<= (test in assembly).dependsOn(test in Configs.EndToEndTest)
 
 scalacOptions ++= Seq("-feature", "-language:postfixOps")
 

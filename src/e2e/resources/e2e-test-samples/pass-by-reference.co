@@ -1,0 +1,18 @@
+void byValue(int x) {
+    x = 5
+}
+
+void byReference(int& x) {
+    x = 5
+}
+
+void main() {
+    int a = 9
+    assert(a == 9)
+
+    byValue(a)
+    assert(a == 9)
+
+    byReference(a)
+    assert(a == 5)
+}
