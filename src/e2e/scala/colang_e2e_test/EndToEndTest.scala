@@ -51,7 +51,7 @@ class EndToEndTest extends FunSpec {
   }
 
   private def describeTestSample(sample: File): Unit = {
-    val fileName = sample.getAbsolutePath.replaceAll(""".*e2e\-test\-samples\/""", "")
+    val fileName = sample.getAbsolutePath.replaceAll(""".*e2e\-test\-samples(\/|\\)""", "")
 
     describe(fileName) {
       it("should behave as specified") {
