@@ -13,4 +13,12 @@ void main() {
     assert(15 / 3 == 5)
     assert(5 / 2 == 2)
     assert(-3 / 5 == 0)
+
+    assert(5 % 9 == 5)
+    assert(20 % 4 == 0)
+    assert(33 % 4 == 1)
+
+    assert(5 ** 3 == 125)
+    assert(6 ** 0 == 1)
+    assert(3 ** 5 == 243)
 }

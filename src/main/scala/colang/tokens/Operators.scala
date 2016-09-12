@@ -78,6 +78,15 @@ object Mod {
   val strategy = new StatelessTokenStrategy(Mod.apply, """%(?!%)""".r)
 }
 
+case class Pow(source: SourceCode) extends InfixOperator {
+  val precedence = 80
+  val associativity = Associativity.RIGHT
+  val name = "**"
+}
+object Pow {
+  val strategy = new StatelessTokenStrategy(Pow.apply, """\*\*(?!\*)""".r)
+}
+
 case class Plus(source: SourceCode) extends InfixOperator {
   val precedence = 60
   val associativity = Associativity.LEFT

@@ -49,7 +49,9 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     """#define _bool_ctor(a) (*(a) = 0)""")
 
   private val NATIVE_FUNCTION_DEFS = Seq(
-    """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""")
+    """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""",
+    """int32_t _powInt(int32_t a, int32_t k) { int32_t res = 1; while (k) { if (k & 1) res *= a; a *= a; k >>= 1; } return res; }""",
+    """double _powDbl(double a, double k) { return pow(a, k); }""")
 
   def process(rootNamespace: RootNamespace): Unit = {
     val (types, variables, functions, methods, constructors) = pickUsedEntities(rootNamespace)
@@ -296,28 +298,42 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     } else None
   }
 
-  // TODO change to signature matching when methods have signatures
   private val nativeMethodNames = Map(
-    "not" -> "_not",
-    "unaryMinus" -> "_neg",
-    "times" -> "_mul",
-    "div"   -> "_div",
-    "mod"   -> "_mod",
-    "plus" -> "_add",
-    "minus" -> "_sub",
-    "lessThan" -> "_lt",
-    "greaterThan" -> "_gt",
-    "lessOrEquals" -> "_ltEq",
-    "greaterOrEquals" -> "_gtEq",
-    "equals" -> "_eq",
-    "notEquals" -> "_neq",
-    "and" -> "_and",
-    "or" -> "_or",
-    "assign" -> "_assign")
+    "int int.unaryMinus()" -> "_neg",
+    "int int.times(int)" -> "_mul",
+    "int int.div(int)"   -> "_div",
+    "int int.mod(int)"   -> "_mod",
+    "int int.pow(int)"   -> "_powInt",
+    "int int.plus(int)" -> "_add",
+    "int int.minus(int)" -> "_sub",
+    "bool int.lessThan(int)" -> "_lt",
+    "bool int.greaterThan(int)" -> "_gt",
+    "bool int.lessOrEquals(int)" -> "_ltEq",
+    "bool int.greaterOrEquals(int)" -> "_gtEq",
+    "bool int.equals(int)" -> "_eq",
+    "bool int.notEquals(int)" -> "_neq",
+    "double double.unaryMinus()" -> "_neg",
+    "double double.times(double)" -> "_mul",
+    "double double.div(double)"   -> "_div",
+    "double double.pow(double)"   -> "_powDbl",
+    "double double.plus(double)" -> "_add",
+    "double double.minus(double)" -> "_sub",
+    "bool double.lessThan(double)" -> "_lt",
+    "bool double.greaterThan(double)" -> "_gt",
+    "bool double.lessOrEquals(double)" -> "_ltEq",
+    "bool double.greaterOrEquals(double)" -> "_gtEq",
+    "bool double.equals(double)" -> "_eq",
+    "bool double.notEquals(double)" -> "_neq",
+    "bool bool.not()" -> "_not",
+    "bool bool.and(bool)" -> "_and",
+    "bool bool.or(bool)" -> "_or")
 
   private def generateMethodPrototype(method: Method): Option[String] = {
-    if (method.native) {
-      val nativeName = nativeMethodNames.getOrElse(method.name, reportMissingInternalMethod(method))
+    if (method.name == "assign") {
+      nameGenerator.setNativeNameFor(method, "_assign")
+      None
+    } else if (method.native) {
+      val nativeName = nativeMethodNames.getOrElse(method.signatureString, reportMissingInternalMethod(method))
       nameGenerator.setNativeNameFor(method, nativeName)
       None
     } else {

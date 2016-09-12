@@ -61,6 +61,7 @@ class LexerImpl extends Lexer {
     Multiply.strategy,
     Divide.strategy,
     Mod.strategy,
+    Pow.strategy,
     Plus.strategy,
     Minus.strategy,
     Less.strategy,
