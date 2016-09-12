@@ -27,6 +27,6 @@ class Method(val name: String,
 
   def signatureString: String = {
     val paramString = parameters map { _.type_.qualifiedName } mkString ", "
-    s"${returnType.qualifiedName} ${container.qualifiedName}.$name{$paramString}"
+    s"${returnType.qualifiedName} ${container.qualifiedName}.$name($paramString)"
   }
 }
