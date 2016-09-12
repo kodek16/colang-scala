@@ -19,8 +19,8 @@ void main() {
     assert(33 % 4 == 1)
 
     assert(5 ** 3 == 125)
-    assert(1.2 ** 2.0 == 1.44)
-    assert(2.4 ** 5.0 == 79.62624)
+    assert(6 ** 0 == 1)
+    assert(3 ** 5 == 243)
 
 
 }

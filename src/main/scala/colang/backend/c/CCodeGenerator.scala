@@ -50,7 +50,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
   private val NATIVE_FUNCTION_DEFS = Seq(
     """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""",
-    """int _powInt(int a, int k) { int res = 1; while (k) { if (k & 1) res *= a; a *= a; k >>= 1; } return res; }""",
+    """int32_t _powInt(int32_t a, int32_t k) { int32_t res = 1; while (k) { if (k & 1) res *= a; a *= a; k >>= 1; } return res; }""",
     """double _powDbl(double a, double k) { return pow(a, k); }""")
 
   def process(rootNamespace: RootNamespace): Unit = {
