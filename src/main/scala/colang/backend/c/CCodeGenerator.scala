@@ -50,7 +50,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
   private val NATIVE_FUNCTION_DEFS = Seq(
     """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""",
-    """int _powInt(int a, int k) { int res = 1; whlie (k) { if (k & 1) res *= a; a *= a; k >>= 1; } return res; }""",
+    """int _powInt(int a, int k) { int res = 1; while (k) { if (k & 1) res *= a; a *= a; k >>= 1; } return res; }""",
     """double _powDbl(double a, double k) { return pow(a, k); }""")
 
   def process(rootNamespace: RootNamespace): Unit = {
@@ -308,12 +308,12 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "int int.pow(int)"   -> "_powInt",
     "int int.plus(int)" -> "_add",
     "int int.minus(int)" -> "_sub",
-    "int int.lessThan(int)" -> "_lt",
-    "int int.greaterThan(int)" -> "_gt",
-    "int int.lessOrEquals(int)" -> "_ltEq",
-    "int int.greaterOrEquals(int)" -> "_gtEq",
-    "int int.equals(int)" -> "_eq",
-    "int int.notEquals(int)" -> "_neq",
+    "bool int.lessThan(int)" -> "_lt",
+    "bool int.greaterThan(int)" -> "_gt",
+    "bool int.lessOrEquals(int)" -> "_ltEq",
+    "bool int.greaterOrEquals(int)" -> "_gtEq",
+    "bool int.equals(int)" -> "_eq",
+    "bool int.notEquals(int)" -> "_neq",
 
     "double& double&.assign(double)" -> "_assign",
     "double double.unaryMinus()" -> "_neg",
@@ -322,12 +322,12 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "double double.pow(double)"   -> "_powDbl",
     "double double.plus(double)" -> "_add",
     "double double.minus(double)" -> "_sub",
-    "double double.lessThan(double)" -> "_lt",
-    "double double.greaterThan(double)" -> "_gt",
-    "double double.lessOrEquals(double)" -> "_ltEq",
-    "double double.greaterOrEquals(double)" -> "_gtEq",
-    "double double.equals(double)" -> "_eq",
-    "double double.notEquals(double)" -> "_neq",
+    "bool double.lessThan(double)" -> "_lt",
+    "bool double.greaterThan(double)" -> "_gt",
+    "bool double.lessOrEquals(double)" -> "_ltEq",
+    "bool double.greaterOrEquals(double)" -> "_gtEq",
+    "bool double.equals(double)" -> "_eq",
+    "bool double.notEquals(double)" -> "_neq",
     
     "bool& bool&.assign(bool)" -> "_assign",
     "bool bool.not()" -> "_not",
