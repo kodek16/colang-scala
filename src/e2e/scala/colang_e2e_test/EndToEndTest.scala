@@ -1,6 +1,7 @@
 package colang_e2e_test
 
 import java.io.File
+import java.nio.file.Paths
 
 import colang.Compiler
 import colang.ast.parsed.AnalyzerImpl
@@ -55,8 +56,10 @@ class EndToEndTest extends FunSpec {
 
     describe(fileName) {
       it("should behave as specified") {
-        val cFile = new File("co_e2e_test.c")
-        val runFile = new File("co_e2e_test")
+        val tmpDir = System.getProperty("java.io.tmpdir")
+
+        val cFile = Paths.get(tmpDir, s"co_e2e_test_${fileName.hashCode}.c").toFile
+        val runFile = Paths.get(tmpDir, s"co_e2e_test_${fileName.hashCode}.exe").toFile
 
         val compiler = new Compiler(
           sample,
@@ -75,7 +78,7 @@ class EndToEndTest extends FunSpec {
         try {
           if (cFile.exists()) {
             println("Compiling " + fileName)
-            val gccReturnCode = s"gcc -o ${runFile.getName} ${cFile.getName}".!
+            val gccReturnCode = s"gcc -lm -o ${runFile.getAbsolutePath} ${cFile.getAbsolutePath}".!
             println(s"GCC return code: $gccReturnCode")
 
             if (gccReturnCode != 0) {
@@ -84,7 +87,7 @@ class EndToEndTest extends FunSpec {
 
             if (runFile.exists()) {
               println("Running " + fileName)
-              val programReturnCode = s"./${runFile.getName}".!
+              val programReturnCode = s"${runFile.getAbsolutePath}".!
               println(s"Program return code: $programReturnCode")
 
               if (programReturnCode != 0) {
