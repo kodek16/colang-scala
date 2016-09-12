@@ -298,7 +298,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     } else None
   }
 
-  // TODO change to signature matching when methods have signatures
   private val nativeMethodNames = Map(
     "int int.unaryMinus()" -> "_neg",
     "int int.times(int)" -> "_mul",
