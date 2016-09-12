@@ -300,7 +300,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
   // TODO change to signature matching when methods have signatures
   private val nativeMethodNames = Map(
-    "int& int&.assign(int)" -> "_assign",
     "int int.unaryMinus()" -> "_neg",
     "int int.times(int)" -> "_mul",
     "int int.div(int)"   -> "_div",
@@ -315,7 +314,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool int.equals(int)" -> "_eq",
     "bool int.notEquals(int)" -> "_neq",
 
-    "double& double&.assign(double)" -> "_assign",
     "double double.unaryMinus()" -> "_neg",
     "double double.times(double)" -> "_mul",
     "double double.div(double)"   -> "_div",
@@ -329,13 +327,15 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool double.equals(double)" -> "_eq",
     "bool double.notEquals(double)" -> "_neq",
     
-    "bool& bool&.assign(bool)" -> "_assign",
     "bool bool.not()" -> "_not",
     "bool bool.and(bool)" -> "_and",
     "bool bool.or(bool)" -> "_or")
 
   private def generateMethodPrototype(method: Method): Option[String] = {
-    if (method.native) {
+    if (method.name == "assign") {
+      nameGenerator.setNativeNameFor(method, "_assign")
+      None
+    } else if (method.native) {
       val nativeName = nativeMethodNames.getOrElse(method.signatureString, reportMissingInternalMethod(method))
       nameGenerator.setNativeNameFor(method, nativeName)
       None
