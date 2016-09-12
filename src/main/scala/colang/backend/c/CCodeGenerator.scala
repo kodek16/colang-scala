@@ -313,7 +313,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool int.greaterOrEquals(int)" -> "_gtEq",
     "bool int.equals(int)" -> "_eq",
     "bool int.notEquals(int)" -> "_neq",
-
     "double double.unaryMinus()" -> "_neg",
     "double double.times(double)" -> "_mul",
     "double double.div(double)"   -> "_div",
@@ -326,7 +325,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool double.greaterOrEquals(double)" -> "_gtEq",
     "bool double.equals(double)" -> "_eq",
     "bool double.notEquals(double)" -> "_neq",
-    
     "bool bool.not()" -> "_not",
     "bool bool.and(bool)" -> "_and",
     "bool bool.or(bool)" -> "_or")
