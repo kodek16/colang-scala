@@ -24,4 +24,9 @@ class Method(val name: String,
     case Some(fd) => Some(fd.prototypeSource)
     case None => None
   }
+
+  def signatureString: String = {
+    val paramString = parameters map { _.type_.qualifiedName } mkString ", "
+    s"${returnType.qualifiedName} ${container.qualifiedName}.$name{$paramString}"
+  }
 }

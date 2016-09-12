@@ -48,6 +48,16 @@ class OperatorStrategiesSpec extends LexerUnitSpec {
     }
   }
 
+  describe("'**' lexer strategy") {
+    it("should match single '**' tokens") {
+      Pow.strategy shouldSucceedOn "**" withoutIssues()
+    }
+
+    it("should not match multiple '**' tokens without whitespace") {
+      Pow.strategy shouldNotMatch "***"
+    }
+  }
+
   describe("'+' lexer strategy") {
     it("should match single '+' tokens") {
       Plus.strategy shouldSucceedOn "+" withoutIssues()
