@@ -21,6 +21,4 @@ void main() {
     assert(5 ** 3 == 125)
     assert(6 ** 0 == 1)
     assert(3 ** 5 == 243)
-
-
 }
