@@ -1055,4 +1055,26 @@ object Terms {
       "конструкторе",
       RussianTerm.Masculine)
   }
+
+  object Member extends Term {
+    val en_US = new EnglishTerm("member", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "член",
+      "члена",
+      "члену",
+      "член",
+      "членам",
+      "члене",
+      BelarusianTerm.Masculine)
+
+    val ru_RU = new RussianTerm(
+      "член",
+      "члена",
+      "члену",
+      "член",
+      "членом",
+      "члене",
+      RussianTerm.Masculine)
+  }
 }

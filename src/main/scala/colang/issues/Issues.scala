@@ -531,21 +531,7 @@ object Issues {
     }
   }
 
-  object TypeDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
-    private val code = "E0024"
-
-    protected def en_US(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "a type cannot be defined without a body", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "тып ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "тип не может быть определён без тела", notes = Seq.empty)
-    }
-  }
+  // E0024 isn't used any longer
 
   object InvalidMainFunctionSignature extends LocaleAwareIssueFactory[Error, Unit] {
     private val code = "E0025"

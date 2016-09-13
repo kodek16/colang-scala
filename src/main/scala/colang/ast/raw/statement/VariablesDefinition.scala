@@ -76,12 +76,16 @@ object VariableDefinition {
 }
 
 /**
-  * Represents a variable(s) definition statement, which may also appear at the top-level.
+  * Represents a variable(s) definition statement, which may appear in multiple contexts. They are:
+  * 1) In the global namespace - for global variables definitions
+  * 2) In a type definition - for fields or static variables
+  * 3) In a local scope - for local variables definitions
   * @param type_ variable(s) type
   * @param variables individual variable definitions
   */
 case class VariablesDefinition(type_ : Type, variables: Seq[VariableDefinition]) extends Statement
-                                                                                 with GlobalSymbolDefinition {
+                                                                                 with GlobalSymbolDefinition
+                                                                                 with TypeMemberDefinition {
   def source: SourceCode = type_.source + variables.last.source
 }
 

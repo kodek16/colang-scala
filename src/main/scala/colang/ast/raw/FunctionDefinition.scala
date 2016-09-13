@@ -19,7 +19,7 @@ case class FunctionDefinition(specifiers: SpecifiersList,
                               returnType : Type,
                               name: Identifier,
                               parameterList: ParameterList,
-                              body: Option[CodeBlock]) extends GlobalSymbolDefinition {
+                              body: Option[CodeBlock]) extends GlobalSymbolDefinition with TypeMemberDefinition {
 
   lazy val source = specifiers.source + body.getOrElse(parameterList).source
   lazy val prototypeSource = specifiers.source + parameterList.source

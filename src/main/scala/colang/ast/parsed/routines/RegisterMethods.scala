@@ -2,6 +2,7 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed._
 import colang.ast.raw
+import colang.ast.raw.FunctionDefinition
 import colang.issues.{Issue, Terms}
 import colang.tokens.NativeKeyword
 
@@ -15,7 +16,8 @@ private[routines] object RegisterMethods {
   def registerMethods(types: Seq[Type]): (Seq[Method], Seq[Issue]) = {
     val result = types map { type_ =>
       type_.definition match {
-        case Some(raw.TypeDefinition(_, _, _, Some(raw.TypeBody(_, methodDefs, _)))) =>
+        case Some(raw.TypeDefinition(_, _, _, raw.TypeBody(_, memberDefs, _))) =>
+          val methodDefs = memberDefs.filter { _.isInstanceOf[FunctionDefinition] }.asInstanceOf[Seq[FunctionDefinition]]
           val methodResult = methodDefs map { registerMethod(type_, _) }
           val methods = methodResult map { _._1 }
           val methodsIssues = methodResult flatMap { _._2 }

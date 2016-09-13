@@ -6,7 +6,6 @@ package colang.ast.parsed
 package object routines {
   val analyzeFunctionBodies = AnalyzeFunctionBodies.analyzeFunctionBodies _
   val checkReturnStatements = CheckReturnStatements.checkReturnStatements _
-  val checkTypesWithoutBody = CheckTypesWithoutBody.checkTypesWithoutBody _
   val processMainFunction = ProcessMainFunction.processMainFunction _
   val registerFunctions = RegisterFunctions.registerFunctions _
   val registerGlobalVariables = RegisterGlobalVariables.registerGlobalVariables _
