@@ -44,12 +44,13 @@ class AnalyzerImpl extends Analyzer {
     val (types, typesIssues) = routines.registerTypes(rootNamespace, typeDefs)
     val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)
     val (methods, methodsIssues) = routines.registerMethods(types)
+    val fieldsIssues = routines.registerFields(types)
     val (variables, globalVarInitStatements, varIssues) = routines.registerGlobalVariables(rootNamespace, varDefs)
     val funcBodiesIssues = routines.analyzeFunctionBodies(functions)
     val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements, eof)
     val returnIssues = routines.checkReturnStatements(functions)
 
-    val issues = typesIssues ++ functionsIssues ++ methodsIssues ++ varIssues ++ funcBodiesIssues ++
+    val issues = typesIssues ++ functionsIssues ++ methodsIssues ++ fieldsIssues ++ varIssues ++ funcBodiesIssues ++
       mainFuncIssues ++ returnIssues
 
     (rootNamespace, issues)

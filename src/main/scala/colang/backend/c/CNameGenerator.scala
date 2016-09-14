@@ -1,6 +1,6 @@
 package colang.backend.c
 
-import colang.ast.parsed.{Constructor, Method, ReferenceType, Symbol}
+import colang.ast.parsed.{Constructor, Method, ObjectMember, ReferenceType, Symbol}
 
 import scala.collection.mutable
 
@@ -11,7 +11,7 @@ trait CNameGenerator {
 
   // Implementations must return the same name for each argument on every call.
   def nameFor(symbol: Symbol): String
-  def nameFor(method: Method): String
+  def nameFor(objectMember: ObjectMember): String
   def nameFor(constructor: Constructor): String
 
   // After calling these methods with a specific name, this name must be returned from all consequent nameFor calls.
@@ -38,12 +38,12 @@ class CVerboseNameGenerator extends CNameGenerator {
     }
   }
 
-  def nameFor(method: Method): String = {
-    if (generatedNames contains method) {
-      generatedNames(method)
+  def nameFor(objectMember: ObjectMember): String = {
+    if (generatedNames contains objectMember) {
+      generatedNames(objectMember)
     } else {
-      val name = adjustName("co_m_" + sanitizeName(method.name))
-      generatedNames(method) = name
+      val name = adjustName(s"co_${sanitizeName(objectMember.container.qualifiedName)}_${sanitizeName(objectMember.name)}")
+      generatedNames(objectMember) = name
       name
     }
   }

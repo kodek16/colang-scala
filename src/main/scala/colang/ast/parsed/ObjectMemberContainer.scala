@@ -9,37 +9,38 @@ import scala.collection.mutable
   */
 trait ObjectMemberContainer { this: Type =>
 
-  private val methods: mutable.LinkedHashMap[String, Method] = mutable.LinkedHashMap.empty
+  private val objectMembers: mutable.LinkedHashMap[String, ObjectMember] = mutable.LinkedHashMap.empty
 
   /**
-    * Resolves a method name.
-    * @param name method name
-    * @return the method with given name, or None if it doesn't exist
+    * Resolves an object member name.
+    * @param name object member name
+    * @return field or method with given name, or None if it doesn't exist
     */
-  def resolveMethod(name: String): Option[Method] = methods get name
+  def resolveObjectMember(name: String): Option[ObjectMember] = objectMembers get name
 
   /**
-    * Adds a method unconditionally, throws if it can't be done.
-    * @param method detached method
+    * Adds an object member unconditionally, throws if it can't be done.
+    * @param objectMember detached object member
     */
-  def addMethod(method: Method): Unit = {
-    val issues = tryAddMethod(method)
-    if (issues.nonEmpty) throw new IllegalArgumentException("couldn't add the method")
+  def addObjectMember(objectMember: ObjectMember): Unit = {
+    val issues = tryAddObjectMember(objectMember)
+    if (issues.nonEmpty) throw new IllegalArgumentException("couldn't add object member")
   }
 
   /**
-    * Tries to register a method in the type.
-    * @param method detached method
-    * @return an issue if registration failed
+    * Tries to register an object member in the type.
+    * @param objectMember detached object member
+    * @return issues encountered while registering
     */
-  def tryAddMethod(method: Method): Seq[Issue] = {
-    methods get method.name match {
-      case Some(existingMethod) if !existingMethod.native =>
-        val issue = Issues.DuplicateMethodDefinition(method.definitionSite.get, existingMethod.definitionSite)
+  def tryAddObjectMember(objectMember: ObjectMember): Seq[Issue] = {
+    objectMembers get objectMember.name match {
+      case Some(existingMember) =>
+        val issue = Issues.EntityNameTaken(objectMember.definitionSite.get,
+          (existingMember.description, existingMember.definitionSite))
         Seq(issue)
 
       case None =>
-        methods(method.name) = method
+        objectMembers(objectMember.name) = objectMember
         Seq.empty
     }
   }
@@ -48,5 +49,17 @@ trait ObjectMemberContainer { this: Type =>
     * Returns a Seq containing all methods of this type.
     * @return all methods in a Seq
     */
-  def allMethods: Seq[Method] = methods.values.toSeq
+  def allMethods: Seq[Method] = objectMembers.values.toSeq flatMap {
+    case m: Method => Some(m)
+    case _ => None
+  }
+
+  /**
+    * Returns a Seq containing all fields of this type.
+    * @return all fields in a Seq
+    */
+  def allFields: Seq[Field] = objectMembers.values.toSeq flatMap {
+    case f: Field => Some(f)
+    case _ => None
+  }
 }

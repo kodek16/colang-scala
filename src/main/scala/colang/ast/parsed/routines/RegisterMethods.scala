@@ -61,7 +61,7 @@ private[routines] object RegisterMethods {
       definition = Some(methodDef),
       native = methodDef.specifiers.has(classOf[NativeKeyword]))
 
-    val methodIssues = type_.tryAddMethod(method)
+    val methodIssues = type_.tryAddObjectMember(method)
     (method, returnTypeIssues ++ paramIssues ++ methodIssues)
   }
 }

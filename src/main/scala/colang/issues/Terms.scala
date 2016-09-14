@@ -1077,4 +1077,26 @@ object Terms {
       "члене",
       RussianTerm.Masculine)
   }
+
+  object Field extends Term {
+    val en_US = new EnglishTerm("field", EnglishTerm.Singular)
+
+    val be_BY = new BelarusianTerm(
+      "поле",
+      "поля",
+      "полю",
+      "поле",
+      "полем",
+      "полі",
+      BelarusianTerm.Neuter)
+
+    val ru_RU = new RussianTerm(
+      "поле",
+      "поля",
+      "полю",
+      "поле",
+      "полем",
+      "поле",
+      RussianTerm.Neuter)
+  }
 }

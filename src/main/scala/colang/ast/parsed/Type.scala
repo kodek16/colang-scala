@@ -113,7 +113,7 @@ class ReferenceType(val referenced: Type) extends Type(
   override lazy val reference: ReferenceType = throw new IllegalArgumentException("cannot reference a reference type")
 
   // A default assign method is generated for every reference type.
-  addMethod(defaultAssignMethod)
+  addObjectMember(defaultAssignMethod)
 
   private def defaultAssignMethod: Method = {
     val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = this)

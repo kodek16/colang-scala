@@ -709,7 +709,7 @@ object Issues {
     * Generates an issue for a symbol definition with a taken name.
     * Args: (term describing original symbol, optionally its definition site)
     */
-  object SymbolNameTaken extends LocaleAwareIssueFactory[Error, (Term, Option[SourceCode])] {
+  object EntityNameTaken extends LocaleAwareIssueFactory[Error, (Term, Option[SourceCode])] {
     private val code = "E0032"
 
     protected def en_US(source: SourceCode, args: (Term, Option[SourceCode])): Error = {
@@ -743,40 +743,7 @@ object Issues {
     }
   }
 
-  /**
-    * Generates an issue for a duplicate method definition (same name).
-    * Args: optionally definition site of the original method
-    */
-  object DuplicateMethodDefinition extends LocaleAwareIssueFactory[Error, Option[SourceCode]] {
-    private val code = "E0033"
-
-    protected def en_US(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "defined here"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "there is already a method with the same name for this type", notes)
-    }
-
-    protected def be_BY(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "акрэсьлены тут"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "для гэтага тыпу ужо акрэсьлены метад з такім самым імем", notes)
-    }
-
-    protected def ru_RU(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "определённый здесь"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "для этого типа уже определён метод с таким же именем", notes)
-    }
-  }
+  // E0033 isn't used any longer
 
   /**
     * Generates an issue for an unexpected symbol reference used as a type.

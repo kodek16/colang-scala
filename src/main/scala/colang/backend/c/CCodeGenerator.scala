@@ -252,7 +252,17 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
       None
     } else {
       val cName = nameGenerator.nameFor(type_)
-      Some(s"typedef struct {} $cName;")
+      val cFields = addIndentation(type_.allFields map { field =>
+        val cFieldType = nameGenerator.nameFor(field.type_)
+        val cFieldName = nameGenerator.nameFor(field)
+        s"$cFieldType $cFieldName;"
+      } mkString "\n")
+
+      if (cFields.trim.nonEmpty) {
+        Some(s"typedef struct {\n$cFields\n} $cName;")
+      } else {
+        Some(s"typedef struct {} $cName;")
+      }
     }
   }
 

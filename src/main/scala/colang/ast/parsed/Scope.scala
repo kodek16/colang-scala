@@ -61,7 +61,7 @@ trait Scope {
         issues
 
       case Some(existingSymbol) =>
-        val issue = Issues.SymbolNameTaken(symbol.definitionSite.get,
+        val issue = Issues.EntityNameTaken(symbol.definitionSite.get,
           (existingSymbol.description, existingSymbol.definitionSite))
         Seq(issue)
 
