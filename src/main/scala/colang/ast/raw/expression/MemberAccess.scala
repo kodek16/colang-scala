@@ -2,14 +2,14 @@ package colang.ast.raw.expression
 
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
-import colang.{SourceCode, TokenStream}
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.issues.Terms
 import colang.tokens.{Dot, Identifier}
+import colang.{SourceCode, TokenStream}
 
 /**
-  * Represents an object member access expression/
+  * Represents an object member access expression.
   * @param instance object
   * @param memberName member name
   */

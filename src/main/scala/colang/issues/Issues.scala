@@ -850,4 +850,24 @@ object Issues {
         s"определён конструктор по умолчанию", notes = Seq.empty)
     }
   }
+
+  /**
+    * Generates an issue for a member access with unknown member name.
+    * Args: instance type
+    */
+  object UnknownObjectMember extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0038"
+
+    protected def en_US(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"an object of type '$objectType' has no members with this name", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"аб'ект тыпу '$objectType' ня мае членаў з гэтым імем", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"объект типа '$objectType' не содержит членов с этим именем", notes = Seq.empty)
+    }
+  }
 }

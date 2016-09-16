@@ -36,6 +36,7 @@ object Expression {
 
       case r: raw.SymbolReference => SymbolReference.analyze(r)
       case r: raw.FunctionCall => FunctionCall.analyze(r)
+      case r: raw.MemberAccess => MemberAccess.analyze(r)
         
       case r: raw.InfixOperator => Operator.analyze(r)
       case r: raw.PrefixOperator => Operator.analyze(r)
