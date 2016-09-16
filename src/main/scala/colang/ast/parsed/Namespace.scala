@@ -20,7 +20,7 @@ class RootNamespace extends Namespace("", None, None) {
   /**
     * A type assigned to values that failed analysis.
     */
-  val unknownType: Type = new Type(
+  val unknownType: Type = new NonReferenceType(
     name = "(unknown type)",
     definition = None,
     scope = Some(this))
@@ -29,7 +29,7 @@ class RootNamespace extends Namespace("", None, None) {
   /**
     * A type assigned to overloaded function references.
     */
-  val overloadedFunctionType: Type = new Type(
+  val overloadedFunctionType: Type = new NonReferenceType(
     name = "(unresolved function overload)",
     definition = None,
     scope = Some(this))

@@ -6,16 +6,21 @@ import colang.ast.raw.TypeDefinition
 import colang.issues.{Issue, Issues, Terms}
 
 /**
-  * Represents a type. Different type aspects are defined in separate traits to keep the file smaller.
+  * Represents a type. Different type aspects are defined in separate traits to keep this file smaller.
+  * All types are divided into reference and non-reference types: each of these categories has its own concrete
+  * Type subclass.
   * @param name type name
   * @param scope enclosing scope
   * @param definition raw type definition
   * @param native whether type is native
   */
-class Type(val name: String,
-           val scope: Some[Scope],
-           val definition: Option[TypeDefinition],
-           val native: Boolean = false) extends Symbol with Scope with ObjectMemberContainer with ConstructorContainer {
+abstract class Type(val name: String,
+                    val scope: Some[Scope],
+                    val definition: Option[TypeDefinition],
+                    val native: Boolean = false) extends Symbol
+                                                 with Scope
+                                                 with ObjectMemberContainer
+                                                 with ConstructorContainer {
 
   val parent = scope
   val definitionSite = definition match {
@@ -24,15 +29,6 @@ class Type(val name: String,
   }
 
   val description = Terms.Type
-
-  // TODO ReferenceType throwing here is not the best solution, it should be probably eventually refactored using traits
-  // TODO and templates
-  /**
-    * Returns a reference type for this type.
-    * WARNING: This will throw when used on ReferenceType, because of overrefencing. Be careful when you use it.
-    * @return reference type
-    */
-  lazy val reference: ReferenceType = new ReferenceType(this)
 
   // A default constructor is added for every type (it shouldn't be, need to check if the type is Plain)
   defaultConstructor foreach addConstructor
@@ -100,6 +96,21 @@ class Type(val name: String,
 }
 
 /**
+  * Represents a non-reference type.
+  */
+class NonReferenceType(name: String,
+                       scope: Some[Scope],
+                       definition: Option[raw.TypeDefinition],
+                       native: Boolean = false) extends Type(name, scope, definition, native) {
+
+  /**
+    * Returns a reference type associated with this type.
+    * @return reference type
+    */
+  lazy val reference: ReferenceType = new ReferenceType(this)
+}
+
+/**
   * Represents a reference type.
   * Never construct those manually, use Type reference method instead.
   * @param referenced referenced type.
@@ -109,8 +120,6 @@ class ReferenceType(val referenced: Type) extends Type(
   scope = referenced.scope,
   definition = None,
   native = true) {
-
-  override lazy val reference: ReferenceType = throw new IllegalArgumentException("cannot reference a reference type")
 
   // A default assign method is generated for every reference type.
   addObjectMember(defaultAssignMethod)
@@ -159,7 +168,14 @@ object Type {
 
       case r: raw.ReferenceType =>
         val (referenced, referencedIssues) = Type.resolve(scope, r.referenced)
-        (referenced.reference, referencedIssues)
+        referenced match {
+          case t: NonReferenceType => (t.reference, referencedIssues)
+
+          // Normally, overreferenced types have already been checked in the parser, so this should never be the case.
+          case rt: ReferenceType =>
+            val issue = Issues.OverreferencedType(r.source, referenced.qualifiedName)
+            (scope.root.unknownType, referencedIssues :+ issue)
+        }
     }
   }
 

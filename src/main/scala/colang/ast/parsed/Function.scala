@@ -44,7 +44,7 @@ class Function(val name: String,
     val paramString = (parameters map { _.type_.qualifiedName }).mkString(",")
     val retTypeString = returnType.qualifiedName
     val typeName = s"($paramString -> $retTypeString)"
-    new Type(
+    new NonReferenceType(
       name = typeName,
       scope = Some(scope.get.root),
       definition = None)

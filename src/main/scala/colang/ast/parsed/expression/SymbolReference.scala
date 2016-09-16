@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Type, Variable}
+import colang.ast.parsed.{Function, NonReferenceType, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 
@@ -47,8 +47,8 @@ object ReferenceVariableReference {
 class VariableReference private (val variable: Variable,
                                  val rawNode: Option[raw.SymbolReference]) extends Expression {
   val type_ = variable.type_ match {
+    case t: NonReferenceType => t.reference
     case rt: ReferenceType => rt
-    case t: Type => t.reference
   }
 }
 
