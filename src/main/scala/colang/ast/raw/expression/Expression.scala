@@ -44,7 +44,9 @@ object Expression {
     * Secondary expressions are postfix operator expressions.
     */
   val secondaryStrategy = new ParserImpl.Strategy[Expression] {
-    private val postfixOperatorStrategy = StrategyUnion(FunctionCall.strategy)
+    private val postfixOperatorStrategy = StrategyUnion(
+      FunctionCall.strategy,
+      MemberAccess.strategy)
 
     private case class PostfixOperatorSequence(operators: ::[PostfixOperator]) extends Node {
       def source: SourceCode = operators.head.source + operators.last.source
