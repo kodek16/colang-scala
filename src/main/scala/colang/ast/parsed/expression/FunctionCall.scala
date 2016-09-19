@@ -17,6 +17,9 @@ case class FunctionCall(function: Function,
 }
 
 object FunctionCall {
+
+  // Note that method calls are also represented by raw.FunctionCall objects.
+  // This function correctly handles them, creating appropriate MethodCall expressions.
   def analyze(rawExpr: raw.FunctionCall)(implicit scope: Scope): (Expression, Seq[Issue]) = {
     val function = rawExpr.function
     val args = rawExpr.arguments.args
@@ -46,6 +49,15 @@ object FunctionCall {
       case FunctionReference(f, _) =>
         val argTypeNames = parsedArgs map { _.type_.qualifiedName }
         val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Function, argTypeNames))
+        (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
+
+      case MethodAccess(instance, m, _) if m.canBeAppliedTo(parsedArgs map { _.type_ }) =>
+        val methodArgs = Type.performImplicitConversions(parsedArgs, m.parameters map { _.type_ })
+        (MethodCall(m, instance, methodArgs, Some(rawExpr)), functionIssues ++ argsIssues)
+
+      case MethodAccess(instance, m, _) =>
+        val argTypeNames = parsedArgs map { _.type_.qualifiedName }
+        val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Method, argTypeNames))
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
       case _ =>

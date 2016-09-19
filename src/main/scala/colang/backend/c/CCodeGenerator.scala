@@ -352,7 +352,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool bool.or(bool)" -> "_or")
 
   private def generateMethodPrototype(method: Method): Option[String] = {
-    if (method.name == "assign") {
+    if (method.native && method.name == "assign" && method.parameters.size == 1) {
       nameGenerator.setNativeNameFor(method, "_assign")
       None
     } else if (method.native) {
@@ -360,12 +360,27 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
       nameGenerator.setNativeNameFor(method, nativeName)
       None
     } else {
-      ???
+      val cName = nameGenerator.nameFor(method)
+      val cReturnTypeName = nameGenerator.nameFor(method.returnType)
+      val cParamTypes = (method.container +: (method.parameters map { _.type_ })) map nameGenerator.nameFor mkString ", "
+
+      Some(s"$cReturnTypeName $cName($cParamTypes);")
     }
   }
 
   private def generateMethodDefinition(method: Method): Option[String] = {
-    None
+    if (!method.native) {
+      val cName = nameGenerator.nameFor(method)
+      val cReturnTypeName = nameGenerator.nameFor(method.returnType)
+
+      val cParamTypeNames = (method.container +: (method.parameters map { _.type_ })) map nameGenerator.nameFor
+      val cParamNames = "_this" +: (method.parameters map nameGenerator.nameFor)
+      val cParameters = (cParamTypeNames zip cParamNames) map { case (t, n) => s"$t $n" } mkString ", "
+
+      val cBody = generateCodeBlock(method.body, ignoredVariables = method.parameters)
+
+      Some(s"$cReturnTypeName $cName($cParameters) $cBody")
+    } else None
   }
 
   private val nativeDefaultConstructorNames = Map(
@@ -541,7 +556,6 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     * @param method native method
     */
   private def reportMissingInternalMethod(method: Method): Nothing = {
-    // TODO when methods have signature() method, use it here.
-    InternalErrors.noNativeSymbol(method.name)
+    InternalErrors.noNativeSymbol(method.signatureString)
   }
 }

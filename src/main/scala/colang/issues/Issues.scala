@@ -870,4 +870,36 @@ object Issues {
       Error(code, source, s"объект типа '$objectType' не содержит членов с этим именем", notes = Seq.empty)
     }
   }
+
+  object NativeMethodWithBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0039"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a 'native' method cannot be defined with a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-метад ня можа быць акрэсьлены з целам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-метод не может быть определён с телом", notes = Seq.empty)
+    }
+  }
+
+  object MethodDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0040"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a method cannot be defined without a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "метад ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "метод не может быть определён без тела", notes = Seq.empty)
+    }
+  }
 }

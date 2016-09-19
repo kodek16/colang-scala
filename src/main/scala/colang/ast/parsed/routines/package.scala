@@ -5,6 +5,7 @@ package colang.ast.parsed
   */
 package object routines {
   val analyzeFunctionBodies = AnalyzeFunctionBodies.analyzeFunctionBodies _
+  val analyzeMethodBodies = AnalyzeMethodBodies.analyzeMethodBodies _
   val checkReturnStatements = CheckReturnStatements.checkReturnStatements _
   val processMainFunction = ProcessMainFunction.processMainFunction _
   val registerFields = RegisterFields.registerFields _

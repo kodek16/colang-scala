@@ -23,6 +23,18 @@ case class FieldAccess(instance: Expression,
   }
 }
 
+/**
+  * Represents a reference to an object method.
+  * @param instance object the method is bound to
+  * @param method object method
+  */
+case class MethodAccess(instance: Expression,
+                        method: Method,
+                        rawNode: Option[raw.MemberAccess]) extends Expression {
+
+  val type_ = method.container.scope.get.root.boundMethodType
+}
+
 object MemberAccess {
   def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope): (Expression, Seq[Issue]) = {
     val (instance, instanceIssues) = Expression.analyze(scope, rawExpr.instance)
@@ -39,11 +51,29 @@ object MemberAccess {
       }
     }
 
+    def asMethodAccess: Option[(Expression, Seq[Issue])] = {
+      instance.type_.resolveObjectMember(rawExpr.memberName.value) match {
+        case Some(m: Method) => Some((MethodAccess(instance, m, Some(rawExpr)), instanceIssues))
+        case None =>
+          instance.type_ match {
+            case rt: ReferenceType =>
+              val dereferenced = rt.referenced
+              dereferenced.resolveObjectMember(rawExpr.memberName.value) match {
+                case Some(m: Method) =>
+                  Some((MethodAccess(ImplicitDereferencing(instance), m, Some(rawExpr)), instanceIssues))
+                case _ => None
+              }
+            case _ => None
+          }
+        case _ => None
+      }
+    }
+
     def asUnknownMemberAccess: (Expression, Seq[Issue]) = {
       val issue = Issues.UnknownObjectMember(rawExpr.memberName.source, instance.type_.qualifiedName)
       (InvalidExpression(), instanceIssues :+ issue)
     }
 
-    asFieldAccess.getOrElse(asUnknownMemberAccess)
+    asFieldAccess.orElse(asMethodAccess).getOrElse(asUnknownMemberAccess)
   }
 }

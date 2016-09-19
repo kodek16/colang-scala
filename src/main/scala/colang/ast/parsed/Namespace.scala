@@ -34,6 +34,14 @@ class RootNamespace extends Namespace("", None, None) {
     definition = None,
     scope = Some(this))
 
+  /**
+    * A type assigned to bound method references.
+    */
+  val boundMethodType: Type = new NonReferenceType(
+    name = "(bound method)",
+    definition = None,
+    scope = Some(this))
+
   lazy val voidType = getPrimitiveType("void")
   lazy val intType = getPrimitiveType("int")
   lazy val doubleType = getPrimitiveType("double")
