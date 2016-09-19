@@ -934,4 +934,40 @@ object Issues {
       Error(code, source, "ссылочный маркер '&' может появляться только в определениях методов", notes = Seq.empty)
     }
   }
+
+  /**
+    * Generates an issue for a duplicate method definition (same name and parameter types)
+    * Args: optionally definition site of the original method
+    */
+  object DuplicateMethodDefinition extends LocaleAwareIssueFactory[Error, Option[SourceCode]] {
+    private val code = "E0043"
+
+    protected def en_US(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "defined here"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "there is already a method with the same name and parameter types in this type",
+        notes)
+    }
+
+    protected def be_BY(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "акрэсьлены тут"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для гэтага тыпу ужо акрэсьлены метад з такімі самымі імем і тыпамі параметраў", notes)
+    }
+
+    protected def ru_RU(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "определён здесь"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для этого типа уже определён метод с такими же именем и типами параметров", notes)
+    }
+  }
 }

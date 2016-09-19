@@ -35,6 +35,19 @@ case class MethodAccess(instance: Expression,
   val type_ = method.container.scope.get.root.boundMethodType
 }
 
+
+/**
+  * Represents a reference to an overloaded object method.
+  * @param instance object the method is bound to
+  * @param overloadedMethod overloaded method
+  */
+case class OverloadedMethodAccess(instance: Expression,
+                                  overloadedMethod: OverloadedMethod,
+                                  rawNode: Option[raw.MemberAccess]) extends Expression {
+
+  val type_ = overloadedMethod.container.scope.get.root.boundMethodType
+}
+
 object MemberAccess {
   def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     val (instance, instanceIssues) = Expression.analyze(rawExpr.instance)
@@ -54,6 +67,8 @@ object MemberAccess {
     def asMethodAccess: Option[(Expression, Seq[Issue])] = {
       instance.type_.resolveObjectMember(rawExpr.memberName.value) match {
         case Some(m: Method) => Some((MethodAccess(instance, m, Some(rawExpr)), instanceIssues))
+        case Some(om: OverloadedMethod) => Some((OverloadedMethodAccess(instance, om, Some(rawExpr)), instanceIssues))
+
         case None =>
           instance.type_ match {
             case rt: ReferenceType =>
@@ -61,6 +76,9 @@ object MemberAccess {
               dereferenced.resolveObjectMember(rawExpr.memberName.value) match {
                 case Some(m: Method) =>
                   Some((MethodAccess(ImplicitDereferencing(instance), m, Some(rawExpr)), instanceIssues))
+                case Some(om: OverloadedMethod) =>
+                  Some((OverloadedMethodAccess(ImplicitDereferencing(instance), om, Some(rawExpr)), instanceIssues))
+
                 case _ => None
               }
             case _ => None

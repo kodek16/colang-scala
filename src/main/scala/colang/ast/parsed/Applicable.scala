@@ -31,7 +31,9 @@ object Applicable {
     * @return true if applicables have the same parameter types.
     */
   def sameParameterTypes[A <: Applicable](f: A, g: A): Boolean = {
-    if (f.parameters.size == g.parameters.size) {
+    if (f.parameters.isEmpty && g.parameters.isEmpty) {
+      true
+    } else if (f.parameters.size == g.parameters.size) {
       (f.parameters map { _.type_ }) zip (g.parameters map { _.type_ }) map { ts => ts._1 == ts._2 } reduce { _ && _ }
     } else false
   }

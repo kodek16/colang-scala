@@ -28,12 +28,24 @@ trait ObjectMemberContainer { this: Type =>
   }
 
   /**
-    * Tries to register an object member in the type.
+    * Tries to register an object member in the type. Will overload methods if necessary and possible.
     * @param objectMember detached object member
     * @return issues encountered while registering
     */
   def tryAddObjectMember(objectMember: ObjectMember): Seq[Issue] = {
     objectMembers get objectMember.name match {
+      case Some(om: OverloadedMethod) if objectMember.isInstanceOf[Method] =>
+        om.tryAddOverload(objectMember.asInstanceOf[Method])
+
+      case Some(m: Method) if objectMember.isInstanceOf[Method] =>
+        val overloadedMethod = new OverloadedMethod(m.name, m.container)
+        overloadedMethod.tryAddOverload(m)  // Will always succeed
+        val issues = overloadedMethod.tryAddOverload(objectMember.asInstanceOf[Method])
+
+        objectMembers -= m.name
+        objectMembers(overloadedMethod.name) = overloadedMethod
+        issues
+
       case Some(existingMember) =>
         val issue = Issues.EntityNameTaken(objectMember.definitionSite.get,
           (existingMember.description, existingMember.definitionSite))

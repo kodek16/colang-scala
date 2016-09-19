@@ -51,6 +51,17 @@ object FunctionCall {
         val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Function, argTypeNames))
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
+      case OverloadedMethodAccess(instance, om, _) =>
+        val (overloadOption, overloadingIssues) = om.resolveOverload(parsedArgs map { _.type_ }, Some(rawExpr.source))
+        val result = overloadOption match {
+          case Some(overload) =>
+            val methodArgs = Type.performImplicitConversions(parsedArgs, overload.parameters map { _.type_ })
+            MethodCall(overload, instance, methodArgs, Some(rawExpr))
+
+          case None => InvalidExpression()
+        }
+        (result, functionIssues ++ argsIssues ++ overloadingIssues)
+
       case MethodAccess(instance, m, _) if m.canBeAppliedTo(parsedArgs map { _.type_ }) =>
         val methodArgs = Type.performImplicitConversions(parsedArgs, m.parameters map { _.type_ })
         (MethodCall(m, instance, methodArgs, Some(rawExpr)), functionIssues ++ argsIssues)

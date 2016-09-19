@@ -238,6 +238,12 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
         case expr: FieldAccess =>
           processExpression(expr.instance)
 
+        case expr: MethodAccess =>
+          processExpression(expr.instance)
+          processMethod(expr.method)
+
+        case expr: OverloadedMethodAccess => ()
+
         case expr: MethodCall =>
           processMethod(expr.method)
           processExpression(expr.instance)
@@ -520,6 +526,10 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
           case _: NonReferenceType => s"(($cInstance).$cField)"
           case _: ReferenceType => s"&(($cInstance)->$cField)"
         }
+
+      // Bound method references by themselves are currently useless, so we don't generate them.
+      case expr: MethodAccess => ""
+      case expr: OverloadedMethodAccess => ""
 
       case expr: MethodCall =>
         val cMethodName = nameGenerator.nameFor(expr.method)
