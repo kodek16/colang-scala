@@ -246,6 +246,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
         case expr: FunctionReference => processFunction(expr.function)
         case expr: OverloadedFunctionReference => ()
         case expr: VariableReference => processVariable(expr.variable)
+        case expr: ThisReference => ()
       }
     }
 
@@ -531,6 +532,8 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
       case ReferenceVariableReference(v, _) => nameGenerator.nameFor(v)
       case VariableReference(v) => "&" + nameGenerator.nameFor(v)
+
+      case expr: ThisReference => "_this"
     }
   }
 

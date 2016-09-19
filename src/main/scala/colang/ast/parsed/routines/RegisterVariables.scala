@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
 import colang.ast.parsed._
-import colang.ast.parsed.expression.{Expression, VariableReference}
-import colang.ast.parsed.statement.{VariableConstructorCall, Statement}
+import colang.ast.parsed.expression.Expression
+import colang.ast.parsed.statement.{Statement, VariableConstructorCall}
 import colang.ast.raw.{statement => raw}
 import colang.issues.{Issue, Issues}
 
@@ -11,10 +11,13 @@ private[routines] object RegisterVariables {
   /**
     * "Registers" variables in the enclosing scope and generates all necessary initialization statements.
     * @param scope variable scope
+    * @param localContext enclosing local context
     * @param rawDefs raw variables definition node
     * @return (new variables, initialization statements, encountered issues)
     */
-  def registerVariables(scope: Scope, rawDefs: raw.VariablesDefinition): (Seq[Variable], Seq[Statement], Seq[Issue]) = {
+  def registerVariables(scope: Scope, localContext: LocalContext, rawDefs: raw.VariablesDefinition)
+      : (Seq[Variable], Seq[Statement], Seq[Issue]) = {
+
     val (type_, typeIssues) = Type.resolve(scope, rawDefs.type_)
 
     def registerOne(rawDef: raw.VariableDefinition): (Variable, Seq[Statement], Seq[Issue]) = {
@@ -28,7 +31,7 @@ private[routines] object RegisterVariables {
 
       val (initStatement, initIssues) = rawDef.initializer match {
         case Some(rawInit) =>
-          val (init, initIssues) = Expression.analyze(scope, rawInit)
+          val (init, initIssues) = Expression.analyze(rawInit)(scope, localContext)
           val copyConstructor = variable.type_.copyConstructor
 
           if (copyConstructor.canBeAppliedTo(Seq(init.type_))) {

@@ -37,6 +37,7 @@ object Expression {
     IntLiteral.strategy,
     DoubleLiteral.strategy,
     BoolLiteral.strategy,
+    ThisReference.strategy,
     SymbolReference.strategy)
 
   /**

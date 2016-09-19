@@ -36,8 +36,8 @@ case class MethodAccess(instance: Expression,
 }
 
 object MemberAccess {
-  def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope): (Expression, Seq[Issue]) = {
-    val (instance, instanceIssues) = Expression.analyze(scope, rawExpr.instance)
+  def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
+    val (instance, instanceIssues) = Expression.analyze(rawExpr.instance)
 
     def asFieldAccess: Option[(Expression, Seq[Issue])] = {
       val nonRefType = instance.type_ match {

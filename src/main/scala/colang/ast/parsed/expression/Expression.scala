@@ -26,15 +26,16 @@ case class InvalidExpression(implicit scope: Scope) extends Expression {
 }
 
 object Expression {
-  def analyze(implicit scope: Scope, rawExpr: raw.Expression): (Expression, Seq[Issue]) = {
+  def analyze(rawExpr: raw.Expression)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     rawExpr match {
-      case r: raw.ParenthesesExpression => analyze(scope, r.expression)
+      case r: raw.ParenthesesExpression => analyze(r.expression)
 
       case r: raw.IntLiteral => IntLiteral.analyze(r)
       case r: raw.DoubleLiteral => DoubleLiteral.analyze(r)
       case r: raw.BoolLiteral => BoolLiteral.analyze(r)
 
       case r: raw.SymbolReference => SymbolReference.analyze(r)
+      case r: raw.ThisReference => ThisReference.analyze(r)
       case r: raw.FunctionCall => FunctionCall.analyze(r)
       case r: raw.MemberAccess => MemberAccess.analyze(r)
         

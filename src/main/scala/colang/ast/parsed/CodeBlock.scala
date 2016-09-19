@@ -83,7 +83,7 @@ class CodeBlock(var innerScope: Scope,
   def addReturnStatement(rawStmt: raw.statement.ReturnStatement): Seq[Issue] = {
     val (returnValue, retValIssues) = rawStmt.expression match {
       case Some(rawValue) =>
-        Expression.analyze(innerScope, rawValue) match {
+        Expression.analyze(rawValue)(innerScope, localContext) match {
           case (retVal, issues) if retVal.type_ isImplicitlyConvertibleTo localContext.expectedReturnType =>
             val convertedRetVal = Type.performImplicitConversion(retVal, localContext.expectedReturnType)
             (Some(convertedRetVal), issues)
@@ -104,7 +104,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addVariablesDefinition(rawStmt: raw.statement.VariablesDefinition): Seq[Issue] = {
-    val (_, initStatements, varIssues) = routines.registerVariables(innerScope, rawStmt)
+    val (_, initStatements, varIssues) = routines.registerVariables(innerScope, localContext, rawStmt)
     statements ++= initStatements
     varIssues
   }
@@ -117,7 +117,7 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addExpression(rawStmt: raw.expression.Expression): Seq[Issue] = {
-    val (parsedExpr, exprIssues) = Expression.analyze(innerScope, rawStmt)
+    val (parsedExpr, exprIssues) = Expression.analyze(rawStmt)(innerScope, localContext)
     statements += parsedExpr
     exprIssues
   }
@@ -131,7 +131,7 @@ class CodeBlock(var innerScope: Scope,
   private def analyzeConditionExpression(rawCond: raw.expression.Expression,
                                          statementName: String): (Expression, Seq[Issue]) = {
 
-    Expression.analyze(innerScope, rawCond) match {
+    Expression.analyze(rawCond)(innerScope, localContext) match {
       case (condition, conditionIssues) if condition.type_ isImplicitlyConvertibleTo innerScope.root.boolType =>
         val convertedCondtion = Type.performImplicitConversion(condition, innerScope.root.boolType)
         (convertedCondtion, conditionIssues)

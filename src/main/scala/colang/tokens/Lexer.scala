@@ -42,6 +42,7 @@ class LexerImpl extends Lexer {
     ElseKeyword.strategy,
     WhileKeyword.strategy,
     ReturnKeyword.strategy,
+    ThisKeyword.strategy,
     BoolLiteral.strategy,
     Identifier.strategy,
 

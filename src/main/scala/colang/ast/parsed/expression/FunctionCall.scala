@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, Scope, Type}
+import colang.ast.parsed.{Function, LocalContext, Scope, Type}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues, Terms}
 
@@ -20,13 +20,13 @@ object FunctionCall {
 
   // Note that method calls are also represented by raw.FunctionCall objects.
   // This function correctly handles them, creating appropriate MethodCall expressions.
-  def analyze(rawExpr: raw.FunctionCall)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+  def analyze(rawExpr: raw.FunctionCall)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     val function = rawExpr.function
     val args = rawExpr.arguments.args
 
-    val (parsedFunction, functionIssues) = Expression.analyze(scope, function)
+    val (parsedFunction, functionIssues) = Expression.analyze(function)
 
-    val argsResult = args map { Expression.analyze(scope, _) }
+    val argsResult = args map Expression.analyze
     val parsedArgs = argsResult map { _._1 }
     val argsIssues = argsResult flatMap { _._2 }
 

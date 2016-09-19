@@ -38,7 +38,11 @@ private[routines] object RegisterMethods {
   private def registerMethod(type_ : Type, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
     val (returnType, returnTypeIssues) = Type.resolve(type_, methodDef.returnType)
 
-    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = returnType)
+    val localContext = LocalContext(
+      applicableKind = Terms.Method,
+      expectedReturnType = returnType,
+      contextualObjectType = Some(type_))
+
     val methodBody = new CodeBlock(new LocalScope(Some(type_)), localContext, methodDef.body)
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>

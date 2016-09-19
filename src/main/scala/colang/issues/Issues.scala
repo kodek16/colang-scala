@@ -902,4 +902,20 @@ object Issues {
       Error(code, source, "метод не может быть определён без тела", notes = Seq.empty)
     }
   }
+
+  object ThisReferenceOutsideMethod extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0041"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'this' cannot be used outside of methods", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга ужываць 'this' па-за метадамі", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя использовать 'this' вне методов", notes = Seq.empty)
+    }
+  }
 }
