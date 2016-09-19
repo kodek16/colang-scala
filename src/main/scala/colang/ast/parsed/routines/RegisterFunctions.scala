@@ -2,7 +2,7 @@ package colang.ast.parsed.routines
 
 import colang.ast.parsed.{CodeBlock, Function, LocalContext, LocalScope, RootNamespace, Type, Variable}
 import colang.ast.raw
-import colang.issues.{Issue, Terms}
+import colang.issues.{Issue, Issues, Terms}
 import colang.tokens.NativeKeyword
 
 private[routines] object RegisterFunctions {
@@ -16,6 +16,10 @@ private[routines] object RegisterFunctions {
   def registerFunctions(rootNamespace: RootNamespace, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
     val result = funcDefs map { funcDef =>
       val (returnType, returnTypeIssues) = Type.resolve(rootNamespace, funcDef.returnType)
+
+      val refMarkerIssues = funcDef.referenceMarker.toSeq map { marker =>
+        Issues.ReferenceMarkerInFunctionDefinition(marker.source, ())
+      }
 
       val localContext = LocalContext(applicableKind = Terms.Function, expectedReturnType = returnType)
       val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), localContext, funcDef.body)
@@ -44,7 +48,7 @@ private[routines] object RegisterFunctions {
         native = funcDef.specifiers.has(classOf[NativeKeyword]))
 
       val functionIssues = rootNamespace.tryAdd(function)
-      (function, returnTypeIssues ++ paramIssues ++ functionIssues)
+      (function, returnTypeIssues ++ refMarkerIssues ++ paramIssues ++ functionIssues)
     }
 
     val functions = result map { _._1 }

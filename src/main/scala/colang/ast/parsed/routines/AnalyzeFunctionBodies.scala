@@ -16,7 +16,7 @@ private[routines] object AnalyzeFunctionBodies {
       val paramIssues = function.parameters flatMap { function.body.innerScope.tryAdd(_) }
 
       val bodyIssues = function.definition match {
-        case Some(funcDef @ raw.FunctionDefinition(_, _, _, _, Some(rawBody))) =>
+        case Some(funcDef @ raw.FunctionDefinition(_, _, _, _, _, Some(rawBody))) =>
           val nativeIssues = if (function.native) {
             Seq(Issues.NativeFunctionWithBody(funcDef.prototypeSource, ()))
           } else Seq.empty
@@ -24,7 +24,7 @@ private[routines] object AnalyzeFunctionBodies {
           val statementIssues = function.body.addStatementsFromBlock(rawBody)
           nativeIssues ++ statementIssues
 
-        case Some(funcDef @ raw.FunctionDefinition(_, _, _, _, None)) if !function.native =>
+        case Some(funcDef @ raw.FunctionDefinition(_, _, _, _, _, None)) if !function.native =>
           Seq(Issues.FunctionDefinitionWithoutBody(funcDef.prototypeSource, ()))
 
         case _ => Seq.empty

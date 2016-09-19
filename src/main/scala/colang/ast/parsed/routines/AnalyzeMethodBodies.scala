@@ -16,7 +16,7 @@ private[routines] object AnalyzeMethodBodies {
       val paramIssues = method.parameters flatMap { method.body.innerScope.tryAdd(_) }
 
       val bodyIssues = method.definition match {
-        case Some(methDef @ raw.FunctionDefinition(_, _, _, _, Some(rawBody))) =>
+        case Some(methDef @ raw.FunctionDefinition(_, _, _, _, _, Some(rawBody))) =>
           val nativeIssues = if (method.native) {
             Seq(Issues.NativeMethodWithBody(methDef.prototypeSource, ()))
           } else Seq.empty
@@ -24,7 +24,7 @@ private[routines] object AnalyzeMethodBodies {
           val statementIssues = method.body.addStatementsFromBlock(rawBody)
           nativeIssues ++ statementIssues
 
-        case Some(methDef @ raw.FunctionDefinition(_, _, _, _, None)) if !method.native =>
+        case Some(methDef @ raw.FunctionDefinition(_, _, _, _, _, None)) if !method.native =>
           Seq(Issues.MethodDefinitionWithoutBody(methDef.prototypeSource, ()))
 
         case _ => Seq.empty

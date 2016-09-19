@@ -918,4 +918,20 @@ object Issues {
       Error(code, source, "нельзя использовать 'this' вне методов", notes = Seq.empty)
     }
   }
+
+  object ReferenceMarkerInFunctionDefinition extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0042"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "reference marker '&' can only appear in method definitions.", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "спасылачны маркер '&' можа з'яўляцца толькі ў акрэсьленьнях метадаў", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "ссылочный маркер '&' может появляться только в определениях методов", notes = Seq.empty)
+    }
+  }
 }

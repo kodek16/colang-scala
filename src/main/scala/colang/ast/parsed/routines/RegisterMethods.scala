@@ -12,7 +12,7 @@ private[routines] object RegisterMethods {
     * @param types types to check
     * @return (new methods, encountered issues)
     */
-  def registerMethods(types: Seq[Type]): (Seq[Method], Seq[Issue]) = {
+  def registerMethods(types: Seq[NonReferenceType]): (Seq[Method], Seq[Issue]) = {
     val result = types map { type_ =>
       type_.definition match {
         case Some(raw.TypeDefinition(_, _, _, raw.TypeBody(_, memberDefs, _))) =>
@@ -35,14 +35,21 @@ private[routines] object RegisterMethods {
     (methods, issues)
   }
 
-  private def registerMethod(type_ : Type, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
+  private def registerMethod(type_ : NonReferenceType, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
     val (returnType, returnTypeIssues) = Type.resolve(type_, methodDef.returnType)
+
+    val containerType = if (methodDef.referenceMarker.isDefined) {
+      type_.reference
+    } else {
+      type_
+    }
 
     val localContext = LocalContext(
       applicableKind = Terms.Method,
       expectedReturnType = returnType,
-      contextualObjectType = Some(type_))
+      contextualObjectType = Some(containerType))
 
+    // Note that the method scope for method of type 'T&' has the type scope of 'T' as its parent.
     val methodBody = new CodeBlock(new LocalScope(Some(type_)), localContext, methodDef.body)
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>
@@ -61,14 +68,14 @@ private[routines] object RegisterMethods {
 
     val method = new Method(
       name = methodDef.name.value,
-      container = type_,
+      container = containerType,
       returnType = returnType,
       parameters = params,
       body = methodBody,
       definition = Some(methodDef),
       native = methodDef.specifiers.has(classOf[NativeKeyword]))
 
-    val methodIssues = type_.tryAddObjectMember(method)
+    val methodIssues = containerType.tryAddObjectMember(method)
     (method, returnTypeIssues ++ paramIssues ++ methodIssues)
   }
 }

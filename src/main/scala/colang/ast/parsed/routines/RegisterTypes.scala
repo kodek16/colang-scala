@@ -1,6 +1,6 @@
 package colang.ast.parsed.routines
 
-import colang.ast.parsed.{NonReferenceType, RootNamespace, Type}
+import colang.ast.parsed.{NonReferenceType, RootNamespace}
 import colang.ast.raw
 import colang.issues.Issue
 import colang.tokens.NativeKeyword
@@ -13,7 +13,7 @@ private[routines] object RegisterTypes {
     * @param typeDefs type definitions
     * @return (new types, encountered issues)
     */
-  def registerTypes(rootNamespace: RootNamespace, typeDefs: Seq[raw.TypeDefinition]): (Seq[Type], Seq[Issue]) = {
+  def registerTypes(rootNamespace: RootNamespace, typeDefs: Seq[raw.TypeDefinition]): (Seq[NonReferenceType], Seq[Issue]) = {
     val result = typeDefs map { typeDef =>
       val type_ = new NonReferenceType(
         name = typeDef.name.value,

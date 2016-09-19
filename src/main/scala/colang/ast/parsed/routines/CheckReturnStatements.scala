@@ -21,7 +21,7 @@ private[routines] object CheckReturnStatements {
       val missingReturnIssues = result match {
         case WontReturn(_) if function.returnType != function.scope.get.root.voidType =>
           function.definition match {
-            case Some(raw.FunctionDefinition(_, _, _, _, Some(rawBody))) =>
+            case Some(raw.FunctionDefinition(_, _, _, _, _, Some(rawBody))) =>
               Seq(Issues.MissingReturnStatement(rawBody.rightBrace.source.before, ()))
             case _ => Seq.empty
           }
