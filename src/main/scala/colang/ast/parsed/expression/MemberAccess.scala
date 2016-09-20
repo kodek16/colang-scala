@@ -71,6 +71,7 @@ object MemberAccess {
 
         case None =>
           instance.type_ match {
+            // Try dereferencing
             case rt: ReferenceType =>
               val dereferenced = rt.referenced
               dereferenced.resolveObjectMember(rawExpr.memberName.value) match {
@@ -81,8 +82,22 @@ object MemberAccess {
 
                 case _ => None
               }
-            case _ => None
+
+            // Check if the method exists in the reference type.
+            case t: NonReferenceType =>
+              val reference = t.reference
+              reference.resolveObjectMember(rawExpr.memberName.value) match {
+                case Some(m: Method) =>
+                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawExpr.source, (m.name, t.qualifiedName))
+                  Some((InvalidExpression()), instanceIssues :+ issue)
+                case Some(om: OverloadedMethod) =>
+                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawExpr.source, (om.name, t.qualifiedName))
+                  Some((InvalidExpression()), instanceIssues :+ issue)
+
+                case _ => None
+              }
           }
+
         case _ => None
       }
     }

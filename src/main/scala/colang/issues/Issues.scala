@@ -923,11 +923,11 @@ object Issues {
     private val code = "E0042"
 
     protected def en_US(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "reference marker '&' can only appear in method definitions.", notes = Seq.empty)
+      Error(code, source, "reference marker '&' can only appear in method definitions", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "спасылачны маркер '&' можа з'яўляцца толькі ў акрэсьленьнях метадаў", notes = Seq.empty)
+      Error(code, source, "спасылкавы маркер '&' можа з'яўляцца толькі ў акрэсьленьнях метадаў", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, args: Unit): Error = {
@@ -968,6 +968,32 @@ object Issues {
       }
 
       Error(code, source, "для этого типа уже определён метод с такими же именем и типами параметров", notes)
+    }
+  }
+
+  /**
+    * Generates an issue for a reference method access from a non-reference object.
+    * Args: (method name, type name)
+    */
+  object ReferenceMethodAccessFromNonReference extends LocaleAwareIssueFactory[Error, (String, String)] {
+    private val code = "E0044"
+
+    protected def en_US(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"method '$methodName' is only defined for reference type '$typeName&', it can't be used " +
+        s"with an object of type '$typeName'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"метад '$methodName' акрэсьлены толькі для спасылкавага тыпу '$typeName&', нельга ужываць " +
+        s"яго з аб'ектам тыпу '$typeName'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"метад '$methodName' определён только для ссылочного типа '$typeName&', нельзя использовать " +
+        s"его с объектом типа '$typeName'", notes = Seq.empty)
     }
   }
 }
