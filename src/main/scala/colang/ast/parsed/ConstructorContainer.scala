@@ -68,9 +68,16 @@ trait ConstructorContainer { this: Type =>
     val existingConstructorOption = constructors find { Applicable.sameParameterTypes(_, newConstructor) }
 
     existingConstructorOption match {
-      case Some(existingConstructor) =>
-        // TODO when constructors have definitions, generate an issue here. The issue already exists as E0036.
+      case Some(existingConstructor) if existingConstructor.definition.isEmpty =>
+        constructors -= existingConstructor
+        constructors += newConstructor
         Seq.empty
+
+      case Some(existingConstructor) =>
+        val issue = Issues.DuplicateConstructorDefinition(newConstructor.definitionSite.get,
+          existingConstructor.definitionSite)
+        Seq(issue)
+
       case None =>
         constructors += newConstructor
         Seq.empty

@@ -81,26 +81,32 @@ class CodeBlock(var innerScope: Scope,
   }
 
   def addReturnStatement(rawStmt: raw.statement.ReturnStatement): Seq[Issue] = {
-    val (returnValue, retValIssues) = rawStmt.expression match {
-      case Some(rawValue) =>
-        Expression.analyze(rawValue)(innerScope, localContext) match {
-          case (retVal, issues) if retVal.type_ isImplicitlyConvertibleTo localContext.expectedReturnType =>
-            val convertedRetVal = Type.performImplicitConversion(retVal, localContext.expectedReturnType)
-            (Some(convertedRetVal), issues)
+    localContext.expectedReturnType match {
+      case Some(expectedReturnType) =>
+        val (returnValue, retValIssues) = rawStmt.expression match {
+          case Some(rawValue) =>
+            Expression.analyze(rawValue)(innerScope, localContext) match {
+              case (retVal, issues) if retVal.type_ isImplicitlyConvertibleTo expectedReturnType =>
+                val convertedRetVal = Type.performImplicitConversion(retVal, expectedReturnType)
+                (Some(convertedRetVal), issues)
 
-          case (retVal, issues) =>
-            val actualTypeStr = retVal.type_.qualifiedName
-            val expectedTypeStr = localContext.expectedReturnType.qualifiedName
+              case (retVal, issues) =>
+                val actualTypeStr = retVal.type_.qualifiedName
+                val expectedTypeStr = expectedReturnType.qualifiedName
 
-            // TODO when we have methods and constructors use different issue here.
-            val issue = Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, expectedTypeStr))
-            (Some(retVal), issues :+ issue)
+                // TODO when we have methods and constructors use different issue here.
+                val issue = Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, expectedTypeStr))
+                (Some(retVal), issues :+ issue)
+            }
+          case None => (None, Seq.empty)
         }
-      case None => (None, Seq.empty)
-    }
 
-    statements += ReturnStatement(returnValue, Some(rawStmt))
-    retValIssues
+        statements += ReturnStatement(returnValue, Some(rawStmt))
+        retValIssues
+
+      case None =>
+        Seq(Issues.ReturnFromConstructor(rawStmt.source, ()))
+    }
   }
 
   def addVariablesDefinition(rawStmt: raw.statement.VariablesDefinition): Seq[Issue] = {

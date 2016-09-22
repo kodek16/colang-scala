@@ -23,10 +23,7 @@ class Method(val name: String,
 
   val description = Terms.Method
 
-  val definitionSite = definition match {
-    case Some(fd) => Some(fd.prototypeSource)
-    case None => None
-  }
+  val definitionSite = definition map { _.prototypeSource }
 
   def signatureString: String = {
     val paramString = parameters map { _.type_.qualifiedName } mkString ", "

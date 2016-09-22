@@ -17,7 +17,9 @@ private[routines] object RegisterGlobalVariables {
                               rawDefs: Seq[raw.VariablesDefinition]): (Seq[Variable], Seq[Statement], Seq[Issue]) = {
 
     // Local context here means the context initializers are evaluated in, so we use 'main' function description.
-    val localContext = LocalContext(Terms.Function, rootNamespace.voidType)
+    val localContext = LocalContext(
+      Terms.Function,
+      expectedReturnType = Some(rootNamespace.voidType))
 
     val result = rawDefs map { RegisterVariables.registerVariables(rootNamespace, localContext, _ )}
     val variables = result flatMap { _._1 }

@@ -401,18 +401,16 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     "bool.constructor()" -> "_bool_ctor")
 
   private def generateConstructorPrototype(constructor: Constructor): Option[String] = {
-    // 1.1: Use a macro (copy-ctor):
-    if (constructor.native && constructor.isCopyConstructor && constructor.type_.native) {
-      nameGenerator.setNativeNameFor(constructor, "_noop")
-      None
-
-    // 1.2: Use a macro (default-ctor):
-    } else if (nativeDefaultConstructorNames contains constructor.signatureString) {
-      nameGenerator.setNativeNameFor(constructor, nativeDefaultConstructorNames(constructor.signatureString))
-      None
-
-    // 2: Generate a recursive constructor:
-    // 3: Use custom constructor from definition:
+    if (constructor.native) {
+      if (constructor.isCopyConstructor && constructor.type_.native) {
+        nameGenerator.setNativeNameFor(constructor, "_noop")
+        None
+      } else if (constructor.isDefaultConstructor && (nativeDefaultConstructorNames contains constructor.signatureString)) {
+        nameGenerator.setNativeNameFor(constructor, nativeDefaultConstructorNames(constructor.signatureString))
+        None
+      } else {
+        reportMissingInternalConstructor(constructor)
+      }
     } else {
       val cName = nameGenerator.nameFor(constructor)
       val cType = nameGenerator.nameFor(constructor.type_)
@@ -423,36 +421,33 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
   }
 
   private def generateConstructorDefinition(constructor: Constructor): Option[String] = {
-    // 1: Use a macro:
-    if (constructor.native && constructor.isCopyConstructor && constructor.type_.native
-      || (nativeDefaultConstructorNames contains constructor.signatureString)) {
-
-      None
-
-    // 2.1: Generate a recursive constructor (default):
-    } else if (constructor.native && constructor.isDefaultConstructor) {
-      // TODO insert field initialization
-
+    if (!constructor.native) {
       val cName = nameGenerator.nameFor(constructor)
       val cType = nameGenerator.nameFor(constructor.type_)
 
-      Some(s"$cType $cName() {\n$INDENT$cType _this;\n${INDENT}return _this;\n}")
+      val cParamTypeNames = constructor.parameters map { _.type_ } map nameGenerator.nameFor
+      val cParamNames = constructor.parameters map nameGenerator.nameFor
+      val cParameters = (cParamTypeNames zip cParamNames) map { case (t, n) => s"$t $n" } mkString ", "
 
-    // 2.2: Generate a recursive constructor (copy):
-    } else if (constructor.native && constructor.isCopyConstructor) {
-      ???
+      val cBody = generateCodeBlock(
+        constructor.body,
+        ignoredVariables = constructor.parameters,
+        injectBefore = Seq(s"$cType _t;", s"$cType* _this = &_t;"),
+        injectAfter = Seq(s"return *_this;"))
 
-    // 3: Use custom constructor from definition
-    } else {
-      ???
-    }
+      Some(s"$cType $cName($cParameters) $cBody")
+    } else None
   }
 
-  private def generateCodeBlock(codeBlock: CodeBlock, ignoredVariables: Seq[Variable] = Seq.empty): String = {
+  private def generateCodeBlock(codeBlock: CodeBlock,
+                                ignoredVariables: Seq[Variable] = Seq.empty,
+                                injectBefore: Seq[String] = Seq.empty,
+                                injectAfter: Seq[String] = Seq.empty): String = {
+
     val localVariables = codeBlock.innerScope.allVariables filterNot { ignoredVariables contains _ }
 
     val localVariableDefinitions = localVariables flatMap generateVariableDefinition mkString "\n"
-    val statements = codeBlock.statements map generateStatement mkString "\n"
+    val statements = (injectBefore ++ (codeBlock.statements map generateStatement) ++ injectAfter) mkString "\n"
 
     val blockContent = addIndentation(Seq(localVariableDefinitions, statements) filter { _.trim.nonEmpty } mkString "\n")
     s"{\n$blockContent\n}"
@@ -576,5 +571,13 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     */
   private def reportMissingInternalMethod(method: Method): Nothing = {
     InternalErrors.noNativeSymbol(method.signatureString)
+  }
+
+  /**
+    * Reports missing implementation for a native constructor and exits with error.
+    * @param constructor native constructor
+    */
+  private def reportMissingInternalConstructor(constructor: Constructor): Nothing = {
+    InternalErrors.noNativeSymbol(constructor.signatureString)
   }
 }

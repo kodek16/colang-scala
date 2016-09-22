@@ -21,10 +21,7 @@ class Function(val name: String,
                val definition: Option[raw.FunctionDefinition],
                val native: Boolean = false) extends Symbol with Applicable {
 
-  val definitionSite = definition match {
-    case Some(fd) => Some(fd.prototypeSource)
-    case None => None
-  }
+  val definitionSite = definition map { _.prototypeSource }
 
   val description = Terms.Function
 

@@ -46,7 +46,7 @@ private[routines] object RegisterMethods {
 
     val localContext = LocalContext(
       applicableKind = Terms.Method,
-      expectedReturnType = returnType,
+      expectedReturnType = Some(returnType),
       contextualObjectType = Some(containerType))
 
     // Note that the method scope for method of type 'T&' has the type scope of 'T' as its parent.

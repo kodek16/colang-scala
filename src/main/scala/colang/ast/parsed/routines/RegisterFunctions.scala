@@ -21,7 +21,10 @@ private[routines] object RegisterFunctions {
         Issues.ReferenceMarkerInFunctionDefinition(marker.source, ())
       }
 
-      val localContext = LocalContext(applicableKind = Terms.Function, expectedReturnType = returnType)
+      val localContext = LocalContext(
+        applicableKind = Terms.Function,
+        expectedReturnType = Some(returnType))
+
       val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), localContext, funcDef.body)
 
       val paramsResult = funcDef.parameterList.params map { rawParam =>

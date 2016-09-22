@@ -996,4 +996,52 @@ object Issues {
         s"его с объектом типа '$typeName'", notes = Seq.empty)
     }
   }
+
+  object NativeConstructorWithBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0045"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a 'native' constructor cannot be defined with a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-канструктар ня можа быць акрэсьлены з целам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-конструктор не может быть определён с телом", notes = Seq.empty)
+    }
+  }
+
+  object ConstructorDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0046"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a constructor cannot be defined without a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "канструктар ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "конструктор не может быть определён без тела", notes = Seq.empty)
+    }
+  }
+
+  object ReturnFromConstructor extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0047"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "cannot return from a constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга ужываць 'return' у канструктарах", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя использовать 'return' в конструкторах", notes = Seq.empty)
+    }
+  }
 }

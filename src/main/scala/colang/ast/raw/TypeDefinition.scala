@@ -69,6 +69,7 @@ object TypeBody {
   val strategy = new ParserImpl.Strategy[TypeBody] {
 
     private val typeMemberStrategy = StrategyUnion(
+      ConstructorDefinition.strategy,
       FunctionDefinition.strategy,
       VariablesDefinition.strategy)
 

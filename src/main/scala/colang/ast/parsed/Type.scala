@@ -23,42 +23,32 @@ abstract class Type(val name: String,
                                                  with ConstructorContainer {
 
   val parent = scope
-  val definitionSite = definition match {
-    case Some(td) => Some(td.headSource)
-    case None => None
-  }
+  val definitionSite = definition map { _.headSource }
 
   val description = Terms.Type
 
   // A default constructor is added for every type (it shouldn't be, need to check if the type is Plain)
-  defaultConstructor foreach addConstructor
+  // TODO don't do this if the type isn't plain
+  addConstructor(generateDefaultConstructor)
 
   // A copy constructor is added for every type.
-  addConstructor(copyConstructor)
+  addConstructor(generateCopyConstructor)
 
-  // TODO return None if the type isn't plain
-  lazy val defaultConstructor: Option[Constructor] = {
-    // HACK: the LocalContext object has 'this' as expectedReturnType. Semantically for constructors it should be
-    // 'void', but if we specify 'root.voidType' problems will arise because 'void' type may be not defined yet.
-    // The LocalContext object is never used in native functions (since they have no body to parse with this context),
-    // so it should be OK.
-    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = this)
+  private def generateDefaultConstructor: Constructor = {
+    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = None)
 
     val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
 
-    Some(new Constructor(
+    new Constructor(
       type_ = this,
       parameters = Seq.empty,
       body = body,
-      native = true))
+      definition = None,
+      native = true)
   }
 
-  lazy val copyConstructor: Constructor = {
-    // HACK: the LocalContext object has 'this' as expectedReturnType. Semantically for constructors it should be
-    // 'void', but if we specify 'root.voidType' problems will arise because 'void' type may be not defined yet.
-    // The LocalContext object is never used in native functions (since they have no body to parse with this context),
-    // so it should be OK.
-    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = this)
+  private def generateCopyConstructor: Constructor = {
+    val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = None)
     val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
     val params = Seq(Variable(
       name = "other",
@@ -70,8 +60,13 @@ abstract class Type(val name: String,
       type_ = this,
       parameters = params,
       body = body,
+      definition = None,
       native = true)
   }
+
+  def defaultConstructor: Option[Constructor] = resolveConstructor(Seq.empty, None)._1
+
+  def copyConstructor: Constructor = resolveConstructor(Seq(this), None)._1.get
 
   /**
     * Returns true if a type can be implicitly converted to another type.
@@ -82,7 +77,7 @@ abstract class Type(val name: String,
   def isImplicitlyConvertibleTo(other: Type): Boolean = this eq other
 
   /**
-    * Returns the most specific type that both types are implicitly convertable to, or None.
+    * Returns the most specific type that both types are implicitly convertible to, or None.
     * @param other other type
     * @return optional Least Upper Bound
     */
@@ -125,7 +120,7 @@ class ReferenceType(val referenced: Type) extends Type(
   addObjectMember(defaultAssignMethod)
 
   private def defaultAssignMethod: Method = {
-    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = this)
+    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = Some(this))
     val body = new CodeBlock(new LocalScope(Some(this)), localContext, None)
     val params = Seq(Variable(
       name = "other",

@@ -25,4 +25,5 @@ class KeywordStrategiesSpec extends LexerUnitSpec {
   describeKeywordStrategy("while", WhileKeyword.strategy)
   describeKeywordStrategy("return", ReturnKeyword.strategy)
   describeKeywordStrategy("this", ThisKeyword.strategy)
+  describeKeywordStrategy("constructor", ConstructorKeyword.strategy)
 }

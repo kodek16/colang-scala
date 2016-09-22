@@ -63,3 +63,10 @@ case class ThisKeyword(source: SourceCode) extends Keyword {
 object ThisKeyword {
   val strategy = new StatelessTokenStrategy(ThisKeyword.apply, """\bthis\b""".r)
 }
+
+case class ConstructorKeyword(source: SourceCode) extends Keyword {
+  val text = "constructor"
+}
+object ConstructorKeyword {
+  val strategy = new StatelessTokenStrategy(ConstructorKeyword.apply, """\bconstructor\b""".r)
+}
