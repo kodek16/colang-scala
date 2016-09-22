@@ -13,7 +13,7 @@ import colang.issues.{Issue, Issues}
   */
 case class FieldAccess(instance: Expression,
                        field: Field,
-                       rawNode: Option[raw.MemberAccess]) extends Expression {
+                       rawNode: Option[raw.Expression]) extends Expression {
 
   val type_ = (instance.type_, field.type_) match {
     case (it: NonReferenceType, ft: NonReferenceType) => ft
@@ -30,7 +30,7 @@ case class FieldAccess(instance: Expression,
   */
 case class MethodAccess(instance: Expression,
                         method: Method,
-                        rawNode: Option[raw.MemberAccess]) extends Expression {
+                        rawNode: Option[raw.Expression]) extends Expression {
 
   val type_ = method.container.scope.get.root.boundMethodType
 }
@@ -43,14 +43,21 @@ case class MethodAccess(instance: Expression,
   */
 case class OverloadedMethodAccess(instance: Expression,
                                   overloadedMethod: OverloadedMethod,
-                                  rawNode: Option[raw.MemberAccess]) extends Expression {
+                                  rawNode: Option[raw.Expression]) extends Expression {
 
   val type_ = overloadedMethod.container.scope.get.root.boundMethodType
 }
 
 object MemberAccess {
-  def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
-    val (instance, instanceIssues) = Expression.analyze(rawExpr.instance)
+
+  /**
+    * A "safer" function for accessing object members: only returns Some(expr, issues) if the member actually existed.
+    * This is very useful for analyzing short member access expressions in SymbolReference.
+    * @param instance object that may contain the member
+    * @param memberName member name
+    * @return Some(expression, issues) if the member actually exists
+    */
+  def tryAnalyze(instance: Expression, memberName: String, rawNode: raw.Expression)(implicit scope: Scope): Option[(Expression, Seq[Issue])] = {
 
     def asFieldAccess: Option[(Expression, Seq[Issue])] = {
       val nonRefType = instance.type_ match {
@@ -58,27 +65,27 @@ object MemberAccess {
         case rt: ReferenceType => rt.referenced
       }
 
-      nonRefType.resolveObjectMember(rawExpr.memberName.value) match {
-        case Some(f: Field) => Some((FieldAccess(instance, f, Some(rawExpr)), instanceIssues))
+      nonRefType.resolveObjectMember(memberName) match {
+        case Some(f: Field) => Some((FieldAccess(instance, f, Some(rawNode)), Seq.empty))
         case _ => None
       }
     }
 
     def asMethodAccess: Option[(Expression, Seq[Issue])] = {
-      instance.type_.resolveObjectMember(rawExpr.memberName.value) match {
-        case Some(m: Method) => Some((MethodAccess(instance, m, Some(rawExpr)), instanceIssues))
-        case Some(om: OverloadedMethod) => Some((OverloadedMethodAccess(instance, om, Some(rawExpr)), instanceIssues))
+      instance.type_.resolveObjectMember(memberName) match {
+        case Some(m: Method) => Some((MethodAccess(instance, m, Some(rawNode)), Seq.empty))
+        case Some(om: OverloadedMethod) => Some((OverloadedMethodAccess(instance, om, Some(rawNode)), Seq.empty))
 
         case None =>
           instance.type_ match {
             // Try dereferencing
             case rt: ReferenceType =>
               val dereferenced = rt.referenced
-              dereferenced.resolveObjectMember(rawExpr.memberName.value) match {
+              dereferenced.resolveObjectMember(memberName) match {
                 case Some(m: Method) =>
-                  Some((MethodAccess(ImplicitDereferencing(instance), m, Some(rawExpr)), instanceIssues))
+                  Some((MethodAccess(ImplicitDereferencing(instance), m, Some(rawNode)), Seq.empty))
                 case Some(om: OverloadedMethod) =>
-                  Some((OverloadedMethodAccess(ImplicitDereferencing(instance), om, Some(rawExpr)), instanceIssues))
+                  Some((OverloadedMethodAccess(ImplicitDereferencing(instance), om, Some(rawNode)), Seq.empty))
 
                 case _ => None
               }
@@ -86,13 +93,13 @@ object MemberAccess {
             // Check if the method exists in the reference type.
             case t: NonReferenceType =>
               val reference = t.reference
-              reference.resolveObjectMember(rawExpr.memberName.value) match {
+              reference.resolveObjectMember(memberName) match {
                 case Some(m: Method) =>
-                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawExpr.source, (m.name, t.qualifiedName))
-                  Some((InvalidExpression()), instanceIssues :+ issue)
+                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawNode.source, (m.name, t.qualifiedName))
+                  Some((InvalidExpression(), Seq(issue)))
                 case Some(om: OverloadedMethod) =>
-                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawExpr.source, (om.name, t.qualifiedName))
-                  Some((InvalidExpression()), instanceIssues :+ issue)
+                  val issue = Issues.ReferenceMethodAccessFromNonReference(rawNode.source, (om.name, t.qualifiedName))
+                  Some((InvalidExpression(), Seq(issue)))
 
                 case _ => None
               }
@@ -102,11 +109,17 @@ object MemberAccess {
       }
     }
 
-    def asUnknownMemberAccess: (Expression, Seq[Issue]) = {
-      val issue = Issues.UnknownObjectMember(rawExpr.memberName.source, instance.type_.qualifiedName)
-      (InvalidExpression(), instanceIssues :+ issue)
-    }
+    asFieldAccess.orElse(asMethodAccess)
+  }
 
-    asFieldAccess.orElse(asMethodAccess).getOrElse(asUnknownMemberAccess)
+  def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
+    val (instance, instanceIssues) = Expression.analyze(rawExpr.instance)
+
+    tryAnalyze(instance, rawExpr.memberName.value, rawExpr) match {
+      case Some((result, issues)) => (result, instanceIssues ++ issues)
+      case None =>
+        val issue = Issues.UnknownObjectMember(rawExpr.memberName.source, instance.type_.qualifiedName)
+        (InvalidExpression(), instanceIssues :+ issue)
+    }
   }
 }

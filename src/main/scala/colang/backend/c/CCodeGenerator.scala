@@ -201,7 +201,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
         case cb: CodeBlock => processCodeBlock(cb)
 
         case initialization: VariableInitialization =>
-          processType(initialization.variable.type_)
+          processVariable(initialization.variable)
           processExpression(initialization.value)
 
         case stmt: IfElseStatement =>

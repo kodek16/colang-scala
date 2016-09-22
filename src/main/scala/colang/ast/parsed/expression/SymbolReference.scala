@@ -1,8 +1,10 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, NonReferenceType, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Variable}
+import colang.ast.parsed.{Function, LocalContext, NonReferenceType, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
+
+import scala.annotation.tailrec
 
 /**
   * Represents a function reference.
@@ -53,18 +55,64 @@ class VariableReference private (val variable: Variable,
 }
 
 object SymbolReference {
-  def analyze(rawExpr: raw.SymbolReference)(implicit scope: Scope): (Expression, Seq[Issue]) = {
 
-    scope.resolve(rawExpr.name.value) match {
-      case Some(v: Variable) => (VariableReference(v, Some(rawExpr)), Seq.empty)
-      case Some(f: Function) => (FunctionReference(f, Some(rawExpr)), Seq.empty)
-      case Some(of: OverloadedFunction) => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
+  // Note that this function supports "short member access" expressions: object member names without "this." prefix
+  // inside methods, and handles them correctly.
+  def analyze(rawExpr: raw.SymbolReference)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
 
-      case Some(s: Symbol) =>
-        val issue = Issues.InvalidReferenceAsExpression(rawExpr.source, s.description)
-        (InvalidExpression(), Seq(issue))
+    // Returns true if the symbol is more "local" than an object member. Should only return true when the symbol
+    // is local.
+    def symbolIsMoreSpecificThanObjectMember(symbol: Symbol): Boolean = {
+      localContext.contextualObjectType match {
+        case Some(contextualObjectType) =>
+          val objectTypeScope = contextualObjectType match {
+            case t: NonReferenceType => t
+            case rt: ReferenceType => rt.referenced
+          }
 
-      case None =>
+          @tailrec
+          def checkScope(scope: Scope): Boolean = {
+            if (scope == objectTypeScope) {
+              true
+            } else {
+              scope.parent match {
+                case Some(parent) => checkScope(parent)
+                case None => false
+              }
+            }
+          }
+
+          checkScope(symbol.scope.get)  // scope is always defined: root namespace can't appear here.
+
+        case None => true
+      }
+    }
+
+    def resolveSymbol(symbol: Symbol): (Expression, Seq[Issue]) = {
+      symbol match {
+        case v: Variable => (VariableReference(v, Some(rawExpr)), Seq.empty)
+        case f: Function => (FunctionReference(f, Some(rawExpr)), Seq.empty)
+        case of: OverloadedFunction => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
+        case _ =>
+          val issue = Issues.InvalidReferenceAsExpression(rawExpr.source, symbol.description)
+          (InvalidExpression(), Seq(issue))
+      }
+    }
+
+    val asShortMemberAccess = localContext.contextualObjectType match {
+      case Some(contextualObjectType) =>
+        MemberAccess.tryAnalyze(ThisReference(contextualObjectType, None), rawExpr.name.value, rawExpr)
+      case None => None
+    }
+
+    (asShortMemberAccess, scope.resolve(rawExpr.name.value)) match {
+      case (Some(resultAsShortMemberAccess), Some(s: Symbol)) if symbolIsMoreSpecificThanObjectMember(s) =>
+        resolveSymbol(s)
+      case (Some(resultAsShortMemberAccess), _) =>
+        resultAsShortMemberAccess
+      case (None, Some(s: Symbol)) =>
+        resolveSymbol(s)
+      case (None, None) =>
         val issue = Issues.UnknownName(rawExpr.source, ())
         (InvalidExpression(), Seq(issue))
     }
