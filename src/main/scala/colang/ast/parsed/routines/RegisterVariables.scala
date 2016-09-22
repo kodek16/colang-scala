@@ -1,8 +1,8 @@
 package colang.ast.parsed.routines
 
 import colang.ast.parsed._
-import colang.ast.parsed.expression.Expression
-import colang.ast.parsed.statement.{Statement, VariableConstructorCall}
+import colang.ast.parsed.expression.{ConstructorCall, Expression, ImplicitDereferencing}
+import colang.ast.parsed.statement.{Statement, VariableInitialization}
 import colang.ast.raw.{statement => raw}
 import colang.issues.{Issue, Issues}
 
@@ -32,36 +32,31 @@ private[routines] object RegisterVariables {
       val (initStatement, initIssues) = rawDef.initializer match {
         case Some(rawInit) =>
           val (init, initIssues) = Expression.analyze(rawInit)(scope, localContext)
-          val copyConstructor = variable.type_.copyConstructor
 
-          if (copyConstructor.canBeAppliedTo(Seq(init.type_))) {
-            val constructorArgs = Type.performImplicitConversions(Seq(init), copyConstructor.parameters map { _.type_ })
+          val (initStatement, initTypeIssues) = init.type_ match {
+            case `type_` =>
+              val statement = VariableInitialization(variable, init, None)
+              (Some(statement), Seq.empty)
 
-            val constructStatement = VariableConstructorCall(
-              copyConstructor,
-              variable,
-              constructorArgs,
-              None)
+            case rt: ReferenceType if rt.referenced == type_ =>
+              val statement = VariableInitialization(variable, ImplicitDereferencing(init), None)
+              (Some(statement), Seq.empty)
 
-            (Some(constructStatement), initIssues)
-
-          } else {
-            val initTypeStr = init.type_.qualifiedName
-            val varTypeStr = variable.type_.qualifiedName
-            val issue = Issues.IncompatibleVariableInitializer(rawInit.source, (initTypeStr, varTypeStr))
-            (None, initIssues :+ issue)
+            case _ =>
+              val initTypeStr = init.type_.qualifiedName
+              val varTypeStr = variable.type_.qualifiedName
+              val issue = Issues.IncompatibleVariableInitializer(rawInit.source, (initTypeStr, varTypeStr))
+              (None, Seq(issue))
           }
+
+          (initStatement, initIssues ++ initTypeIssues)
 
         case None =>
           variable.type_.defaultConstructor match {
-            case Some(defaultConstructor) =>
-              val constructStatement = VariableConstructorCall(
-                defaultConstructor,
-                variable,
-                Seq.empty,
-                None)
-
-              (Some(constructStatement), Seq.empty)
+            case Some(defaultCtor) =>
+              val initializer = ConstructorCall(defaultCtor, Seq.empty, None)
+              val statement = VariableInitialization(variable, initializer, None)
+              (Some(statement), Seq.empty)
 
             case None =>
               val issue = Issues.NonPlainVariableWithoutInitializer(rawDef.source, variable.type_.qualifiedName)

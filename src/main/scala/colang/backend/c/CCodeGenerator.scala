@@ -24,6 +24,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
   private val INDENT = "    "
   private val HEADERS = Seq("stdlib.h", "stdio.h", "math.h", "stdint.h")
   private val MACROS = Seq(
+    """#define _noop(a) (a)""",
     """#define _not(a) (!(a))""",
     """#define _neg(a) (-(a))""",
     """#define _mul(a, b) ((a) * (b))""",
@@ -44,9 +45,9 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     """#define _readDbl(a) scanf("%lf", a)""",
     """#define _writeIntLn(a) printf("%d\n", a)""",
     """#define _writeDblLn(a) printf("%lf\n", a)""",
-    """#define _int_ctor(a) (*(a) = 0)""",
-    """#define _dbl_ctor(a) (*(a) = 0.0)""",
-    """#define _bool_ctor(a) (*(a) = 0)""")
+    """#define _int_ctor() 0""",
+    """#define _dbl_ctor() 0.0""",
+    """#define _bool_ctor() 0""")
 
   private val NATIVE_FUNCTION_DEFS = Seq(
     """void _assert(int c) { if (!c) { fprintf(stderr, "Assertion failed!\n"); exit(1); } }""",
@@ -199,10 +200,9 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
         case expr: Expression => processExpression(expr)
         case cb: CodeBlock => processCodeBlock(cb)
 
-        case constructorCall: VariableConstructorCall =>
-          processConstructor(constructorCall.constructor)
-          processType(constructorCall.instance.type_)
-          constructorCall.arguments foreach processExpression
+        case initialization: VariableInitialization =>
+          processType(initialization.variable.type_)
+          processExpression(initialization.value)
 
         case stmt: IfElseStatement =>
           processExpression(stmt.condition)
@@ -223,6 +223,11 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
       expression match {
         case expr: BoolLiteral => processType(rootNamespace.boolType)
+
+        case expr: ConstructorCall =>
+          processConstructor(expr.constructor)
+          expr.arguments foreach processExpression
+
         case expr: DoubleLiteral => processType(rootNamespace.doubleType)
 
         case expr: FunctionCall =>
@@ -398,7 +403,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
   private def generateConstructorPrototype(constructor: Constructor): Option[String] = {
     // 1.1: Use a macro (copy-ctor):
     if (constructor.native && constructor.isCopyConstructor && constructor.type_.native) {
-      nameGenerator.setNativeNameFor(constructor, "_assign")
+      nameGenerator.setNativeNameFor(constructor, "_noop")
       None
 
     // 1.2: Use a macro (default-ctor):
@@ -410,12 +415,10 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     // 3: Use custom constructor from definition:
     } else {
       val cName = nameGenerator.nameFor(constructor)
-      val cInstanceType = nameGenerator.nameFor(constructor.type_) + "*"
-      val cParamTypes = (constructor.parameters map { _.type_ }) map nameGenerator.nameFor
+      val cType = nameGenerator.nameFor(constructor.type_)
+      val cParameters = constructor.parameters map { _.type_ } map nameGenerator.nameFor mkString ", "
 
-      val cParamString = (cInstanceType +: cParamTypes) mkString ", "
-
-      Some(s"void $cName($cParamString);")
+      Some(s"$cType $cName($cParameters);")
     }
   }
 
@@ -426,18 +429,18 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
 
       None
 
-    // 2: Generate a recursive constructor:
-    } else if (constructor.native) {
-      // TODO when we have fields, those constructors should actually do something.
+    // 2.1: Generate a recursive constructor (default):
+    } else if (constructor.native && constructor.isDefaultConstructor) {
+      // TODO insert field initialization
 
       val cName = nameGenerator.nameFor(constructor)
+      val cType = nameGenerator.nameFor(constructor.type_)
 
-      val cInstanceTypeName = nameGenerator.nameFor(constructor.type_) + "*"
-      val cParamTypeNames = constructor.parameters map { _.type_ } map nameGenerator.nameFor
-      val cParamNames = "_this" +: (constructor.parameters map nameGenerator.nameFor)
-      val cParameters = ((cInstanceTypeName +: cParamTypeNames) zip cParamNames) map { case (t, n) => s"$t $n" } mkString ", "
+      Some(s"$cType $cName() {\n$INDENT$cType _this;\n${INDENT}return _this;\n}")
 
-      Some(s"void $cName($cParameters) {}")
+    // 2.2: Generate a recursive constructor (copy):
+    } else if (constructor.native && constructor.isCopyConstructor) {
+      ???
 
     // 3: Use custom constructor from definition
     } else {
@@ -460,13 +463,10 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
       case expr: Expression => generateExpression(expr) + ";"
       case cb: CodeBlock => generateCodeBlock(cb)
 
-      case constructorCall: VariableConstructorCall =>
-        val cConstructorName = nameGenerator.nameFor(constructorCall.constructor)
-        val instance = "&" + nameGenerator.nameFor(constructorCall.instance)
-        val arguments = constructorCall.arguments map generateExpression
-        val cArguments = (instance +: arguments) mkString ", "
-
-        s"$cConstructorName($cArguments);"
+      case initialization: VariableInitialization =>
+        val cInstance = nameGenerator.nameFor(initialization.variable)
+        val cInitializer = generateExpression(initialization.value)
+        s"$cInstance = $cInitializer;"
 
       case stmt: IfElseStatement =>
         val condition = generateExpression(stmt.condition)
@@ -497,6 +497,12 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
   private def generateExpression(expression: Expression): String = {
     expression match {
       case expr: BoolLiteral => if (expr.value) "1" else "0"
+
+      case expr: ConstructorCall =>
+        val cConstructorName = nameGenerator.nameFor(expr.constructor)
+        val cArguments = expr.arguments map generateExpression mkString ", "
+        s"$cConstructorName($cArguments)"
+
       case expr: DoubleLiteral =>
         if (expr.value.isPosInfinity) {
           "INFINITY"
