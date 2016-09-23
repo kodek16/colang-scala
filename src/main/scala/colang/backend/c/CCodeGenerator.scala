@@ -200,6 +200,10 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
         case expr: Expression => processExpression(expr)
         case cb: CodeBlock => processCodeBlock(cb)
 
+        case initialization: FieldInitialization =>
+          processType(initialization.field.container)
+          processExpression(initialization.value)
+
         case initialization: VariableInitialization =>
           processVariable(initialization.variable)
           processExpression(initialization.value)
@@ -457,6 +461,11 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     statement match {
       case expr: Expression => generateExpression(expr) + ";"
       case cb: CodeBlock => generateCodeBlock(cb)
+
+      case initialization: FieldInitialization =>
+        val cField = nameGenerator.nameFor(initialization.field)
+        val cInitializer = generateExpression(initialization.value)
+        s"_this->$cField = $cInitializer;"
 
       case initialization: VariableInitialization =>
         val cInstance = nameGenerator.nameFor(initialization.variable)

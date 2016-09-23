@@ -8,6 +8,7 @@ package object routines {
   val analyzeFunctionBodies = AnalyzeFunctionBodies.analyzeFunctionBodies _
   val analyzeMethodBodies = AnalyzeMethodBodies.analyzeMethodBodies _
   val checkReturnStatements = CheckReturnStatements.checkReturnStatements _
+  val injectFieldInitialization = InjectFieldInitialization.injectFieldInitialization _
   val processMainFunction = ProcessMainFunction.processMainFunction _
   val registerConstructors = RegisterConstructors.registerConstructors _
   val registerFields = RegisterFields.registerFields _

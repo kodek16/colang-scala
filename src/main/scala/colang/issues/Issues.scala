@@ -591,7 +591,7 @@ object Issues {
     protected def en_US(source: SourceCode, args: (String, String)): Error = {
       val (initializerType, variableType) = args
       Error(code, source, s"initializer of type '$initializerType' is incompatible with " +
-        s"the variable of type '$variableType'", notes = Seq.empty)
+        s"a variable of type '$variableType'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (String, String)): Error = {
@@ -1042,6 +1042,56 @@ object Issues {
 
     protected def ru_RU(source: SourceCode, args: Unit): Error = {
       Error(code, source, "нельзя использовать 'return' в конструкторах", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a field initializer of different type than the field itself.
+    * Args: (initializer type, field type)
+    */
+  object IncompatibleFieldInitializer extends LocaleAwareIssueFactory[Error, (String, String)] {
+    private val code = "E0048"
+
+    protected def en_US(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"initializer of type '$initializerType' is incompatible with " +
+        s"a field of type '$fieldType'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"ініцыялізатар тыпу '$initializerType' нясумяшчальны с полем тыпу '$fieldType'",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"инициализатор типа '$initializerType' несовместим с полем типа '$fieldType'",
+        notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a field definition of non-plain type without initializer
+    * Args: field type
+    */
+  object NonPlainFieldWithoutInitializer extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0049"
+
+    protected def en_US(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"cannot create a field of type '$fieldType' without explicit initializer: the type has " +
+        "no default constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"немагчыма стварыць поле тыпу '$fieldType' бяз яўнага ініцыялізатара: для тыпу няма " +
+        s" змоўчнага канструктара",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"невозможно создать поле типа '$fieldType' без явного инициализатора: для типа не " +
+        s"определён конструктор по умолчанию", notes = Seq.empty)
     }
   }
 }

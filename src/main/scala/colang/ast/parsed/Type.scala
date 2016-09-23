@@ -44,7 +44,7 @@ abstract class Type(val name: String,
       parameters = Seq.empty,
       body = body,
       definition = None,
-      native = true)
+      native = this.native)
   }
 
   private def generateCopyConstructor: Constructor = {
