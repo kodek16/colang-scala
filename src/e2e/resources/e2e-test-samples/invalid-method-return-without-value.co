@@ -1,0 +1,11 @@
+struct foo {
+    int meth() {
+        return      //E0022
+        5           //E0023
+    }
+}
+
+void main() {
+    foo f
+    f.meth()
+}

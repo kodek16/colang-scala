@@ -52,7 +52,7 @@ class AnalyzerImpl extends Analyzer {
     val constructorBodiesIssues = routines.analyzeConstructorBodies(constructors)
     routines.injectFieldInitialization(fieldsInitStatements)
     val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements, eof)
-    val returnIssues = routines.checkReturnStatements(functions)
+    val returnIssues = routines.checkReturnStatements(functions, methods)
 
     val issues = typesIssues ++ functionsIssues ++ methodsIssues ++ constructorsIssues ++ fieldsIssues ++ varIssues ++
       funcBodiesIssues ++ methBodiesIssues ++ constructorBodiesIssues ++ mainFuncIssues ++ returnIssues

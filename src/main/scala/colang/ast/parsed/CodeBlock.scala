@@ -93,12 +93,13 @@ class CodeBlock(var innerScope: Scope,
               case (retVal, issues) =>
                 val actualTypeStr = retVal.type_.qualifiedName
                 val expectedTypeStr = expectedReturnType.qualifiedName
-
-                // TODO when we have methods and constructors use different issue here.
-                val issue = Issues.IncompatibleFunctionReturnValue(rawStmt.source, (actualTypeStr, expectedTypeStr))
+                val issue = Issues.IncompatibleReturnType(rawStmt.source, (actualTypeStr, expectedTypeStr))
                 (Some(retVal), issues :+ issue)
             }
-          case None => (None, Seq.empty)
+
+          case None =>
+            val issue = Issues.ReturnWithoutValue(rawStmt.source, expectedReturnType.qualifiedName)
+            (None, Seq(issue))
         }
 
         statements += ReturnStatement(returnValue, Some(rawStmt))

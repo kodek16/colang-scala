@@ -469,49 +469,49 @@ object Issues {
   }
 
   /**
-    * Generates an issue for a return statement with value that is incompatible with the enclosing function
+    * Generates an issue for a return statement with value that is incompatible with the enclosing entity
     * return type.
-    * Args: (return value type, function return type)
+    * Args: (return value type, expected return type)
     */
-  object IncompatibleFunctionReturnValue extends LocaleAwareIssueFactory[Error, (String, String)] {
+  object IncompatibleReturnType extends LocaleAwareIssueFactory[Error, (String, String)] {
     private val code = "E0021"
 
     protected def en_US(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"a value of type '$actualType' cannot be returned from a function returning '$expectedType'",
+      Error(code, source, s"cannot return a value of type '$actualType': expected return type is '$expectedType'",
         notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"немагчыма вярнуць значэньне тыпу '$actualType' з функцыі, якая вяртае '$expectedType'",
+      Error(code, source, s"немагчыма вярнуць значэньне тыпу '$actualType': чаканы тып вяртаньня - '$expectedType'",
         notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"нельзя вернуть значение типа '$actualType' из функции, возвращающей '$expectedType'",
+      Error(code, source, s"нельзя вернуть значение типа '$actualType': ожидаемый возвращаемый тип - '$expectedType'",
         notes = Seq.empty)
     }
   }
 
   /**
-    * Generates an issue for a 'return-void' statement in a non-void function.
-    * Args: function return type
+    * Generates an issue for a 'return-void' statement in a non-void-returning entity.
+    * Args: expected return type
     */
-  object FunctionReturnWithoutValue extends LocaleAwareIssueFactory[Error, String] {
+  object ReturnWithoutValue extends LocaleAwareIssueFactory[Error, String] {
     private val code = "E0022"
 
     protected def en_US(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"must return a value from a function returning '$returnType'", notes = Seq.empty)
+      Error(code, source, s"must return a value of type '$returnType'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"з функцыі, якая вяртае '$returnType', трэба вярнуць значэньне", notes = Seq.empty)
+      Error(code, source, s"трэба вярнуць значэньне тыпу '$returnType'", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"из функции, возвращающей '$returnType', необходимо вернуть значение", notes = Seq.empty)
+      Error(code, source, s"необходимо вернуть значение типа '$returnType'", notes = Seq.empty)
     }
   }
 
