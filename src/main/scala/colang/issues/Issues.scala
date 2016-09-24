@@ -507,11 +507,11 @@ object Issues {
     }
 
     protected def be_BY(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"из функции, возвращающей '$returnType', необходимо вернуть значение", notes = Seq.empty)
+      Error(code, source, s"з функцыі, якая вяртае '$returnType', трэба вярнуць значэньне", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"з функцыі, якая вяртае '$returnType', трэба вярнуць значэньне", notes = Seq.empty)
+      Error(code, source, s"из функции, возвращающей '$returnType', необходимо вернуть значение", notes = Seq.empty)
     }
   }
 
@@ -746,25 +746,22 @@ object Issues {
   // E0033 isn't used any longer
 
   /**
-    * Generates an issue for an unexpected symbol reference used as a type.
-    * Args: term describing the symbol type
+    * Generates an issue for a non-type expression where type expression was expected.
+    * Args: expression type
     */
-  object InvalidReferenceAsType extends LocaleAwareIssueFactory[Error, Term] {
+  object ExpressionIsNotAType extends LocaleAwareIssueFactory[Error, String] {
     private val code = "E0034"
 
-    protected def en_US(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.en_US
-      Error(code, source, s"${symbol.indefinite} cannot be a type", notes = Seq.empty)
+    protected def en_US(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"an expression of type '$exprType' cannot be used a type", notes = Seq.empty)
     }
 
-    protected def be_BY(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.be_BY
-      Error(code, source, s"${symbol.nominative} ня можа быць тыпам", notes = Seq.empty)
+    protected def be_BY(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"выражэньне тыпу '$exprType' ня можа быць тыпам", notes = Seq.empty)
     }
 
-    protected def ru_RU(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.ru_RU
-      Error(code, source, s"${symbol.nominative} не может быть типом", notes = Seq.empty)
+    protected def ru_RU(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"выражение типа '$exprType' не может быть типом", notes = Seq.empty)
     }
   }
 

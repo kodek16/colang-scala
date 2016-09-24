@@ -4,6 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.{NoMatch, Success}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy, identifierStrategy}
+import colang.ast.raw.expression.Expression
 import colang.issues.Terms
 import colang.tokens._
 
@@ -18,7 +19,7 @@ import colang.tokens._
   * @param body function body, may be absent
   */
 case class FunctionDefinition(specifiers: SpecifiersList,
-                              returnType : Type,
+                              returnType : Expression,
                               name: Identifier,
                               referenceMarker: Option[Ampersand],
                               parameterList: ParameterList,
@@ -46,7 +47,7 @@ object FunctionDefinition {
         .definingElement(ParameterList.strategy)
         .optionalElement(CodeBlock.strategy)
         .parse(stream)
-        .as[SpecifiersList, Type, Identifier, Ampersand, ParameterList, CodeBlock] match {
+        .as[SpecifiersList, Expression, Identifier, Ampersand, ParameterList, CodeBlock] match {
 
         case (Present(specifiersList), Present(returnType), Present(name), refMarkerOption, Present(parameterList),
               bodyOption, issues, streamAfterFunction) =>

@@ -34,7 +34,7 @@ private[routines] object RegisterFields {
   private def registerFieldsForType(containingType: NonReferenceType, fieldsDef: raw.statement.VariablesDefinition)
   : (Seq[Field], Seq[FieldInitialization], Seq[Issue]) = {
 
-    val (fieldType_, fieldTypeIssues) = Type.resolve(containingType, fieldsDef.type_)
+    val (fieldType_, fieldTypeIssues) = Type.resolve(fieldsDef.type_)(containingType)
 
     def registerOne(fieldDef: raw.statement.VariableDefinition): (Field, Seq[FieldInitialization], Seq[Issue]) = {
       val field = new Field(

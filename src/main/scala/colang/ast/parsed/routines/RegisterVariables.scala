@@ -17,7 +17,7 @@ private[routines] object RegisterVariables {
   def registerVariables(scope: Scope, localContext: LocalContext, varDefs: raw.VariablesDefinition)
       : (Seq[Variable], Seq[Statement], Seq[Issue]) = {
 
-    val (type_, typeIssues) = Type.resolve(scope, varDefs.type_)
+    val (type_, typeIssues) = Type.resolve(varDefs.type_)(scope)
 
     def registerOne(varDef: raw.VariableDefinition): (Variable, Seq[Statement], Seq[Issue]) = {
       val variable = Variable(

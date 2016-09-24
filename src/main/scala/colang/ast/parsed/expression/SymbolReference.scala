@@ -1,10 +1,18 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{Function, LocalContext, NonReferenceType, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Variable}
+import colang.ast.parsed.{Function, LocalContext, NonReferenceType, OverloadedFunction, ReferenceType, ReferenceVariable, Scope, Symbol, Type, Variable}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 
 import scala.annotation.tailrec
+
+/**
+  * Represents a type name, which is technically an expression.
+  * @param value referenced type
+  */
+case class TypeReference(value: Type, rawNode: Option[raw.Expression]) extends Expression {
+  val type_ = value.scope.get.root.typeType
+}
 
 /**
   * Represents a function reference.
@@ -90,6 +98,7 @@ object SymbolReference {
 
     def resolveSymbol(symbol: Symbol): (Expression, Seq[Issue]) = {
       symbol match {
+        case t: Type => (TypeReference(t, Some(rawExpr)), Seq.empty)
         case v: Variable => (VariableReference(v, Some(rawExpr)), Seq.empty)
         case f: Function => (FunctionReference(f, Some(rawExpr)), Seq.empty)
         case of: OverloadedFunction => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)

@@ -25,7 +25,6 @@ class RootNamespace extends Namespace("", None, None) {
     definition = None,
     scope = Some(this))
 
-
   /**
     * A type assigned to overloaded function references.
     */
@@ -39,6 +38,14 @@ class RootNamespace extends Namespace("", None, None) {
     */
   val boundMethodType: Type = new NonReferenceType(
     name = "(bound method)",
+    definition = None,
+    scope = Some(this))
+
+  /**
+    * A type assigned to type references.
+    */
+  val typeType: Type = new NonReferenceType(
+    name = "(type name)",
     definition = None,
     scope = Some(this))
 

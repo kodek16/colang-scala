@@ -1,6 +1,6 @@
 package colang.ast.parsed
 
-import colang.ast.parsed.expression.{Expression, ImplicitDereferencing}
+import colang.ast.parsed.expression.{Expression, ImplicitDereferencing, InvalidExpression, TypeReference}
 import colang.ast.raw
 import colang.ast.raw.TypeDefinition
 import colang.issues.{Issue, Issues, Terms}
@@ -147,30 +147,25 @@ class ReferenceType(val referenced: Type) extends Type(
 
 object Type {
 
-  def resolve(scope: Scope, rawType: raw.Type): (Type, Seq[Issue]) = {
-    rawType match {
-      case r: raw.SimpleType =>
-        scope.resolve(r.name.value) match {
-          case Some(type_ : Type) => (type_, Seq.empty)
-          case Some(otherSymbol) =>
-            val issue = Issues.InvalidReferenceAsType(rawType.source, otherSymbol.description)
-            (scope.root.unknownType, Seq(issue))
+  def resolve(rawType: raw.expression.Expression)(implicit scope: Scope): (Type, Seq[Issue]) = {
+    val (expression, expressionIssues) = Expression.analyzeInNonLocalContext(rawType)
 
-          case None =>
-            val issue = Issues.UnknownName(rawType.source, ())
-            (scope.root.unknownType, Seq(issue))
-        }
+    expression match {
+      case TypeReference(type_, _) => (type_, expressionIssues)
+      case _ =>
+        val issue = Issues.ExpressionIsNotAType(rawType.source, expression.type_.qualifiedName)
+        (scope.root.unknownType, expressionIssues :+ issue)
+    }
+  }
 
-      case r: raw.ReferenceType =>
-        val (referenced, referencedIssues) = Type.resolve(scope, r.referenced)
-        referenced match {
-          case t: NonReferenceType => (t.reference, referencedIssues)
+  def analyzeReference(rawType: raw.expression.TypeReferencing)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+    val (referenced, referencedIssues) = Type.resolve(rawType.referencedType)
 
-          // Normally, overreferenced types have already been checked in the parser, so this should never be the case.
-          case rt: ReferenceType =>
-            val issue = Issues.OverreferencedType(r.source, referenced.qualifiedName)
-            (scope.root.unknownType, referencedIssues :+ issue)
-        }
+    referenced match {
+      case referenced: NonReferenceType => (TypeReference(referenced.reference, Some(rawType)), referencedIssues)
+      case rt: ReferenceType =>
+        val issue = Issues.OverreferencedType(rawType.source, rt.qualifiedName)
+        (InvalidExpression(), referencedIssues :+ issue)
     }
   }
 

@@ -36,7 +36,7 @@ private[routines] object RegisterMethods {
   }
 
   private def registerMethod(type_ : NonReferenceType, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
-    val (returnType, returnTypeIssues) = Type.resolve(type_, methodDef.returnType)
+    val (returnType, returnTypeIssues) = Type.resolve(methodDef.returnType)(type_)
 
     val containerType = if (methodDef.referenceMarker.isDefined) {
       type_.reference
@@ -53,7 +53,7 @@ private[routines] object RegisterMethods {
     val methodBody = new CodeBlock(new LocalScope(Some(type_)), localContext, methodDef.body)
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>
-      val (paramType, paramTypeIssues) = Type.resolve(type_, rawParam.type_)
+      val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(type_)
       val param = Variable(
         name = rawParam.name.value,
         scope = Some(methodBody.innerScope),

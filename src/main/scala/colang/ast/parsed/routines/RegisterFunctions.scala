@@ -15,7 +15,7 @@ private[routines] object RegisterFunctions {
     */
   def registerFunctions(rootNamespace: RootNamespace, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
     val result = funcDefs map { funcDef =>
-      val (returnType, returnTypeIssues) = Type.resolve(rootNamespace, funcDef.returnType)
+      val (returnType, returnTypeIssues) = Type.resolve(funcDef.returnType)(rootNamespace)
 
       val refMarkerIssues = funcDef.referenceMarker.toSeq map { marker =>
         Issues.ReferenceMarkerInFunctionDefinition(marker.source, ())
@@ -28,7 +28,7 @@ private[routines] object RegisterFunctions {
       val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), localContext, funcDef.body)
 
       val paramsResult = funcDef.parameterList.params map { rawParam =>
-        val (paramType, paramTypeIssues) = Type.resolve(rootNamespace, rawParam.type_)
+        val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(rootNamespace)
         val param = Variable(
           name = rawParam.name.value,
           scope = Some(functionBody.innerScope),

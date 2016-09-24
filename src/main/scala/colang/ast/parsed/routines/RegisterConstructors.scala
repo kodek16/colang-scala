@@ -44,7 +44,7 @@ private[routines] object RegisterConstructors {
     val constructorBody = new CodeBlock(new LocalScope(Some(type_)), localContext, constructorDef.body)
 
     val paramsResult = constructorDef.parameterList.params map { rawParam =>
-      val (paramType, paramTypeIssues) = Type.resolve(type_, rawParam.type_)
+      val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(type_)
       val param = Variable(
         name = rawParam.name.value,
         scope = Some(constructorBody.innerScope),

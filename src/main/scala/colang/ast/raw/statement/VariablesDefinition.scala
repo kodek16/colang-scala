@@ -83,7 +83,7 @@ object VariableDefinition {
   * @param type_ variable(s) type
   * @param variables individual variable definitions
   */
-case class VariablesDefinition(type_ : Type, variables: Seq[VariableDefinition]) extends Statement
+case class VariablesDefinition(type_ : Expression, variables: Seq[VariableDefinition]) extends Statement
                                                                                  with GlobalSymbolDefinition
                                                                                  with TypeMemberDefinition {
   def source: SourceCode = type_.source + variables.last.source
@@ -115,9 +115,10 @@ object VariablesDefinition {
     def apply(stream: TokenStream): Result[TokenStream, VariablesDefinition] = {
       ParserImpl.parseGroup()
         .definingElement(Type.strategy)
+        .lineContinuation()
         .element(varsStrategy, Terms.Definitions of Terms.Variables)
         .parse(stream)
-        .as[Type, VariableDefinitionSequence] match {
+        .as[Expression, VariableDefinitionSequence] match {
 
         case (Present(type_), Present(VariableDefinitionSequence(variables)), issues, streamAfterVariables) =>
             Success(VariablesDefinition(type_, variables), issues, streamAfterVariables)

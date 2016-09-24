@@ -3,7 +3,7 @@ package colang.ast.parsed.expression
 import colang.ast.parsed._
 import colang.ast.parsed.statement.Statement
 import colang.ast.raw.{expression => raw}
-import colang.issues.Issue
+import colang.issues.{Issue, Terms}
 
 /**
   * Represents a code fragment that can be evaluated.
@@ -41,6 +41,18 @@ object Expression {
         
       case r: raw.InfixOperator => Operator.analyze(r)
       case r: raw.PrefixOperator => Operator.analyze(r)
+
+      case r: raw.TypeReferencing => Type.analyzeReference(r)
     }
+  }
+
+  def analyzeInNonLocalContext(rawExpr: raw.Expression)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+
+    // We use the most possibly safe stub here.
+    implicit val localContext = LocalContext(
+      applicableKind = Terms.Constructor,
+      expectedReturnType = None)
+
+    analyze(rawExpr)
   }
 }
