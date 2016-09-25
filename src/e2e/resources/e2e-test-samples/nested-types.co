@@ -1,0 +1,28 @@
+struct foo {
+    struct bar {
+        int x, y
+    }
+
+    bar xy
+    int z
+}
+
+void main() {
+    foo a, b
+
+    a.xy.x = 1
+    a.xy.y = 2
+    a.z = 3
+
+    b.xy.x = 4
+    b.xy.y = 5
+    b.z = 6
+
+    assert(a.xy.x == 1)
+    assert(a.xy.y == 2)
+    assert(a.z == 3)
+
+    assert(b.xy.x == 4)
+    assert(b.xy.y == 5)
+    assert(b.z == 6)
+}

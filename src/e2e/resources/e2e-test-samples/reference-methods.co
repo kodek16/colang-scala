@@ -1,0 +1,18 @@
+struct foo {
+    int x
+
+    void buff&() {
+        x = x + 1
+    }
+}
+
+void main() {
+    foo f
+    f.x = 3
+
+    f.buff()
+    assert(f.x == 4)
+
+    f.buff()
+    assert(f.x == 5)
+}

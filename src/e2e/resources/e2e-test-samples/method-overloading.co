@@ -1,0 +1,19 @@
+struct foo {
+    double x
+
+    double method(double y) {
+        return x * y
+    }
+
+    double method(int y) {
+        return x
+    }
+}
+
+void main() {
+    foo f
+    f.x = 2.5
+
+    assert(f.method(2.5) == 6.25)
+    assert(f.method(10) == 2.5)
+}
