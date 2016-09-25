@@ -34,6 +34,8 @@ abstract class Type(val name: String,
   // A copy constructor is added for every type.
   addConstructor(generateCopyConstructor)
 
+  // The body of the generated default constructor is empty: field initialization will be injected into it in
+  // InjectFieldInitialization routine just like the other constructors.
   private def generateDefaultConstructor: Constructor = {
     val localContext = LocalContext(applicableKind = Terms.Constructor, expectedReturnType = None)
 

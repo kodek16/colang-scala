@@ -1091,4 +1091,20 @@ object Issues {
         s"определён конструктор по умолчанию", notes = Seq.empty)
     }
   }
+
+  object CopyConstructorDefinition extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0050"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "cannot define a custom copy constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга акрэсьліваць уласныя канструктары капіраваньня", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя определять собственные копирующие конструкторы", notes = Seq.empty)
+    }
+  }
 }

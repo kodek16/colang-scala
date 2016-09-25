@@ -11,6 +11,8 @@ private[routines] object CommonSubroutines {
 
   /**
     * Analyzes a raw initializer expression.
+    * If no initializer was provided, will try to use the default constructor call as an initializer, and will
+    * generate issues on failure.
     * @param rawInitializer raw initializer expression
     * @param objectType type of the object (variable/field) that the initializer belongs to
     * @param initializationStatementGenerator a function that actually creates an initializer from a parsed expression

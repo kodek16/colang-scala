@@ -68,6 +68,10 @@ trait ConstructorContainer { this: Type =>
     val existingConstructorOption = constructors find { Applicable.sameParameterTypes(_, newConstructor) }
 
     existingConstructorOption match {
+      case Some(existingConstructor) if existingConstructor.isCopyConstructor =>
+        val issue = Issues.CopyConstructorDefinition(newConstructor.definitionSite.get, ())
+        Seq(issue)
+
       case Some(existingConstructor) if existingConstructor.definition.isEmpty =>
         constructors -= existingConstructor
         constructors += newConstructor
