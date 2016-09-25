@@ -1,6 +1,6 @@
 package colang.ast.parsed.routines
 
-import colang.ast.parsed.{CodeBlock, Function, LocalContext, LocalScope, RootNamespace, Type, Variable}
+import colang.ast.parsed.{CodeBlock, Function, LocalContext, LocalScope, Scope, Type, Variable}
 import colang.ast.raw
 import colang.issues.{Issue, Issues, Terms}
 import colang.tokens.NativeKeyword
@@ -8,14 +8,14 @@ import colang.tokens.NativeKeyword
 private[routines] object RegisterFunctions {
 
   /**
-    * "Registers" all functions in the root namespace, doesn't parse bodies.
-    * @param rootNamespace root namespace
+    * "Registers" given functions in the given scope, doesn't parse bodies.
+    * @param scope enclosing scope (root namespace for global functions, container type for static functions)
     * @param funcDefs function definitions
     * @return (new functions, encountered issues)
     */
-  def registerFunctions(rootNamespace: RootNamespace, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
+  def registerFunctions(scope: Scope, funcDefs: Seq[raw.FunctionDefinition]): (Seq[Function], Seq[Issue]) = {
     val result = funcDefs map { funcDef =>
-      val (returnType, returnTypeIssues) = Type.resolve(funcDef.returnType)(rootNamespace)
+      val (returnType, returnTypeIssues) = Type.resolve(funcDef.returnType)(scope)
 
       val refMarkerIssues = funcDef.referenceMarker.toSeq map { marker =>
         Issues.ReferenceMarkerInFunctionDefinition(marker.source, ())
@@ -25,10 +25,10 @@ private[routines] object RegisterFunctions {
         applicableKind = Terms.Function,
         expectedReturnType = Some(returnType))
 
-      val functionBody = new CodeBlock(new LocalScope(Some(rootNamespace)), localContext, funcDef.body)
+      val functionBody = new CodeBlock(new LocalScope(Some(scope)), localContext, funcDef.body)
 
       val paramsResult = funcDef.parameterList.params map { rawParam =>
-        val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(rootNamespace)
+        val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(scope)
         val param = Variable(
           name = rawParam.name.value,
           scope = Some(functionBody.innerScope),
@@ -43,14 +43,14 @@ private[routines] object RegisterFunctions {
 
       val function = new Function(
         name = funcDef.name.value,
-        scope = Some(rootNamespace),
+        scope = Some(scope),
         returnType = returnType,
         parameters = params,
         body = functionBody,
         definition = Some(funcDef),
         native = funcDef.specifiers.has(classOf[NativeKeyword]))
 
-      val functionIssues = rootNamespace.tryAdd(function)
+      val functionIssues = scope.tryAdd(function)
       (function, returnTypeIssues ++ refMarkerIssues ++ paramIssues ++ functionIssues)
     }
 

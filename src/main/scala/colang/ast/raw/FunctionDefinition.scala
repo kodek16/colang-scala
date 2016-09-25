@@ -36,7 +36,8 @@ object FunctionDefinition {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
       Terms.Definition of Terms.Function,
-      classOf[NativeKeyword])
+      classOf[NativeKeyword],
+      classOf[StaticKeyword])
 
     def apply(stream: TokenStream): Result[TokenStream, FunctionDefinition] = {
       ParserImpl.parseGroup()

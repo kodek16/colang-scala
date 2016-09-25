@@ -34,7 +34,7 @@ trait Symbol {
     */
   lazy val qualifiedName: String = {
     val prefix = scope match {
-      case Some(ns: Namespace) if ns.name.nonEmpty => ns.qualifiedName + "."
+      case Some(namedScope: Symbol) if namedScope.name.nonEmpty => namedScope.qualifiedName + "."
       case _ => ""
     }
 

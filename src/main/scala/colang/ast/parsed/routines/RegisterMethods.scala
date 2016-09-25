@@ -3,7 +3,7 @@ package colang.ast.parsed.routines
 import colang.ast.parsed._
 import colang.ast.raw
 import colang.issues.{Issue, Terms}
-import colang.tokens.NativeKeyword
+import colang.tokens.{NativeKeyword, StaticKeyword}
 
 private[routines] object RegisterMethods {
 
@@ -17,7 +17,7 @@ private[routines] object RegisterMethods {
       type_.definition match {
         case Some(raw.TypeDefinition(_, _, _, raw.TypeBody(_, memberDefs, _))) =>
           val methodDefs = memberDefs flatMap {
-            case f: raw.FunctionDefinition => Some(f)
+            case f: raw.FunctionDefinition if !f.specifiers.has(classOf[StaticKeyword]) => Some(f)
             case _ => None
           }
 
