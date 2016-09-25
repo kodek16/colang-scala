@@ -18,7 +18,7 @@ case class TypeReference(value: Type, rawNode: Option[raw.Expression]) extends E
   * Represents a function reference.
   * @param function referenced function
   */
-case class FunctionReference(function: Function, rawNode: Option[raw.SymbolReference]) extends Expression {
+case class FunctionReference(function: Function, rawNode: Option[raw.Expression]) extends Expression {
   val type_ = function.functionType
 }
 
@@ -27,13 +27,13 @@ case class FunctionReference(function: Function, rawNode: Option[raw.SymbolRefer
   * @param overloadedFunction referenced overloaded function
   */
 case class OverloadedFunctionReference(overloadedFunction: OverloadedFunction,
-                                       rawNode: Option[raw.SymbolReference]) extends Expression {
+                                       rawNode: Option[raw.Expression]) extends Expression {
 
   val type_ = overloadedFunction.scope.get.root.overloadedFunctionType
 }
 
 object VariableReference {
-  def apply(variable: Variable, rawNode: Option[raw.SymbolReference]) = new VariableReference(variable, rawNode)
+  def apply(variable: Variable, rawNode: Option[raw.Expression]) = new VariableReference(variable, rawNode)
   def unapply(arg: VariableReference): Option[Variable] = Some(arg.variable)
 }
 
@@ -55,7 +55,7 @@ object ReferenceVariableReference {
   * @param variable referenced variable
   */
 class VariableReference private (val variable: Variable,
-                                 val rawNode: Option[raw.SymbolReference]) extends Expression {
+                                 val rawNode: Option[raw.Expression]) extends Expression {
   val type_ = variable.type_ match {
     case t: NonReferenceType => t.reference
     case rt: ReferenceType => rt
@@ -63,6 +63,24 @@ class VariableReference private (val variable: Variable,
 }
 
 object SymbolReference {
+
+  /**
+    * Constructs a reference expression from a symbol.
+    * @param symbol referenced symbol
+    * @param rawExpr raw reference expression
+    * @return (expression, encountered issues)
+    */
+  def resolveSymbol(symbol: Symbol, rawExpr: raw.Expression): (Expression, Seq[Issue]) = {
+    symbol match {
+      case t: Type => (TypeReference(t, Some(rawExpr)), Seq.empty)
+      case v: Variable => (VariableReference(v, Some(rawExpr)), Seq.empty)
+      case f: Function => (FunctionReference(f, Some(rawExpr)), Seq.empty)
+      case of: OverloadedFunction => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
+      case _ =>
+        val issue = Issues.InvalidReferenceAsExpression(rawExpr.source, symbol.description)
+        (InvalidExpression()(symbol.scope.get), Seq(issue))
+    }
+  }
 
   // Note that this function supports "short member access" expressions: object member names without "this." prefix
   // inside methods, and handles them correctly.
@@ -96,18 +114,6 @@ object SymbolReference {
       }
     }
 
-    def resolveSymbol(symbol: Symbol): (Expression, Seq[Issue]) = {
-      symbol match {
-        case t: Type => (TypeReference(t, Some(rawExpr)), Seq.empty)
-        case v: Variable => (VariableReference(v, Some(rawExpr)), Seq.empty)
-        case f: Function => (FunctionReference(f, Some(rawExpr)), Seq.empty)
-        case of: OverloadedFunction => (OverloadedFunctionReference(of, Some(rawExpr)), Seq.empty)
-        case _ =>
-          val issue = Issues.InvalidReferenceAsExpression(rawExpr.source, symbol.description)
-          (InvalidExpression(), Seq(issue))
-      }
-    }
-
     val asShortMemberAccess = localContext.contextualObjectType match {
       case Some(contextualObjectType) =>
         MemberAccess.tryAnalyze(ThisReference(contextualObjectType, None), rawExpr.name.value, rawExpr)
@@ -116,11 +122,11 @@ object SymbolReference {
 
     (asShortMemberAccess, scope.resolve(rawExpr.name.value)) match {
       case (Some(resultAsShortMemberAccess), Some(s: Symbol)) if symbolIsMoreSpecificThanObjectMember(s) =>
-        resolveSymbol(s)
+        resolveSymbol(s, rawExpr)
       case (Some(resultAsShortMemberAccess), _) =>
         resultAsShortMemberAccess
       case (None, Some(s: Symbol)) =>
-        resolveSymbol(s)
+        resolveSymbol(s, rawExpr)
       case (None, None) =>
         val issue = Issues.UnknownName(rawExpr.source, ())
         (InvalidExpression(), Seq(issue))

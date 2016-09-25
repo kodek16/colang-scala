@@ -15,6 +15,7 @@ package object routines {
   val registerFunctions = RegisterFunctions.registerFunctions _
   val registerGlobalVariables = RegisterGlobalVariables.registerGlobalVariables _
   val registerMethods = RegisterMethods.registerMethods _
+  val registerStaticVariables = RegisterStaticVariables.registerStaticVariables _
   val registerTypes = RegisterTypes.registerTypes _
   val registerVariables = RegisterVariables.registerVariables _
 }

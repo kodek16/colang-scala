@@ -4,6 +4,7 @@ import colang.ast.parsed.statement.{FieldInitialization, Statement}
 import colang.ast.parsed.{Field, LocalContext, NonReferenceType, Type}
 import colang.ast.raw
 import colang.issues.{Issue, Issues, Terms}
+import colang.tokens.StaticKeyword
 
 private[routines] object RegisterFields {
 
@@ -16,7 +17,8 @@ private[routines] object RegisterFields {
     val fieldsResults = types flatMap { type_ =>
       type_.definition.toSeq flatMap { typeDef =>
         typeDef.body.members map {
-          case fieldsDef: raw.statement.VariablesDefinition => registerFieldsForType(type_, fieldsDef)
+          case fieldsDef: raw.statement.VariablesDefinition if !fieldsDef.specifiers.has(classOf[StaticKeyword]) =>
+            registerFieldsForType(type_, fieldsDef)
           case _ => (Seq.empty, Seq.empty, Seq.empty)
         }
       }

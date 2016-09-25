@@ -42,20 +42,26 @@ class AnalyzerImpl extends Analyzer {
     val rootNamespace = new RootNamespace()
 
     val (types, typesIssues) = routines.registerTypes(rootNamespace, typeDefs)
+
     val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)
     val (methods, methodsIssues) = routines.registerMethods(types)
     val (constructors, constructorsIssues) = routines.registerConstructors(types)
-    val (fields, fieldsInitStatements, fieldsIssues) = routines.registerFields(types)
+
     val (variables, globalVarInitStatements, varIssues) = routines.registerGlobalVariables(rootNamespace, varDefs)
+    val (staticVariables, staticVarInitStatements, staticVarIssues) = routines.registerStaticVariables(types)
+    val (fields, fieldsInitStatements, fieldsIssues) = routines.registerFields(types)
+
     val funcBodiesIssues = routines.analyzeFunctionBodies(functions)
     val methBodiesIssues = routines.analyzeMethodBodies(methods)
     val constructorBodiesIssues = routines.analyzeConstructorBodies(constructors)
     routines.injectFieldInitialization(fieldsInitStatements)
-    val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements, eof)
+
+    val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements ++ staticVarInitStatements, eof)
+
     val returnIssues = routines.checkReturnStatements(functions, methods)
 
-    val issues = typesIssues ++ functionsIssues ++ methodsIssues ++ constructorsIssues ++ fieldsIssues ++ varIssues ++
-      funcBodiesIssues ++ methBodiesIssues ++ constructorBodiesIssues ++ mainFuncIssues ++ returnIssues
+    val issues = typesIssues ++ functionsIssues ++ methodsIssues ++ constructorsIssues ++ varIssues ++ staticVarIssues ++
+      fieldsIssues ++ funcBodiesIssues ++ methBodiesIssues ++ constructorBodiesIssues ++ mainFuncIssues ++ returnIssues
 
     (rootNamespace, issues)
   }

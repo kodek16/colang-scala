@@ -70,3 +70,10 @@ case class ConstructorKeyword(source: SourceCode) extends Keyword {
 object ConstructorKeyword {
   val strategy = new StatelessTokenStrategy(ConstructorKeyword.apply, """\bconstructor\b""".r)
 }
+
+case class StaticKeyword(source: SourceCode) extends Keyword {
+  val text = "static"
+}
+object StaticKeyword {
+  val strategy = new StatelessTokenStrategy(StaticKeyword.apply, """\bstatic\b""".r)
+}

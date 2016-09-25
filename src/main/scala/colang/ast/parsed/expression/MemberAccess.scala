@@ -59,6 +59,20 @@ object MemberAccess {
     */
   def tryAnalyze(instance: Expression, memberName: String, rawNode: raw.Expression)(implicit scope: Scope): Option[(Expression, Seq[Issue])] = {
 
+    def asStaticMemberAccess: Option[(Expression, Seq[Issue])] = {
+      instance match {
+        case TypeReference(type_, _) =>
+          type_.resolve(memberName) match {
+            case Some(symbol) => Some(SymbolReference.resolveSymbol(symbol, rawNode))
+            case None =>
+              val issue = Issues.UnknownStaticMemberName(rawNode.source, type_.qualifiedName)
+              Some(InvalidExpression(), Seq(issue))
+          }
+
+        case _ => None
+      }
+    }
+
     def asFieldAccess: Option[(Expression, Seq[Issue])] = {
       val nonRefType = instance.type_ match {
         case t: NonReferenceType => t
@@ -109,7 +123,7 @@ object MemberAccess {
       }
     }
 
-    asFieldAccess.orElse(asMethodAccess)
+    asStaticMemberAccess.orElse(asFieldAccess).orElse(asMethodAccess)
   }
 
   def analyze(rawExpr: raw.MemberAccess)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {

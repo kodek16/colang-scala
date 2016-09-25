@@ -1107,4 +1107,21 @@ object Issues {
       Error(code, source, "нельзя определять собственные копирующие конструкторы", notes = Seq.empty)
     }
   }
+
+  // Args: type name
+  object UnknownStaticMemberName extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0051"
+
+    protected def en_US(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"type '$typeName' has no static members with this name", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"тып '$typeName' ня мае статычных членаў з гэтым імем", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"тип '$typeName' не содержит статических членов с этим именем", notes = Seq.empty)
+    }
+  }
 }
