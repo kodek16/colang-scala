@@ -1,6 +1,7 @@
 package colang.ast.parsed
 
 import colang.ast.raw
+import colang.issues.Terms
 
 /**
   * Represents a method: a function that can only be called on an instance of some type.
@@ -18,15 +19,14 @@ class Method(val name: String,
              val parameters: Seq[Variable],
              val body: CodeBlock,
              val definition: Option[raw.FunctionDefinition],
-             val native: Boolean = false) extends Applicable {
+             val native: Boolean = false) extends ObjectMember with Applicable {
 
-  val definitionSite = definition match {
-    case Some(fd) => Some(fd.prototypeSource)
-    case None => None
-  }
+  val description = Terms.Method
+
+  val definitionSite = definition map { _.prototypeSource }
 
   def signatureString: String = {
     val paramString = parameters map { _.type_.qualifiedName } mkString ", "
-    s"${returnType.qualifiedName} ${container.qualifiedName}.$name($paramString)"
+    s"${returnType.qualifiedName} $qualifiedName($paramString)"
   }
 }

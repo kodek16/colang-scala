@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{ReferenceType, Scope, Type}
+import colang.ast.parsed.{LocalContext, Scope}
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 import colang.tokens
@@ -10,7 +10,7 @@ import colang.tokens
   */
 object Operator {
 
-  def analyze(rawExpr: raw.InfixOperator)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+  def analyze(rawExpr: raw.InfixOperator)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     val (rawLhs, operator, rawRhs) = (rawExpr.lhs, rawExpr.operator, rawExpr.rhs)
 
     val methodName = operator match {
@@ -31,8 +31,8 @@ object Operator {
       case tokens.Assign(_) => "assign"
     }
 
-    val (lhs, lhsIssues) = Expression.analyze(scope, rawLhs)
-    val (rhs, rhsIssues) = Expression.analyze(scope, rawRhs)
+    val (lhs, lhsIssues) = Expression.analyze(rawLhs)
+    val (rhs, rhsIssues) = Expression.analyze(rawRhs)
 
     MethodCall.tryConstruct(lhs, methodName, Seq(rhs), Some(rawExpr)) match {
       case Some(methodCall) => (methodCall, lhsIssues ++ rhsIssues)
@@ -44,13 +44,13 @@ object Operator {
     }
   }
 
-  def analyze(rawExpr: raw.PrefixOperator)(implicit scope: Scope): (Expression, Seq[Issue]) = {
+  def analyze(rawExpr: raw.PrefixOperator)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     val methodName = rawExpr.operator match {
       case tokens.LogicalNot(_) => "not"
       case tokens.Minus(_) => "unaryMinus"
     }
 
-    val (expr, exprIssues) = Expression.analyze(scope, rawExpr.expression)
+    val (expr, exprIssues) = Expression.analyze(rawExpr.expression)
 
     MethodCall.tryConstruct(expr, methodName, Seq.empty, Some(rawExpr)) match {
       case Some(methodCall) => (methodCall, exprIssues)

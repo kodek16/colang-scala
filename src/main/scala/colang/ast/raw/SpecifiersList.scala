@@ -4,7 +4,7 @@ import colang.Strategy.Result
 import colang.Strategy.Result.Success
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
 import colang.issues.{Issues, Term, Terms}
-import colang.tokens.{Keyword, NativeKeyword}
+import colang.tokens.{Keyword, NativeKeyword, StaticKeyword}
 import colang.{SourceCode, StrategyUnion, TokenStream}
 
 /**
@@ -29,7 +29,8 @@ object SpecifiersList {
                  allowedSpecifiers: Class[_ <: Keyword]*) extends ParserImpl.Strategy[SpecifiersList] {
 
     private val allSpecifiers = Seq(
-      classOf[NativeKeyword])
+      classOf[NativeKeyword],
+      classOf[StaticKeyword])
 
     private val anySpecifierStrategy = StrategyUnion(allSpecifiers map { SingleTokenStrategy(_) } :_*)
 

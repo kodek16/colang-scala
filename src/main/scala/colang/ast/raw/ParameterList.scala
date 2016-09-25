@@ -3,6 +3,7 @@ package colang.ast.raw
 import colang.Strategy.Result
 import colang.Strategy.Result.{Malformed, NoMatch, Success}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
+import colang.ast.raw.expression.Expression
 import colang.issues.Terms
 import colang.tokens.{Comma, Identifier, LeftParen, RightParen}
 import colang.{SourceCode, TokenStream}
@@ -12,7 +13,7 @@ import colang.{SourceCode, TokenStream}
   * @param type_ parameter type
   * @param name parameter name
   */
-case class FunctionParameter(type_ : Type, name: Identifier) extends Node {
+case class FunctionParameter(type_ : Expression, name: Identifier) extends Node {
   def source: SourceCode = type_.source + name.source
 }
 
@@ -24,7 +25,7 @@ object FunctionParameter {
         .definingElement(Type.strategy)
         .element(SingleTokenStrategy(classOf[Identifier]), Terms.Name of Terms.Parameter)
         .parse(stream)
-        .as[Type, Identifier] match {
+        .as[Expression, Identifier] match {
 
         case (Present(type_), Present(name), issues, streamAfterParam) =>
           Success(FunctionParameter(type_, name), issues, streamAfterParam)

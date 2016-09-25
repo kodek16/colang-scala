@@ -1,0 +1,17 @@
+struct bar {
+    int method(int x) { return x }
+    double method(double x) { return x }
+
+    static int method(int x) { return x * 2 }
+    static double method(double x) { return x * 2.0 }
+}
+
+void main() {
+    bar b
+
+    assert(b.method(10) == 10)
+    assert(b.method(2.4) == 2.4)
+
+    assert(bar.method(10) == 20)
+    assert(bar.method(2.4) == 4.8)
+}

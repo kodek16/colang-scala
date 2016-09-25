@@ -1,0 +1,11 @@
+struct foo {
+    int x
+}
+
+void main() {
+    foo a, b
+    a.x = 2
+    b.x = 3
+    assert(a.x == 2)
+    assert(b.x == 3)
+}

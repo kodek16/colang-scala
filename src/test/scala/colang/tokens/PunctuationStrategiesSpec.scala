@@ -18,6 +18,20 @@ class PunctuationStrategiesSpec extends LexerUnitSpec {
     }
   }
 
+  def describeStrictPunctuationStrategy[T <: Token](tokenText: String,
+                                                    tokenStrategy: LexerImpl.StatelessTokenStrategy[T]): Unit = {
+
+    describe(s"'$tokenText' lexer strategy") {
+      it(s"should match single '$tokenText' tokens") {
+        tokenStrategy shouldSucceedOn tokenText withoutIssues()
+      }
+
+      it(s"should not match '$tokenText$tokenText' tokens") {
+        tokenStrategy shouldNotMatch (tokenText * 2)
+      }
+    }
+  }
+
   describePunctuationStrategy("(", LeftParen.strategy)
   describePunctuationStrategy(")", RightParen.strategy)
   describePunctuationStrategy("{", LeftBrace.strategy)
@@ -25,14 +39,6 @@ class PunctuationStrategiesSpec extends LexerUnitSpec {
   describePunctuationStrategy(",", Comma.strategy)
   describePunctuationStrategy(";", Semicolon.strategy)
 
-  // '&' strategy is different because it doesn't match sequential tokens.
-  describe("'&' lexer strategy") {
-    it("should match single '&' tokens") {
-      Ampersand.strategy shouldSucceedOn "&" withoutIssues()
-    }
-
-    it("should not match '&&' tokens") {
-      Ampersand.strategy shouldNotMatch "&&"
-    }
-  }
+  describeStrictPunctuationStrategy(".", Dot.strategy)
+  describeStrictPunctuationStrategy("&", Ampersand.strategy)
 }

@@ -469,49 +469,49 @@ object Issues {
   }
 
   /**
-    * Generates an issue for a return statement with value that is incompatible with the enclosing function
+    * Generates an issue for a return statement with value that is incompatible with the enclosing entity
     * return type.
-    * Args: (return value type, function return type)
+    * Args: (return value type, expected return type)
     */
-  object IncompatibleFunctionReturnValue extends LocaleAwareIssueFactory[Error, (String, String)] {
+  object IncompatibleReturnType extends LocaleAwareIssueFactory[Error, (String, String)] {
     private val code = "E0021"
 
     protected def en_US(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"a value of type '$actualType' cannot be returned from a function returning '$expectedType'",
+      Error(code, source, s"cannot return a value of type '$actualType': expected return type is '$expectedType'",
         notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"немагчыма вярнуць значэньне тыпу '$actualType' з функцыі, якая вяртае '$expectedType'",
+      Error(code, source, s"немагчыма вярнуць значэньне тыпу '$actualType': чаканы тып вяртаньня - '$expectedType'",
         notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
       val (actualType, expectedType) = args
-      Error(code, source, s"нельзя вернуть значение типа '$actualType' из функции, возвращающей '$expectedType'",
+      Error(code, source, s"нельзя вернуть значение типа '$actualType': ожидаемый возвращаемый тип - '$expectedType'",
         notes = Seq.empty)
     }
   }
 
   /**
-    * Generates an issue for a 'return-void' statement in a non-void function.
-    * Args: function return type
+    * Generates an issue for a 'return-void' statement in a non-void-returning entity.
+    * Args: expected return type
     */
-  object FunctionReturnWithoutValue extends LocaleAwareIssueFactory[Error, String] {
+  object ReturnWithoutValue extends LocaleAwareIssueFactory[Error, String] {
     private val code = "E0022"
 
     protected def en_US(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"must return a value from a function returning '$returnType'", notes = Seq.empty)
+      Error(code, source, s"must return a value of type '$returnType'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"из функции, возвращающей '$returnType', необходимо вернуть значение", notes = Seq.empty)
+      Error(code, source, s"трэба вярнуць значэньне тыпу '$returnType'", notes = Seq.empty)
     }
 
     protected def ru_RU(source: SourceCode, returnType: String): Error = {
-      Error(code, source, s"з функцыі, якая вяртае '$returnType', трэба вярнуць значэньне", notes = Seq.empty)
+      Error(code, source, s"необходимо вернуть значение типа '$returnType'", notes = Seq.empty)
     }
   }
 
@@ -531,21 +531,7 @@ object Issues {
     }
   }
 
-  object TypeDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
-    private val code = "E0024"
-
-    protected def en_US(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "a type cannot be defined without a body", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "тып ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "тип не может быть определён без тела", notes = Seq.empty)
-    }
-  }
+  // E0024 isn't used any longer
 
   object InvalidMainFunctionSignature extends LocaleAwareIssueFactory[Error, Unit] {
     private val code = "E0025"
@@ -605,7 +591,7 @@ object Issues {
     protected def en_US(source: SourceCode, args: (String, String)): Error = {
       val (initializerType, variableType) = args
       Error(code, source, s"initializer of type '$initializerType' is incompatible with " +
-        s"the variable of type '$variableType'", notes = Seq.empty)
+        s"a variable of type '$variableType'", notes = Seq.empty)
     }
 
     protected def be_BY(source: SourceCode, args: (String, String)): Error = {
@@ -723,7 +709,7 @@ object Issues {
     * Generates an issue for a symbol definition with a taken name.
     * Args: (term describing original symbol, optionally its definition site)
     */
-  object SymbolNameTaken extends LocaleAwareIssueFactory[Error, (Term, Option[SourceCode])] {
+  object EntityNameTaken extends LocaleAwareIssueFactory[Error, (Term, Option[SourceCode])] {
     private val code = "E0032"
 
     protected def en_US(source: SourceCode, args: (Term, Option[SourceCode])): Error = {
@@ -757,61 +743,25 @@ object Issues {
     }
   }
 
-  /**
-    * Generates an issue for a duplicate method definition (same name).
-    * Args: optionally definition site of the original method
-    */
-  object DuplicateMethodDefinition extends LocaleAwareIssueFactory[Error, Option[SourceCode]] {
-    private val code = "E0033"
-
-    protected def en_US(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "defined here"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "there is already a method with the same name for this type", notes)
-    }
-
-    protected def be_BY(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "акрэсьлены тут"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "для гэтага тыпу ужо акрэсьлены метад з такім самым імем", notes)
-    }
-
-    protected def ru_RU(source: SourceCode, originalOption: Option[SourceCode]): Error = {
-      val notes = originalOption match {
-        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "определённый здесь"))
-        case None => Seq.empty
-      }
-
-      Error(code, source, "для этого типа уже определён метод с таким же именем", notes)
-    }
-  }
+  // E0033 isn't used any longer
 
   /**
-    * Generates an issue for an unexpected symbol reference used as a type.
-    * Args: term describing the symbol type
+    * Generates an issue for a non-type expression where type expression was expected.
+    * Args: expression type
     */
-  object InvalidReferenceAsType extends LocaleAwareIssueFactory[Error, Term] {
+  object ExpressionIsNotAType extends LocaleAwareIssueFactory[Error, String] {
     private val code = "E0034"
 
-    protected def en_US(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.en_US
-      Error(code, source, s"${symbol.indefinite} cannot be a type", notes = Seq.empty)
+    protected def en_US(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"an expression of type '$exprType' cannot be used a type", notes = Seq.empty)
     }
 
-    protected def be_BY(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.be_BY
-      Error(code, source, s"${symbol.nominative} ня можа быць тыпам", notes = Seq.empty)
+    protected def be_BY(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"выражэньне тыпу '$exprType' ня можа быць тыпам", notes = Seq.empty)
     }
 
-    protected def ru_RU(source: SourceCode, symbolDescription: Term): Error = {
-      val symbol = symbolDescription.ru_RU
-      Error(code, source, s"${symbol.nominative} не может быть типом", notes = Seq.empty)
+    protected def ru_RU(source: SourceCode, exprType: String): Error = {
+      Error(code, source, s"выражение типа '$exprType' не может быть типом", notes = Seq.empty)
     }
   }
 
@@ -895,6 +845,283 @@ object Issues {
     protected def ru_RU(source: SourceCode, variableType: String): Error = {
       Error(code, source, s"невозможно создать переменную типа '$variableType' без явного инициализатора: для типа не " +
         s"определён конструктор по умолчанию", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a member access with unknown member name.
+    * Args: instance type
+    */
+  object UnknownObjectMember extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0038"
+
+    protected def en_US(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"an object of type '$objectType' has no members with this name", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"аб'ект тыпу '$objectType' ня мае членаў з гэтым імем", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, objectType: String): Error = {
+      Error(code, source, s"объект типа '$objectType' не содержит членов с этим именем", notes = Seq.empty)
+    }
+  }
+
+  object NativeMethodWithBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0039"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a 'native' method cannot be defined with a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-метад ня можа быць акрэсьлены з целам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-метод не может быть определён с телом", notes = Seq.empty)
+    }
+  }
+
+  object MethodDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0040"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a method cannot be defined without a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "метад ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "метод не может быть определён без тела", notes = Seq.empty)
+    }
+  }
+
+  object ThisReferenceOutsideMethod extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0041"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'this' cannot be used outside of methods", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга ужываць 'this' па-за метадамі", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя использовать 'this' вне методов", notes = Seq.empty)
+    }
+  }
+
+  object ReferenceMarkerInFunctionDefinition extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0042"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "reference marker '&' can only appear in method definitions", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "спасылкавы маркер '&' можа з'яўляцца толькі ў акрэсьленьнях метадаў", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "ссылочный маркер '&' может появляться только в определениях методов", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a duplicate method definition (same name and parameter types)
+    * Args: optionally definition site of the original method
+    */
+  object DuplicateMethodDefinition extends LocaleAwareIssueFactory[Error, Option[SourceCode]] {
+    private val code = "E0043"
+
+    protected def en_US(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "defined here"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "there is already a method with the same name and parameter types in this type",
+        notes)
+    }
+
+    protected def be_BY(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "акрэсьлены тут"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для гэтага тыпу ужо акрэсьлены метад з такімі самымі імем і тыпамі параметраў", notes)
+    }
+
+    protected def ru_RU(source: SourceCode, originalOption: Option[SourceCode]): Error = {
+      val notes = originalOption match {
+        case Some(originalDefinition) => Seq(Note(Some(originalDefinition), "определён здесь"))
+        case None => Seq.empty
+      }
+
+      Error(code, source, "для этого типа уже определён метод с такими же именем и типами параметров", notes)
+    }
+  }
+
+  /**
+    * Generates an issue for a reference method access from a non-reference object.
+    * Args: (method name, type name)
+    */
+  object ReferenceMethodAccessFromNonReference extends LocaleAwareIssueFactory[Error, (String, String)] {
+    private val code = "E0044"
+
+    protected def en_US(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"method '$methodName' is only defined for reference type '$typeName&', it can't be used " +
+        s"with an object of type '$typeName'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"метад '$methodName' акрэсьлены толькі для спасылкавага тыпу '$typeName&', нельга ужываць " +
+        s"яго з аб'ектам тыпу '$typeName'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
+      val (methodName, typeName) = args
+      Error(code, source, s"метад '$methodName' определён только для ссылочного типа '$typeName&', нельзя использовать " +
+        s"его с объектом типа '$typeName'", notes = Seq.empty)
+    }
+  }
+
+  object NativeConstructorWithBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0045"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a 'native' constructor cannot be defined with a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-канструктар ня можа быць акрэсьлены з целам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "'native'-конструктор не может быть определён с телом", notes = Seq.empty)
+    }
+  }
+
+  object ConstructorDefinitionWithoutBody extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0046"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "a constructor cannot be defined without a body", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "канструктар ня можа быць акрэсьлены бяз цела", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "конструктор не может быть определён без тела", notes = Seq.empty)
+    }
+  }
+
+  object ReturnFromConstructor extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0047"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "cannot return from a constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга ужываць 'return' у канструктарах", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя использовать 'return' в конструкторах", notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a field initializer of different type than the field itself.
+    * Args: (initializer type, field type)
+    */
+  object IncompatibleFieldInitializer extends LocaleAwareIssueFactory[Error, (String, String)] {
+    private val code = "E0048"
+
+    protected def en_US(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"initializer of type '$initializerType' is incompatible with " +
+        s"a field of type '$fieldType'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"ініцыялізатар тыпу '$initializerType' нясумяшчальны с полем тыпу '$fieldType'",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
+      val (initializerType, fieldType) = args
+      Error(code, source, s"инициализатор типа '$initializerType' несовместим с полем типа '$fieldType'",
+        notes = Seq.empty)
+    }
+  }
+
+  /**
+    * Generates an issue for a field definition of non-plain type without initializer
+    * Args: field type
+    */
+  object NonPlainFieldWithoutInitializer extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0049"
+
+    protected def en_US(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"cannot create a field of type '$fieldType' without explicit initializer: the type has " +
+        "no default constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"немагчыма стварыць поле тыпу '$fieldType' бяз яўнага ініцыялізатара: для тыпу няма " +
+        s" змоўчнага канструктара",
+        notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, fieldType: String): Error = {
+      Error(code, source, s"невозможно создать поле типа '$fieldType' без явного инициализатора: для типа не " +
+        s"определён конструктор по умолчанию", notes = Seq.empty)
+    }
+  }
+
+  object CopyConstructorDefinition extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0050"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "cannot define a custom copy constructor", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельга акрэсьліваць уласныя канструктары капіраваньня", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "нельзя определять собственные копирующие конструкторы", notes = Seq.empty)
+    }
+  }
+
+  // Args: type name
+  object UnknownStaticMemberName extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0051"
+
+    protected def en_US(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"type '$typeName' has no static members with this name", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"тып '$typeName' ня мае статычных членаў з гэтым імем", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"тип '$typeName' не содержит статических членов с этим именем", notes = Seq.empty)
     }
   }
 }

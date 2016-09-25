@@ -81,6 +81,34 @@ object ParserImpl {
   }
 
   /**
+    * A special strategy that can be used to assert that the stream doesn't begin with a line break (no Whitespace
+    * token with hasLineBreaks flag set precedes the next non-whitespace token).
+    * When applied to a stream that doesn't begin with a line break, will return Malformed(Seq.empty, passedStream).
+    * When applied to a stream that does begin with a line break, won't match.
+    */
+  val lineContinuationStrategy = new Strategy[Nothing] {
+    def apply(stream: TokenStream): Result[TokenStream, Nothing] = {
+
+      def streamHasTokenOnCurrentLine(currentStream: TokenStream): Boolean = {
+        if (currentStream.nonEmpty) {
+          val (token, streamAfterToken) = currentStream.read
+          token match {
+            case Whitespace(false, _) => streamHasTokenOnCurrentLine(streamAfterToken)
+            case Whitespace(true, _) => false
+            case _ => true
+          }
+        } else true
+      }
+
+      if (streamHasTokenOnCurrentLine(stream)) {
+        Malformed(Seq.empty, stream)
+      } else {
+        NoMatch()
+      }
+    }
+  }
+
+  /**
     * A generic method for parsing sequences of nodes of the same type, possibly separated by a mandatory separator.
     * @param stream source token stream
     * @param elementStrategy strategy for parsing a single element of the sequence
@@ -342,10 +370,14 @@ object ParserImpl {
     */
   def parseGroup() = new GroupParseBuilder(Vector.empty)
 
-  private case class GroupElement(strategy: Strategy[Node],
-                                  description: Option[Term],
-                                  stopIfAbsent: Boolean = false,
-                                  optional: Boolean = false)
+  private sealed trait GroupElement
+
+  private case class NodeGroupElement(strategy: Strategy[Node],
+                                      description: Option[Term],
+                                      stopIfAbsent: Boolean = false,
+                                      optional: Boolean = false) extends GroupElement
+
+  private case object LineContinuationGroupElement extends GroupElement
 
   class GroupParseBuilder private[ParserImpl] (elements: Vector[GroupElement]) {
 
@@ -357,7 +389,7 @@ object ParserImpl {
       */
     def element(strategy: Strategy[Node],
                 description: Term) = {
-      new GroupParseBuilder(elements :+ GroupElement(strategy, Some(description)))
+      new GroupParseBuilder(elements :+ NodeGroupElement(strategy, Some(description)))
     }
 
     /**
@@ -367,7 +399,7 @@ object ParserImpl {
       * @return a GroupParseBuilder object
       */
     def definingElement(strategy: Strategy[Node]) = {
-      new GroupParseBuilder(elements :+ GroupElement(strategy, None, stopIfAbsent = true))
+      new GroupParseBuilder(elements :+ NodeGroupElement(strategy, None, stopIfAbsent = true))
     }
 
     /**
@@ -377,7 +409,16 @@ object ParserImpl {
       * @return a GroupParseBuilder object
       */
     def optionalElement(strategy: Strategy[Node]) = {
-      new GroupParseBuilder(elements :+ GroupElement(strategy, None, optional = true))
+      new GroupParseBuilder(elements :+ NodeGroupElement(strategy, None, optional = true))
+    }
+
+    /**
+      * Does not add a node to the parse result, instead forces the next node to be on the same line as
+      * the previous one.
+      * @return a GroupParseBuilder object
+      */
+    def lineContinuation() = {
+      new GroupParseBuilder(elements :+ LineContinuationGroupElement)
     }
 
     /**
@@ -392,7 +433,7 @@ object ParserImpl {
                collectedNodes: Vector[NodeOption[_]] = Vector.empty,
                collectedIssues: Vector[Issue] = Vector.empty): (Vector[NodeOption[_]], Vector[Issue], TokenStream) = {
         elements match {
-          case element +: tail =>
+          case (element: NodeGroupElement) +: tail =>
             element.strategy(stream) match {
               case Success(elementNode, elementIssues, streamAfterElement) =>
                 doIt(tail, streamAfterElement, collectedNodes :+ Present(elementNode), collectedIssues ++ elementIssues)
@@ -408,9 +449,30 @@ object ParserImpl {
                   doIt(tail, stream, collectedNodes :+ Absent(), collectedIssues :+ issue)
                 }
               case _ =>
-                val nones = Vector.fill(elements.size)(Absent())
+                val nodeElementsLeft = (tail map {
+                  case NodeGroupElement(_, _, _, _) => 1
+                  case LineContinuationGroupElement => 0
+                }).sum + 1
+
+                val nones = Vector.fill(nodeElementsLeft)(Absent())
                 (collectedNodes ++ nones, collectedIssues, stream)
             }
+
+          case LineContinuationGroupElement +: tail =>
+            lineContinuationStrategy(stream) match {
+              case Malformed(_, _) =>
+                doIt(tail, stream, collectedNodes, collectedIssues)
+
+              case _ =>
+                val nodeElementsLeft = (tail map {
+                  case NodeGroupElement(_, _, _, _) => 1
+                  case LineContinuationGroupElement => 0
+                }).sum
+
+                val nones = Vector.fill(nodeElementsLeft)(Absent())
+                (collectedNodes ++ nones, collectedIssues, stream)
+            }
+
           case _ =>
             (collectedNodes, collectedIssues, stream)
         }

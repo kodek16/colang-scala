@@ -42,16 +42,28 @@ class AnalyzerImpl extends Analyzer {
     val rootNamespace = new RootNamespace()
 
     val (types, typesIssues) = routines.registerTypes(rootNamespace, typeDefs)
-    val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)
-    val emptyTypeIssues = routines.checkTypesWithoutBody(types)
-    val (methods, methodsIssues) = routines.registerMethods(types)
-    val (variables, globalVarInitStatements, varIssues) = routines.registerGlobalVariables(rootNamespace, varDefs)
-    val funcBodiesIssues = routines.analyzeFunctionBodies(functions)
-    val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements, eof)
-    val returnIssues = routines.checkReturnStatements(functions)
 
-    val issues = typesIssues ++ functionsIssues ++ emptyTypeIssues ++ methodsIssues ++ varIssues ++
-      funcBodiesIssues ++ mainFuncIssues ++ returnIssues
+    val (functions, functionsIssues) = routines.registerFunctions(rootNamespace, funcDefs)
+    val (staticFunctions, staticFunctionsIssues) = routines.registerStaticFunctions(types)
+    val (methods, methodsIssues) = routines.registerMethods(types)
+    val (constructors, constructorsIssues) = routines.registerConstructors(types)
+
+    val (variables, globalVarInitStatements, varIssues) = routines.registerGlobalVariables(rootNamespace, varDefs)
+    val (staticVariables, staticVarInitStatements, staticVarIssues) = routines.registerStaticVariables(types)
+    val (fields, fieldsInitStatements, fieldsIssues) = routines.registerFields(types)
+
+    val funcBodiesIssues = routines.analyzeFunctionBodies(functions ++ staticFunctions)
+    val methBodiesIssues = routines.analyzeMethodBodies(methods)
+    val constructorBodiesIssues = routines.analyzeConstructorBodies(constructors)
+    routines.injectFieldInitialization(fieldsInitStatements)
+
+    val mainFuncIssues = routines.processMainFunction(rootNamespace, globalVarInitStatements ++ staticVarInitStatements, eof)
+
+    val returnIssues = routines.checkReturnStatements(functions ++ staticFunctions, methods)
+
+    val issues = typesIssues ++ functionsIssues ++ staticFunctionsIssues ++ methodsIssues ++ constructorsIssues ++
+      varIssues ++ staticVarIssues ++ fieldsIssues ++ funcBodiesIssues ++ methBodiesIssues ++ constructorBodiesIssues ++
+      mainFuncIssues ++ returnIssues
 
     (rootNamespace, issues)
   }

@@ -6,7 +6,7 @@ import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
 import colang.issues.Terms
-import colang.tokens.{Assign, Comma, Identifier}
+import colang.tokens.{Assign, Comma, Identifier, StaticKeyword}
 import colang.{SourceCode, TokenStream}
 
 /**
@@ -76,13 +76,20 @@ object VariableDefinition {
 }
 
 /**
-  * Represents a variable(s) definition statement, which may also appear at the top-level.
+  * Represents a variable(s) definition statement, which may appear in multiple contexts. They are:
+  * 1) In the global namespace - for global variables definitions
+  * 2) In a type definition - for fields or static variables
+  * 3) In a local scope - for local variables definitions
+  * @param specifiers variable specifiers list
   * @param type_ variable(s) type
   * @param variables individual variable definitions
   */
-case class VariablesDefinition(type_ : Type, variables: Seq[VariableDefinition]) extends Statement
-                                                                                 with GlobalSymbolDefinition {
-  def source: SourceCode = type_.source + variables.last.source
+case class VariablesDefinition(specifiers: SpecifiersList,
+                               type_ : Expression,
+                               variables: Seq[VariableDefinition]) extends Statement
+                                                                   with GlobalSymbolDefinition
+                                                                   with TypeMemberDefinition {
+  def source: SourceCode = specifiers.source + variables.last.source
 }
 
 object VariablesDefinition {
@@ -108,15 +115,25 @@ object VariablesDefinition {
       }
     }
 
+    private val specifiersStrategy = new SpecifiersList.Strategy(
+      Terms.Definition of Terms.Variables,
+      classOf[StaticKeyword])
+
     def apply(stream: TokenStream): Result[TokenStream, VariablesDefinition] = {
       ParserImpl.parseGroup()
+        .optionalElement(specifiersStrategy)
         .definingElement(Type.strategy)
+        .lineContinuation()
         .element(varsStrategy, Terms.Definitions of Terms.Variables)
         .parse(stream)
-        .as[Type, VariableDefinitionSequence] match {
+        .as[SpecifiersList, Expression, VariableDefinitionSequence] match {
 
-        case (Present(type_), Present(VariableDefinitionSequence(variables)), issues, streamAfterVariables) =>
-            Success(VariablesDefinition(type_, variables), issues, streamAfterVariables)
+        case (Present(specifiers), Present(type_), Present(VariableDefinitionSequence(variables)),
+              issues, streamAfterVariables) =>
+
+            val node = VariablesDefinition(specifiers, type_, variables)
+            Success(node, issues, streamAfterVariables)
+
         case _ => NoMatch()
       }
     }

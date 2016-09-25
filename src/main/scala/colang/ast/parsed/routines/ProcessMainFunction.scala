@@ -8,20 +8,20 @@ import colang.issues.{Issue, Issues}
 private[routines] object ProcessMainFunction {
 
   /**
-    * Checks that 'main' function is valid and injects global variable initializers there.
+    * Checks that 'main' function is valid and injects global and static variable initialization there.
     * @param rootNamespace root namespace
-    * @param globalVarInitStatements global variable initializers
+    * @param varInitStatements global and static variables initialization statements
     * @param eof source code fragment pointing to the end of source CO file
     * @return encountered issues
     */
   def processMainFunction(rootNamespace: RootNamespace,
-                          globalVarInitStatements: Seq[Statement],
+                          varInitStatements: Seq[Statement],
                           eof: SourceCode): Seq[Issue] = {
 
     def processExistingMainFunction(main: Function): Seq[Issue] = {
       if (main.returnType == rootNamespace.voidType && main.parameters.isEmpty) {
-        //Inject global variable initializers here
-        main.body.statements.prepend(globalVarInitStatements :_*)
+        //Inject global variable initialization here
+        main.body.statements.prepend(varInitStatements :_*)
         Seq.empty
       } else if (main.definitionSite.isDefined) {
         Seq(Issues.InvalidMainFunctionSignature(main.definitionSite.get, ()))

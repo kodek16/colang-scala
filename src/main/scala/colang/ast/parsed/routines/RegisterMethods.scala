@@ -3,7 +3,7 @@ package colang.ast.parsed.routines
 import colang.ast.parsed._
 import colang.ast.raw
 import colang.issues.{Issue, Terms}
-import colang.tokens.NativeKeyword
+import colang.tokens.{NativeKeyword, StaticKeyword}
 
 private[routines] object RegisterMethods {
 
@@ -12,10 +12,15 @@ private[routines] object RegisterMethods {
     * @param types types to check
     * @return (new methods, encountered issues)
     */
-  def registerMethods(types: Seq[Type]): (Seq[Method], Seq[Issue]) = {
+  def registerMethods(types: Seq[NonReferenceType]): (Seq[Method], Seq[Issue]) = {
     val result = types map { type_ =>
       type_.definition match {
-        case Some(raw.TypeDefinition(_, _, _, Some(raw.TypeBody(_, methodDefs, _)))) =>
+        case Some(raw.TypeDefinition(_, _, _, raw.TypeBody(_, memberDefs, _))) =>
+          val methodDefs = memberDefs flatMap {
+            case f: raw.FunctionDefinition if !f.specifiers.has(classOf[StaticKeyword]) => Some(f)
+            case _ => None
+          }
+
           val methodResult = methodDefs map { registerMethod(type_, _) }
           val methods = methodResult map { _._1 }
           val methodsIssues = methodResult flatMap { _._2 }
@@ -30,14 +35,25 @@ private[routines] object RegisterMethods {
     (methods, issues)
   }
 
-  private def registerMethod(type_ : Type, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
-    val (returnType, returnTypeIssues) = Type.resolve(type_, methodDef.returnType)
+  private def registerMethod(type_ : NonReferenceType, methodDef: raw.FunctionDefinition): (Method, Seq[Issue]) = {
+    val (returnType, returnTypeIssues) = Type.resolve(methodDef.returnType)(type_)
 
-    val localContext = LocalContext(applicableKind = Terms.Method, expectedReturnType = returnType)
+    val containerType = if (methodDef.referenceMarker.isDefined) {
+      type_.reference
+    } else {
+      type_
+    }
+
+    val localContext = LocalContext(
+      applicableKind = Terms.Method,
+      expectedReturnType = Some(returnType),
+      contextualObjectType = Some(containerType))
+
+    // Note that the method scope for method of type 'T&' has the type scope of 'T' as its parent.
     val methodBody = new CodeBlock(new LocalScope(Some(type_)), localContext, methodDef.body)
 
     val paramsResult = methodDef.parameterList.params map { rawParam =>
-      val (paramType, paramTypeIssues) = Type.resolve(type_, rawParam.type_)
+      val (paramType, paramTypeIssues) = Type.resolve(rawParam.type_)(type_)
       val param = Variable(
         name = rawParam.name.value,
         scope = Some(methodBody.innerScope),
@@ -52,14 +68,14 @@ private[routines] object RegisterMethods {
 
     val method = new Method(
       name = methodDef.name.value,
-      container = type_,
+      container = containerType,
       returnType = returnType,
       parameters = params,
       body = methodBody,
       definition = Some(methodDef),
       native = methodDef.specifiers.has(classOf[NativeKeyword]))
 
-    val methodIssues = type_.tryAddMethod(method)
+    val methodIssues = containerType.tryAddObjectMember(method)
     (method, returnTypeIssues ++ paramIssues ++ methodIssues)
   }
 }

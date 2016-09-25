@@ -1,0 +1,8 @@
+int func() {
+    return      //E0022
+    4           //E0023
+}
+
+void main() {
+    func()
+}

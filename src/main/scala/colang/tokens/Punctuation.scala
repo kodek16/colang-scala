@@ -44,6 +44,14 @@ object Comma {
 }
 
 /**
+  * '.' token
+  */
+case class Dot(source: SourceCode) extends Token
+object Dot {
+  val strategy = new StatelessTokenStrategy(Dot.apply, """\.(?!\.)""".r)
+}
+
+/**
   * ';' token
   */
 case class Semicolon(source: SourceCode) extends Token

@@ -31,8 +31,8 @@ object MethodCall {
                    arguments: Seq[Expression],
                    rawNode: Option[raw.Node]): Option[MethodCall] = {
 
-    instance.type_ resolveMethod methodName match {
-      case Some(m) if m.canBeAppliedTo(arguments map { _.type_ }) =>
+    instance.type_ resolveObjectMember methodName match {
+      case Some(m: Method) if m.canBeAppliedTo(arguments map { _.type_ }) =>
         val operatorArgs = Type.performImplicitConversions(arguments, m.parameters map { _.type_ })
         Some(MethodCall(m, instance, operatorArgs, rawNode))
 
