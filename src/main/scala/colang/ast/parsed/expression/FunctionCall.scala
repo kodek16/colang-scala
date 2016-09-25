@@ -18,8 +18,8 @@ case class FunctionCall(function: Function,
 
 object FunctionCall {
 
-  // Note that method calls are also represented by raw.FunctionCall objects.
-  // This function correctly handles them, creating appropriate MethodCall expressions.
+  // Note that method and constructor calls are also represented by raw.FunctionCall objects.
+  // This function correctly handles them, creating appropriate MethodCall and ConstructorCall expressions.
   def analyze(rawExpr: raw.FunctionCall)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
     val function = rawExpr.function
     val args = rawExpr.arguments.args
@@ -31,6 +31,8 @@ object FunctionCall {
     val argsIssues = argsResult flatMap { _._2 }
 
     parsedFunction match {
+
+      // Function calls:
       case OverloadedFunctionReference(of, _) =>
         val (overloadOption, overloadingIssues) = of.resolveOverload(parsedArgs map { _.type_ }, Some(rawExpr.source))
         val result = overloadOption match {
@@ -51,6 +53,7 @@ object FunctionCall {
         val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Function, argTypeNames))
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
 
+      // Method calls:
       case OverloadedMethodAccess(instance, om, _) =>
         val (overloadOption, overloadingIssues) = om.resolveOverload(parsedArgs map { _.type_ }, Some(rawExpr.source))
         val result = overloadOption match {
@@ -70,6 +73,18 @@ object FunctionCall {
         val argTypeNames = parsedArgs map { _.type_.qualifiedName }
         val issue = Issues.InvalidCallArguments(rawExpr.source, (Terms.Method, argTypeNames))
         (InvalidExpression(), functionIssues ++ argsIssues :+ issue)
+
+      // Constructor calls:
+      case TypeReference(type_, _) =>
+        val (constructorOption, overloadingIssues) = type_.resolveConstructor(parsedArgs map { _.type_ }, Some(rawExpr.source))
+        val result = constructorOption match {
+          case Some(constructor) =>
+            val constructorArgs = Type.performImplicitConversions(parsedArgs, constructor.parameters map { _.type_ })
+            ConstructorCall(constructor, constructorArgs, Some(rawExpr))
+
+          case None => InvalidExpression()
+        }
+        (result, functionIssues ++ argsIssues ++ overloadingIssues)
 
       case _ =>
         val issue = Issues.ExpressionIsNotCallable(function.source, ())

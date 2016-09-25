@@ -15,7 +15,7 @@ class Constructor(val type_ : Type,
                   val definition: Option[raw.ConstructorDefinition],
                   val native: Boolean = false) extends Applicable {
 
-  val definitionSite = definition map { _.source }
+  val definitionSite = definition map { _.prototypeSource }
 
   /**
     * Checks if the constructor is a copy constructor
