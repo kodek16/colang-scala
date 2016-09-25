@@ -123,6 +123,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     val mainFunction = rootNamespace.resolve("main") match {
       case Some(f: Function) => f
       case Some(of: OverloadedFunction) => of.resolveOverload(Seq.empty, None)._1.get
+      case _ => throw new RuntimeException("main function hasn't been validated")
     }
 
     processFunction(mainFunction)
