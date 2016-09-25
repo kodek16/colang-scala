@@ -18,7 +18,7 @@ import colang.{SourceCode, StrategyUnion, TokenStream}
 case class TypeDefinition(specifiers: SpecifiersList,
                           keyword: Keyword,
                           name: Identifier,
-                          body: TypeBody) extends GlobalSymbolDefinition {
+                          body: TypeBody) extends GlobalSymbolDefinition with TypeMemberDefinition {
 
   def source: SourceCode = specifiers.source + body.source
   def headSource: SourceCode = specifiers.source + name.source
@@ -27,7 +27,7 @@ case class TypeDefinition(specifiers: SpecifiersList,
 }
 
 object TypeDefinition {
-  val strategy = new ParserImpl.Strategy[TypeDefinition] {
+  val strategy: ParserImpl.Strategy[TypeDefinition] = new ParserImpl.Strategy[TypeDefinition] {
 
     private val specifiersStrategy = new SpecifiersList.Strategy(
       Terms.Definition of Terms.Type,
@@ -68,7 +68,8 @@ case class TypeBody(leftBrace: LeftBrace, members: Seq[TypeMemberDefinition], ri
 object TypeBody {
   val strategy = new ParserImpl.Strategy[TypeBody] {
 
-    private val typeMemberStrategy = StrategyUnion(
+    private val typeMemberStrategy: Strategy[TypeMemberDefinition] = StrategyUnion(
+      TypeDefinition.strategy,
       ConstructorDefinition.strategy,
       FunctionDefinition.strategy,
       VariablesDefinition.strategy)
