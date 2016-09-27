@@ -41,6 +41,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
     """#define _and(a, b) ((a) && (b))""",
     """#define _or(a, b) ((a) || (b))""",
     """#define _assign(a, b) (*(a) = (b))""",
+    """#define _toDbl(a) (double)(a)""",
     """#define _readInt(a) scanf("%d", a)""",
     """#define _readDbl(a) scanf("%lf", a)""",
     """#define _writeIntLn(a) printf("%d\n", a)""",
@@ -303,6 +304,7 @@ class CCodeGenerator(inFile: File, outFile: File, nameGenerator: CNameGenerator)
   }
 
   private val nativeFunctionNames = Map(
+    "double double.from(int)" -> "_toDbl",
     "void read(int&)" -> "_readInt",
     "void read(double&)" -> "_readDbl",
     "void println(int)" -> "_writeIntLn",

@@ -35,6 +35,8 @@ native struct double {
 
     native bool equals(double other)
     native bool notEquals(double other)
+
+    static native double from(int other)
 }
 
 native struct bool {
