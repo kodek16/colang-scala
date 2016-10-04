@@ -29,6 +29,7 @@ object Operator {
       case TypeReference(targetType, _) =>
         if (expr.type_ isImplicitlyConvertibleTo targetType) {
           (Type.performImplicitConversion(expr, targetType), exprIssues ++ targetTypeIssues)
+
         } else {
           val conversionFunctionOption = targetType.resolve("from") match {
             case Some(of: OverloadedFunction) => of.resolveOverload(Seq(expr.type_), None)._1
@@ -37,9 +38,14 @@ object Operator {
           }
 
           conversionFunctionOption match {
-            case Some(conversionFunction) =>
+            case Some(conversionFunction) if conversionFunction.returnType == targetType =>
               val convertedExpr = Type.performImplicitConversion(expr, conversionFunction.parameters.head.type_)
               (FunctionCall(conversionFunction, Seq(convertedExpr), Some(rawCastExpr)), exprIssues ++ targetTypeIssues)
+
+            case Some(conversionFunction) =>
+              val issue = Issues.InvalidConversionFunctionReturnType(rawCastExpr.source, targetType.qualifiedName)
+              (InvalidExpression(), exprIssues ++ targetTypeIssues :+ issue)
+
             case None =>
               val issue = Issues.NoTypeConversionFunction(rawCastExpr.source,
                 (expr.type_.qualifiedName, targetType.qualifiedName))
