@@ -11,7 +11,7 @@ import colang.issues.{Issue, Issues, Terms}
   */
 case class FunctionCall(function: Function,
                         arguments: Seq[Expression],
-                        rawNode: Option[raw.FunctionCall]) extends Expression {
+                        rawNode: Option[raw.Expression]) extends Expression {
 
   val type_ = function.returnType
 }

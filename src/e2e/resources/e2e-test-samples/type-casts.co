@@ -1,0 +1,4 @@
+void main() {
+    int x = 5
+    assert(x as double == 5.0)
+}

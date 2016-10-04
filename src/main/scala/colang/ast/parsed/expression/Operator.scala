@@ -1,6 +1,6 @@
 package colang.ast.parsed.expression
 
-import colang.ast.parsed.{LocalContext, Scope}
+import colang.ast.parsed._
 import colang.ast.raw.{expression => raw}
 import colang.issues.{Issue, Issues}
 import colang.tokens
@@ -11,6 +11,51 @@ import colang.tokens
 object Operator {
 
   def analyze(rawExpr: raw.InfixOperator)(implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
+    rawExpr.operator match {
+      case _: tokens.AsKeyword => analyzeCast(rawExpr)
+      case _ => analyzeOverloadableOperator(rawExpr)
+    }
+  }
+
+  private def analyzeCast(rawCastExpr: raw.InfixOperator)
+                         (implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
+
+    val (rawExpr, rawTargetTypeExpr) = (rawCastExpr.lhs, rawCastExpr.rhs)
+
+    val (expr, exprIssues) = Expression.analyze(rawExpr)
+    val (targetTypeExpr, targetTypeIssues) = Expression.analyze(rawTargetTypeExpr)
+
+    targetTypeExpr match {
+      case TypeReference(targetType, _) =>
+        if (expr.type_ isImplicitlyConvertibleTo targetType) {
+          (Type.performImplicitConversion(expr, targetType), exprIssues ++ targetTypeIssues)
+        } else {
+          val conversionFunctionOption = targetType.resolve("from") match {
+            case Some(of: OverloadedFunction) => of.resolveOverload(Seq(expr.type_), None)._1
+            case Some(f: Function) if f canBeAppliedTo Seq(expr.type_) => Some(f)
+            case _ => None
+          }
+
+          conversionFunctionOption match {
+            case Some(conversionFunction) =>
+              val convertedExpr = Type.performImplicitConversion(expr, conversionFunction.parameters.head.type_)
+              (FunctionCall(conversionFunction, Seq(convertedExpr), Some(rawCastExpr)), exprIssues ++ targetTypeIssues)
+            case None =>
+              val issue = Issues.NoTypeConversionFunction(rawCastExpr.source,
+                (expr.type_.qualifiedName, targetType.qualifiedName))
+              (InvalidExpression(), exprIssues ++ targetTypeIssues :+ issue)
+          }
+        }
+
+      case _ =>
+        val issue = Issues.NonTypeExpressionAsCastTarget(rawTargetTypeExpr.source, ())
+        (InvalidExpression(), exprIssues ++ targetTypeIssues :+ issue)
+    }
+  }
+
+  private def analyzeOverloadableOperator(rawExpr: raw.InfixOperator)
+                                         (implicit scope: Scope, localContext: LocalContext): (Expression, Seq[Issue]) = {
+
     val (rawLhs, operator, rawRhs) = (rawExpr.lhs, rawExpr.operator, rawExpr.rhs)
 
     val methodName = operator match {
