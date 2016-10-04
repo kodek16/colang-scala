@@ -45,10 +45,26 @@ object Expression {
     * Secondary expressions are postfix operator expressions.
     */
   val secondaryStrategy = new ParserImpl.Strategy[Expression] {
-    private val postfixOperatorStrategy = StrategyUnion(
-      FunctionCall.strategy,
-      MemberAccess.strategy,
-      TypeReferencing.strategy)
+
+    private val postfixOperatorStrategy = new ParserImpl.Strategy[PostfixOperator] {
+      def apply(stream: TokenStream): Result[TokenStream, PostfixOperator] = {
+        ParserImpl.parseGroup()
+          .lineContinuation()
+          .definingElement(StrategyUnion(
+            // Add new postfix operator strategies here:
+            FunctionCall.strategy,
+            MemberAccess.strategy,
+            TypeReferencing.strategy))
+
+          .parse(stream)
+          .as[PostfixOperator] match {
+
+          case (Present(postfixOperator), issues, streamAfterOperator) =>
+            Success(postfixOperator, issues, streamAfterOperator)
+          case _ => NoMatch()
+        }
+      }
+    }
 
     private case class PostfixOperatorSequence(operators: ::[PostfixOperator]) extends Node {
       def source: SourceCode = operators.head.source + operators.last.source

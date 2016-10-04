@@ -77,3 +77,5 @@ case class StaticKeyword(source: SourceCode) extends Keyword {
 object StaticKeyword {
   val strategy = new StatelessTokenStrategy(StaticKeyword.apply, """\bstatic\b""".r)
 }
+
+// AsKeyword is defined in Operators.scala

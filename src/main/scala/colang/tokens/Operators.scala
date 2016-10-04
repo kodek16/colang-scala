@@ -51,6 +51,26 @@ object Associativity extends Enumeration {
   val LEFT, RIGHT = Value
 }
 
+case class AsKeyword(source: SourceCode) extends InfixOperator with Keyword {
+  val precedence = 90
+  val associativity = Associativity.LEFT
+  val name = "as"
+
+  val text = name
+}
+object AsKeyword {
+  val strategy = new StatelessTokenStrategy(AsKeyword.apply, """\bas\b""".r)
+}
+
+case class Pow(source: SourceCode) extends InfixOperator {
+  val precedence = 80
+  val associativity = Associativity.RIGHT
+  val name = "**"
+}
+object Pow {
+  val strategy = new StatelessTokenStrategy(Pow.apply, """\*\*(?!\*)""".r)
+}
+
 case class Multiply(source: SourceCode) extends InfixOperator {
   val precedence = 70
   val associativity = Associativity.LEFT
@@ -76,15 +96,6 @@ case class Mod(source: SourceCode) extends InfixOperator {
 }
 object Mod {
   val strategy = new StatelessTokenStrategy(Mod.apply, """%(?!%)""".r)
-}
-
-case class Pow(source: SourceCode) extends InfixOperator {
-  val precedence = 80
-  val associativity = Associativity.RIGHT
-  val name = "**"
-}
-object Pow {
-  val strategy = new StatelessTokenStrategy(Pow.apply, """\*\*(?!\*)""".r)
 }
 
 case class Plus(source: SourceCode) extends InfixOperator {

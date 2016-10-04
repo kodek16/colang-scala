@@ -26,10 +26,11 @@ object InfixOperator {
   val strategy: ParserImpl.Strategy[Expression] = new RHSStrategy
 
   private val operatorStrategy = StrategyUnion(
+    SingleTokenStrategy(classOf[AsKeyword]),
+    SingleTokenStrategy(classOf[Pow]),
     SingleTokenStrategy(classOf[Multiply]),
     SingleTokenStrategy(classOf[Divide]),
     SingleTokenStrategy(classOf[Mod]),
-    SingleTokenStrategy(classOf[Pow]),
     SingleTokenStrategy(classOf[Plus]),
     SingleTokenStrategy(classOf[Minus]),
     SingleTokenStrategy(classOf[Less]),

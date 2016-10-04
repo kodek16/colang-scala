@@ -1124,4 +1124,60 @@ object Issues {
       Error(code, source, s"тип '$typeName' не содержит статических членов с этим именем", notes = Seq.empty)
     }
   }
+
+  object NonTypeExpressionAsCastTarget extends LocaleAwareIssueFactory[Error, Unit] {
+    private val code = "E0052"
+
+    protected def en_US(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "the right hand operand of a type cast expression must be a type", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "правы аперанд у прывядзеньні тыпаў павінен быць тыпам", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: Unit): Error = {
+      Error(code, source, "правый операнд в приведении типов должен быть типом", notes = Seq.empty)
+    }
+  }
+
+  // Args: (type from, type to)
+  object NoTypeConversionFunction extends LocaleAwareIssueFactory[Error, (String, String)] {
+    private val code = "E0053"
+
+    protected def en_US(source: SourceCode, args: (String, String)): Error = {
+      val (fromType, toType) = args
+      Error(code, source, s"cannot convert a value of type '$fromType' to type '$toType'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, args: (String, String)): Error = {
+      val (fromType, toType) = args
+      Error(code, source, s"немагчыма прывесьці значэньне тыпу '$fromType' да тыпу '$toType'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, args: (String, String)): Error = {
+      val (fromType, toType) = args
+      Error(code, source, s"невозможно привести значение типа '$fromType' к типу '$toType'", notes = Seq.empty)
+    }
+  }
+
+  // Args: expected return type
+  object InvalidConversionFunctionReturnType extends LocaleAwareIssueFactory[Error, String] {
+    private val code = "E0054"
+
+    protected def en_US(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"the function can't be used for conversion because it doesn't return " +
+        s"a value of type '$typeName'", notes = Seq.empty)
+    }
+
+    protected def be_BY(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"немагчыма ужыць гэту функцыю для прывядзеньня тыпаў, таму что яна не вяртае " +
+        s"значэньня тыпу '$typeName'", notes = Seq.empty)
+    }
+
+    protected def ru_RU(source: SourceCode, typeName: String): Error = {
+      Error(code, source, s"невозможно использовать эту функцию для приведения типов, потому что она не возвращает " +
+        s"значение типа '$typeName'", notes = Seq.empty)
+    }
+  }
 }
