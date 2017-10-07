@@ -1,5 +1,5 @@
 import sbt._
 
 object Configs {
-  val EndToEndTest = config("e2e") extend(Test)
+  val EndToEndTest = config("e2e") extend Runtime
 }
