@@ -1,7 +1,6 @@
 package colang
 
 import java.io.File
-import java.util.Locale
 
 import colang.ast.parsed.{Analyzer, AnalyzerImpl}
 import colang.ast.raw._
@@ -10,51 +9,47 @@ import colang.backend.c.{CCodeGenerator, CVerboseNameGenerator}
 import colang.issues.{Error, Issue, Note, Warning}
 import colang.tokens.{Lexer, LexerImpl}
 import colang.utils.InternalErrors
+import colang.utils.Localization._
 import colang.utils.StringImplicits._
 
 /**
-  * Compiler command-line configuration representation. Command line options are parsed by scopt.
-  * @param out target C file
-  * @param source source file
-  */
-case class Config(out: Option[File] = None, source: Option[File] = None)
-
-/**
-  * The main class that ties everything together. Compiler component implementations must be passed to the constructor
-  * as dependencies.
-  * @param inFile source CO file
-  * @param outFile target C file
+  * The main compiler class that ties everything together.
+  * Component implementations must be passed as dependencies to this class.
   * @param lexer lexer implementation to use
   * @param parser parser implementation to use
-  * @param silent if true, errors are not logged
+  * @param analyzer semantic analyzer implementation to use
+  * @param backend compiler backend to use
   */
-class Compiler(inFile: File,
-               outFile: File,
-               lexer: Lexer,
+class Compiler(lexer: Lexer,
                parser: Parser,
                analyzer: Analyzer,
-               backend: Backend,
-               silent: Boolean = false) {
+               backend: Backend) {
 
   /**
-    * Compiles the source file, writing any issues to stderr. If no errors were encountered, creates and populates
-    * target C file.
+    * Compiles the source file, logging all issues to stderr.
+    * If no errors were encountered, passes the compiled file to the backend.
+    * @param coSourceFile java.io.File pointing to CO source file to compile
+    * @param silent if true, issues will not be logged
     * @return all encountered issues
     */
-  def compile(): Seq[Issue] = {
-    val sourceFile = new RealSourceFile(inFile)
-    val preludeFile = new RealSourceFile(locatePrelude)
+  def compile(coSourceFile: File, silent: Boolean = false): Seq[Issue] = {
+    val sourceFile = new RealSourceFile(coSourceFile)
+    val preludeFile = new RealSourceFile(locatePrelude())
 
     val (prelude, preludeIssues) = parseFile(preludeFile)
     val (source, sourceIssues) = parseFile(sourceFile)
 
     val translationUnit = TranslationUnit(prelude.symbols ++ source.symbols)
 
-    val (rootNamespace, analyzerIssues) = analyzer.analyze(translationUnit.symbols, sourceFile.eof)
+    val (rootNamespace, analyzerIssues) =
+      analyzer.analyze(translationUnit.symbols, sourceFile.eof)
 
     val issues = preludeIssues ++ sourceIssues ++ analyzerIssues
 
-    val sortedIssues = issues sortBy { i => (i.source.startLine, i.source.startChar, -i.source.endLine, -i.source.endChar) }
+    val sortedIssues = issues sortBy { issue =>
+      val source = issue.source
+      (source.startLine, source.startChar, -source.endLine, -source.endChar)
+    }
 
     if (!silent) {
       sortedIssues foreach printIssue
@@ -71,7 +66,7 @@ class Compiler(inFile: File,
     * Tries to locate 'prelude.co' from the standard library.
     * @return java.io.File pointing to the Prelude
     */
-  private def locatePrelude: File = {
+  private def locatePrelude(): File = {
     val homeDir = System.getProperty("user.home")
 
     val homeFile = new File(s"$homeDir/.colang-libs/prelude.co")
@@ -113,11 +108,15 @@ class Compiler(inFile: File,
     def colorError(s: String) = Console.RED + s + Console.RESET
 
     val (issueType, color, source, message, notes) = issue match {
-      case Warning(_, s, m, n) => (localizedWarning, colorWarning _, s, m, n)
-      case Error(_, s, m, n) => (localizedError, colorError _, s, m, n)
+      case Warning(_, s, m, n) => (tr("warning"), colorWarning _, s, m, n)
+      case Error(_, s, m, n) => (tr("error"), colorError _, s, m, n)
     }
 
-    val heading = s"${source.file.name}:${source.startLine + 1}:${source.startChar + 1}: ${color(issueType)}: $message"
+    val fileName = source.file.name
+    val lineNo = source.startLine + 1
+    val charNo = source.startChar + 1
+
+    val heading = s"$fileName:$lineNo:$charNo: ${color(issueType)}: $message"
     System.err.println(heading)
 
     printSourceFragment(source, color)
@@ -134,16 +133,30 @@ class Compiler(inFile: File,
 
     note.source match {
       case Some(source) =>
-        val heading = s"${source.file.name}:${source.startLine + 1}:${source.startChar + 1}: ${colorNote("note")}: ${note.message}"
+        val fileName = source.file.name
+        val lineNo = source.startLine + 1
+        val charNo = source.startChar + 1
+
+        val heading =
+          s"$fileName:$lineNo:$charNo: ${colorNote(tr("note"))}: ${note.message}"
         System.err.println(heading)
 
         printSourceFragment(source, colorNote)
       case None =>
-        System.err.println(s"${colorNote(localizedNote)}: ${note.message}")
+        System.err.println(s"${colorNote(tr("note"))}: ${note.message}")
     }
   }
 
-  private def printSourceFragment(source: SourceCode, color: String => String): Unit = {
+  /**
+    * Prints a source code fragment to stderr.
+    * All lines at least partially covered by the fragment will be printed,
+    * and the actual reported fragment will be underlined by `~` characters
+    * of a given color
+    * @param source code fragment to print
+    * @param color function that adds color to a string
+    */
+  private def printSourceFragment(source: SourceCode,
+                                  color: String => String): Unit = {
     val listing = (source.startLine to source.endLine) map { lineNo =>
       val line = source.file.lines(lineNo)
 
@@ -159,7 +172,7 @@ class Compiler(inFile: File,
         line.trimRight.length - 1
       }
 
-      //When line is non-empty
+      // If line is not empty
       if (startChar <= endChar) {
         line + "\n" + " " * startChar + color("~" * (endChar - startChar + 1))
       } else {
@@ -169,51 +182,36 @@ class Compiler(inFile: File,
 
     System.err.println(listing)
   }
-
-  private def localizedError: String = {
-    Locale.getDefault.getLanguage match {
-      case "be" => "памылка"
-      case "ru" => "ошибка"
-      case "en" | _ => "error"
-    }
-  }
-
-  private def localizedWarning: String = {
-    Locale.getDefault.getLanguage match {
-      case "be" => "папярэджаньне"
-      case "ru" => "предупреждение"
-      case "en" | _ => "warning"
-    }
-  }
-
-  private def localizedNote: String = {
-    Locale.getDefault.getLanguage match {
-      case "be" => "увага"
-      case "ru" => "примечание"
-      case "en" | _ => "note"
-    }
-  }
 }
+
+/**
+  * Compiler command-line configuration representation.
+  * Command line options are parsed by scopt.
+  * @param out target C file
+  * @param source source file
+  */
+case class Config(out: Option[File] = None, source: Option[File] = None)
 
 object Compiler {
 
   /**
     * Compiler version as specified in build.sbt project definition.
-    * BuildInfo is a generated source file under /target/scala-2.11/src_managed/main/sbt-buildinfo
+    * BuildInfo is a generated source file under
+    * /target/scala-.../src_managed/main/sbt-buildinfo
     */
-  val VERSION = BuildInfo.version
+  val VERSION: String = BuildInfo.version
 
   def main(args: Array[String]): Unit = {
     val argsParser = new scopt.OptionParser[Config]("colang") {
       head("colang", VERSION)
 
       opt[File]('o', "out").valueName("<file>")
-        .action((f, c) => c.copy(out = Some(f)))
-        .text("generated C source file name")
+        .action((file, config) => config.copy(out = Some(file)))
+        .text(tr("generated_c_file_name"))
 
       arg[File]("<source-file>").required()
-        .action((f, c) => c.copy(source = Some(f)))
-        .text("CO source file name")
+        .action((file, config) => config.copy(source = Some(file)))
+        .text(tr("co_source_file_name"))
     }
 
     argsParser.parse(args, Config()) match {
@@ -234,8 +232,13 @@ object Compiler {
         val lexer = new LexerImpl
         val parser = new ParserImpl
         val analyzer = new AnalyzerImpl
-        val backend = new CCodeGenerator(inFile, outFile, new CVerboseNameGenerator())
-        new Compiler(inFile, outFile, lexer, parser, analyzer, backend).compile()
+        val backend = new CCodeGenerator(
+          inFile, outFile, new CVerboseNameGenerator())
+
+        val compiler = new Compiler(lexer, parser, analyzer, backend)
+
+        val issues = compiler.compile(inFile)
+        if (issues.nonEmpty) sys.exit(1)
 
       case None => sys.exit(2)
     }

@@ -8,10 +8,12 @@ import colang.ast.raw.ParserImpl
 import colang.backend.c.{CCodeGenerator, CVerboseNameGenerator}
 import colang.issues.Issue
 import colang.tokens.LexerImpl
+
 import org.scalatest._
 
 import scala.io.Source
 import scala.sys.process._
+
 
 class EndToEndTest extends FunSpec with Matchers {
 
@@ -79,16 +81,13 @@ class EndToEndTest extends FunSpec with Matchers {
       val runFile = Paths.get(tmpDir, s"co_e2e_${fileName.hashCode}.exe").toFile
 
       val compiler = new Compiler(
-        sample,
-        cFile,
         new LexerImpl,
         new ParserImpl,
         new AnalyzerImpl,
-        new CCodeGenerator(sample, cFile, new CVerboseNameGenerator),
-        silent = true)
+        new CCodeGenerator(sample, cFile, new CVerboseNameGenerator))
 
       it("should behave as expected") {
-        val issues = compiler.compile()
+        val issues = compiler.compile(sample, silent = true)
         val expectedIssues = parseExpectedIssues(sample)
 
         assertThatIssuesMatchExpected(issues, expectedIssues)
