@@ -1,6 +1,6 @@
 package colang
 
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.issues.Warning
 
 class StrategyUnionSpec extends LexerUnitSpec {
@@ -16,7 +16,7 @@ class StrategyUnionSpec extends LexerUnitSpec {
       val successfulTwo = makeSuccessfulStrategy(2, Seq(issueTwo), "new stream 2")
 
       val union = StrategyUnion(successfulOne, successfulTwo)
-      union("") should matchPattern { case Success(1, Seq(`issueOne`), "new stream 1") => }
+      union("") should matchPattern { case Matched(1, Seq(`issueOne`), "new stream 1") => }
     }
 
     it("should skip strategies that didn't match") {
@@ -24,7 +24,7 @@ class StrategyUnionSpec extends LexerUnitSpec {
       val successful = makeSuccessfulStrategy(1, Seq(issueOne), "new stream 1")
 
       val union = StrategyUnion(nonMatching, successful)
-      union("") should matchPattern { case Success(1, Seq(`issueOne`), "new stream 1") => }
+      union("") should matchPattern { case Matched(1, Seq(`issueOne`), "new stream 1") => }
     }
 
     it("should choose strategy that returned Skipped over successful strategy that came later") {
@@ -32,7 +32,7 @@ class StrategyUnionSpec extends LexerUnitSpec {
       val successful = makeSuccessfulStrategy(2, Seq(issueTwo), "new stream 2")
 
       val union = StrategyUnion(malformed, successful)
-      union("") should matchPattern { case Malformed(Seq(`issueOne`), "new stream 1") => }
+      union("") should matchPattern { case Skipped(Seq(`issueOne`), "new stream 1") => }
     }
 
     it("should return NoMatch if none of the strategies matched") {

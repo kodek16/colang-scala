@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.Success
+import colang.Strategy.Result.Matched
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
 import colang.issues.{Issues, Term, Terms}
 import colang.tokens.{Keyword, NativeKeyword, StaticKeyword}
@@ -58,7 +58,7 @@ object SpecifiersList {
             streamAfterSpecifiers.beforeNextNonWhitespace
           }
 
-          Success(SpecifiersList(validSpecifiers, source), parseIssues ++ issues, streamAfterSpecifiers)
+          Matched(SpecifiersList(validSpecifiers, source), parseIssues ++ issues, streamAfterSpecifiers)
       }
     }
   }

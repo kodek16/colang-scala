@@ -1,6 +1,6 @@
 package colang.tokens
 
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang._
 import colang.issues.{Issue, Issues}
 
@@ -95,12 +95,12 @@ class LexerImpl extends Lexer {
         (extractedTokens, extractedIssues)
       } else {
         val (newTokens, newIssues, newStream) = strategies(stream) match {
-          case Success(token, tokenIssues, streamAfterToken) =>
+          case Matched(token, tokenIssues, streamAfterToken) =>
             (extractedTokens :+ token,
               extractedIssues ++ tokenIssues,
               streamAfterToken)
 
-          case Malformed(tokenIssues, streamAfterToken) =>
+          case Skipped(tokenIssues, streamAfterToken) =>
             (extractedTokens,
               extractedIssues ++ tokenIssues,
               streamAfterToken)
@@ -142,7 +142,7 @@ object LexerImpl {
       re findPrefixOf stream match {
         case Some(text) =>
           val (source, newStream) = stream.take(text)
-          Success(constructor(source), Seq.empty, newStream)
+          Matched(constructor(source), Seq.empty, newStream)
         case None => NoMatch()
       }
     }
@@ -157,7 +157,7 @@ object LexerImpl {
     re findPrefixOf stream match {
       case Some(text) =>
         val (source, streamAfterToken) = stream.take(text)
-        Malformed(
+        Skipped(
           Seq(Issues.UnknownCharacterSequence(source)),
           streamAfterToken)
 
@@ -174,7 +174,7 @@ object LexerImpl {
     re findPrefixOf stream match {
       case Some(text) =>
         val (source, streamAfterToken) = stream.take(text)
-        Success(
+        Matched(
           IntLiteral(0, source),
           Seq(Issues.UnknownNumberFormat(source)),
           streamAfterToken)
@@ -192,7 +192,7 @@ object LexerImpl {
     re findPrefixOf stream match {
       case Some(text) =>
         val (_, streamAfterComment) = stream.take(text)
-        Malformed(Seq.empty, streamAfterComment)
+        Skipped(Seq.empty, streamAfterComment)
       case None => NoMatch()
     }
   }
@@ -206,7 +206,7 @@ object LexerImpl {
     re findPrefixOf stream match {
       case Some(text) =>
         val (_, streamAfterComment) = stream.take(text)
-        Malformed(Seq.empty, streamAfterComment)
+        Skipped(Seq.empty, streamAfterComment)
       case None => NoMatch()
     }
   }

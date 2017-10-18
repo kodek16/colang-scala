@@ -1,7 +1,7 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
 import colang.issues.Terms
@@ -32,9 +32,9 @@ object PrefixOperator {
         .as[tokens.PrefixOperator, Expression] match {
 
         case (Present(operator), Present(expression), issues, streamAfterExpression) =>
-          Success(PrefixOperator(operator, expression), issues, streamAfterExpression)
+          Matched(PrefixOperator(operator, expression), issues, streamAfterExpression)
         case (Present(operator), Invalid() | Absent(), issues, streamAfterExpression) =>
-          Malformed(issues, streamAfterExpression)
+          Skipped(issues, streamAfterExpression)
         case _ => NoMatch()
       }
     }

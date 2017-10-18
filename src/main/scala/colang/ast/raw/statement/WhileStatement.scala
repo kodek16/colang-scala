@@ -1,7 +1,7 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
@@ -43,7 +43,7 @@ object WhileStatement {
         case (Present(keyword), Present(leftParen), Present(condition), Present(rightParen), Present(loop),
               issues, streamAfterLoop) =>
           val statement = WhileStatement(keyword, leftParen, condition, rightParen, loop)
-          Success(statement, issues, streamAfterLoop)
+          Matched(statement, issues, streamAfterLoop)
 
         //Missing ( or )
         case (Present(keyword), leftParenOption @ _, Present(condition), rightParenOption @ _, Present(loop),
@@ -58,11 +58,11 @@ object WhileStatement {
           }
 
           val statement = WhileStatement(keyword, leftParen, condition, rightParen, loop)
-          Success(statement, issues, streamAfterLoop)
+          Matched(statement, issues, streamAfterLoop)
 
         //Missing condition or body
         case (Present(keyword), _, _, _, _, issues, streamAfterLoop) =>
-          Malformed(issues, streamAfterLoop)
+          Skipped(issues, streamAfterLoop)
 
         //Missing 'while'
         case _ => NoMatch()

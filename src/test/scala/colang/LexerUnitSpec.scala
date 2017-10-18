@@ -1,6 +1,6 @@
 package colang
 
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.issues.{Error, Issue}
 import colang.tokens.{LexerImpl, Token}
 
@@ -28,14 +28,14 @@ abstract class LexerUnitSpec extends UnitSpec {
       val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
 
       strategy(stream) match {
-        case Success(token, issues, streamAfterToken) =>
+        case Matched(token, issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           if (streamAfterToken.startChar != source.length) {
             fail("Strategy didn't match the whole character sequence.")
           }
 
           new SuccessWrapper(token, issues)
-        case Malformed(_, _) =>
+        case Skipped(_, _) =>
           fail("Strategy matched with Skipped when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
@@ -53,9 +53,9 @@ abstract class LexerUnitSpec extends UnitSpec {
       val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
 
       strategy(stream) match {
-        case Success(_, _, _) =>
+        case Matched(_, _, _) =>
           fail("Strategy succeeded when it was expected to match with Skipped.")
-        case Malformed(issues, streamAfterToken) =>
+        case Skipped(issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           streamAfterToken.startChar should be (source.length)
           new MalformedWrapper(issues)
@@ -73,7 +73,7 @@ abstract class LexerUnitSpec extends UnitSpec {
       val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
 
       strategy(stream) match {
-        case Success(_, _, _) | Malformed(_, _) =>
+        case Matched(_, _, _) | Skipped(_, _) =>
           fail("Strategy matched though it was not supposed to.")
         case NoMatch() => ()
       }
@@ -189,7 +189,7 @@ abstract class LexerUnitSpec extends UnitSpec {
       val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
 
       strategy(stream) match {
-        case Success(token, issues, streamAfterToken) =>
+        case Matched(token, issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           if (streamAfterToken.startChar == source.length) {
             fail("Strategy matched the whole sequence instead of only a part of it.")
@@ -198,7 +198,7 @@ abstract class LexerUnitSpec extends UnitSpec {
           }
 
           new SuccessWrapper(token, issues)
-        case Malformed(_, _) =>
+        case Skipped(_, _) =>
           fail("Strategy matched with Skipped when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
@@ -212,9 +212,9 @@ abstract class LexerUnitSpec extends UnitSpec {
       val stream = new SourceCodeStream(sourceFile, 0, 0, 0)
 
       strategy(stream) match {
-        case Success(_, _, _) =>
+        case Matched(_, _, _) =>
           fail("Strategy succeeded when it was expected to match with Skipped.")
-        case Malformed(issues, streamAfterToken) =>
+        case Skipped(issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           streamAfterToken.startChar should be (tokenText.length)
           new MalformedWrapper(issues)

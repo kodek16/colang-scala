@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
 import colang.ast.raw.expression.Expression
 import colang.issues.Terms
@@ -28,9 +28,9 @@ object FunctionParameter {
         .as[Expression, Identifier] match {
 
         case (Present(type_), Present(name), issues, streamAfterParam) =>
-          Success(FunctionParameter(type_, name), issues, streamAfterParam)
+          Matched(FunctionParameter(type_, name), issues, streamAfterParam)
         case (Present(_) | Invalid(), Invalid() | Absent(), issues, streamAfterParam) =>
-          Malformed(issues, streamAfterParam)
+          Skipped(issues, streamAfterParam)
         case _ => NoMatch()
       }
     }
@@ -70,7 +70,7 @@ object ParameterList {
               RightParen(previousSource.after)
           }
 
-          Success(ParameterList(leftParen, params, rightParen), issues, streamAfterParams)
+          Matched(ParameterList(leftParen, params, rightParen), issues, streamAfterParams)
         case _ => NoMatch()
       }
     }

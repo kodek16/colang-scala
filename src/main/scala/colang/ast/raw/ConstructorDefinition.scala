@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.issues.Terms
@@ -42,10 +42,10 @@ object ConstructorDefinition {
         case (Present(specifiers), Present(constructorKw), Present(parameterList), bodyOption,
               issues, streamAfterConstructor) =>
           val definition = ConstructorDefinition(specifiers, constructorKw, parameterList, bodyOption.toOption)
-          Success(definition, issues, streamAfterConstructor)
+          Matched(definition, issues, streamAfterConstructor)
 
         case (Present(specifiers), Present(constructorKw), _, _, issues, streamAfterConstructor) =>
-          Malformed(issues, streamAfterConstructor)
+          Skipped(issues, streamAfterConstructor)
 
         case _ => NoMatch()
       }

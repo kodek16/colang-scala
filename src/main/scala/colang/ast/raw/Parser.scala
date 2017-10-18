@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang._
 import colang.issues._
 import colang.tokens._
@@ -31,7 +31,7 @@ class ParserImpl extends Parser {
     val tokenStream = TokenStream(tokens.toList)
 
     TranslationUnit.strategy(tokenStream) match {
-      case Success(translationUnit, issues, _) => (translationUnit, issues)
+      case Matched(translationUnit, issues, _) => (translationUnit, issues)
     }
   }
 }
@@ -50,7 +50,7 @@ object ParserImpl {
         val (token, streamAfterToken) = stream.readNonWhitespace
 
         if (token.getClass == tokenType) {
-          Success(token.asInstanceOf[T], Seq.empty, streamAfterToken)
+          Matched(token.asInstanceOf[T], Seq.empty, streamAfterToken)
         } else NoMatch()
       } else NoMatch()
     }
@@ -70,10 +70,10 @@ object ParserImpl {
         val (token, streamAfterToken) = stream.readNonWhitespace
 
         token match {
-          case id: Identifier => Success(id, Seq.empty, streamAfterToken)
+          case id: Identifier => Matched(id, Seq.empty, streamAfterToken)
           case kw: Keyword =>
             val issue = Issues.KeywordAsIdentifier(kw.source, kw.text)
-            Success(Identifier(kw.text, kw.source), Seq(issue), streamAfterToken)
+            Matched(Identifier(kw.text, kw.source), Seq(issue), streamAfterToken)
           case _ => NoMatch()
         }
       } else NoMatch()
@@ -101,7 +101,7 @@ object ParserImpl {
       }
 
       if (streamHasTokenOnCurrentLine(stream)) {
-        Malformed(Seq.empty, stream)
+        Skipped(Seq.empty, stream)
       } else {
         NoMatch()
       }
@@ -139,9 +139,9 @@ object ParserImpl {
                               collectedIssues: Vector[Issue] = Vector.empty): (Vector[N], Vector[Issue], TokenStream) = {
 
       elementStrategy(stream) match {
-        case Success(element, issues, streamAfterElement) =>
+        case Matched(element, issues, streamAfterElement) =>
           parseWithoutSeparator(streamAfterElement, collectedElements :+ element, collectedIssues ++ issues)
-        case Malformed(issues, streamAfterElement) =>
+        case Skipped(issues, streamAfterElement) =>
           parseWithoutSeparator(streamAfterElement, collectedElements, collectedIssues ++ issues)
         case NoMatch() =>
           if (greedy && stream.nonEmpty) {
@@ -163,8 +163,8 @@ object ParserImpl {
       val separatorStrategy = SingleTokenStrategy(separatorType)
 
       val (newElements, elementIssues, streamAfterElement) = elementStrategy(stream) match {
-        case Success(element, issues, streamAfter) => (Seq(element), issues, streamAfter)
-        case Malformed(issues, streamAfter) => (Seq.empty, issues, streamAfter)
+        case Matched(element, issues, streamAfter) => (Seq(element), issues, streamAfter)
+        case Skipped(issues, streamAfter) => (Seq.empty, issues, streamAfter)
         case NoMatch() =>
           if (greedy && stream.nonEmpty) {
             val (invalidSource, streamAfterInvalidTokens) =
@@ -178,14 +178,14 @@ object ParserImpl {
       }
 
       separatorStrategy(streamAfterElement) match {
-        case Success(_, separatorIssues, streamAfterSeparator) =>
+        case Matched(_, separatorIssues, streamAfterSeparator) =>
           parseWithSeparator(
             streamAfterSeparator,
             separatorType,
             collectedElements ++ newElements,
             collectedIssues ++ elementIssues ++ separatorIssues)
 
-        case Malformed(separatorIssues, streamAfterSeparator) =>
+        case Skipped(separatorIssues, streamAfterSeparator) =>
           //Same as above, Scala does't allow such alternatives in pattern matching.
           parseWithSeparator(
             streamAfterSeparator,
@@ -254,7 +254,7 @@ object ParserImpl {
     val closingElementStrategy = SingleTokenStrategy(closingElement)
 
     openingElementStrategy(stream) match {
-      case Success(open, openIssues, streamAfterOpen) =>
+      case Matched(open, openIssues, streamAfterOpen) =>
         val limitedStream = new LimitedTokenStream(streamAfterOpen, openingElement, closingElement, 1)
 
         val (elements, elementIssues, limitedStreamOnEnd) = parseSequence(
@@ -269,8 +269,8 @@ object ParserImpl {
         val streamOnClose = limitedStreamOnEnd.asInstanceOf[LimitedTokenStream[Open, Close]].breakOut
 
         val (close, closeIssues, streamAfterClose) = closingElementStrategy(streamOnClose) match {
-          case Success(c, ci, s) => (Some(c), ci, s)
-          case Malformed(ci, s)  => (None,    ci, s)
+          case Matched(c, ci, s) => (Some(c), ci, s)
+          case Skipped(ci, s)  => (None,    ci, s)
           case NoMatch() =>
             val position = if (elements.nonEmpty) elements.last.source.after else open.source.after
             val issue = Issues.MissingSequenceClosingElement(position, (sequenceDescription, closingElementDescription))
@@ -279,7 +279,7 @@ object ParserImpl {
 
         Some(open, elements, close, openIssues ++ elementIssues ++ closeIssues, streamAfterClose)
 
-      case Malformed(_, _) | NoMatch() => None
+      case Skipped(_, _) | NoMatch() => None
     }
   }
 
@@ -435,10 +435,10 @@ object ParserImpl {
         elements match {
           case (element: NodeGroupElement) +: tail =>
             element.strategy(stream) match {
-              case Success(elementNode, elementIssues, streamAfterElement) =>
+              case Matched(elementNode, elementIssues, streamAfterElement) =>
                 doIt(tail, streamAfterElement, collectedNodes :+ Present(elementNode), collectedIssues ++ elementIssues)
 
-              case Malformed(elementIssues, streamAfterElement) =>
+              case Skipped(elementIssues, streamAfterElement) =>
                 doIt(tail, streamAfterElement, collectedNodes :+ Invalid(), collectedIssues ++ elementIssues)
 
               case NoMatch() if !element.stopIfAbsent =>
@@ -460,7 +460,7 @@ object ParserImpl {
 
           case LineContinuationGroupElement +: tail =>
             lineContinuationStrategy(stream) match {
-              case Malformed(_, _) =>
+              case Skipped(_, _) =>
                 doIt(tail, stream, collectedNodes, collectedIssues)
 
               case _ =>

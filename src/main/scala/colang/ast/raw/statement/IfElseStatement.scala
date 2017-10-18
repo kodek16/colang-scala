@@ -1,7 +1,7 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
@@ -34,10 +34,10 @@ object IfElseStatement {
 
         case (Present(ifStatement), Present(elseKeyword), Present(elseBranch), issues, streamAfterStatement) =>
           val statement = IfElseStatement(ifStatement, elseKeyword, elseBranch)
-          Success(statement, issues, streamAfterStatement)
+          Matched(statement, issues, streamAfterStatement)
 
         case (Present(ifStatement), Present(elseKeyword), Invalid() | Absent(), issues, streamAfterStatement) =>
-          Malformed(issues, streamAfterStatement)
+          Skipped(issues, streamAfterStatement)
 
         case _ => NoMatch()
       }

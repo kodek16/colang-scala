@@ -1,7 +1,7 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
@@ -30,11 +30,11 @@ object ReturnStatement {
 
         case (Present(keyword), Present(expression), issues, streamAfterStatement) =>
           val statement = ReturnStatement(keyword, Some(expression))
-          Success(statement, issues, streamAfterStatement)
+          Matched(statement, issues, streamAfterStatement)
 
         case (Present(keyword), _, issues, streamAfterStatement) =>
           val statement = ReturnStatement(keyword, None)
-          Success(statement, issues, streamAfterStatement)
+          Matched(statement, issues, streamAfterStatement)
 
         case _ => NoMatch()
       }

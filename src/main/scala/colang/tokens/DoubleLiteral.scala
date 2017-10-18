@@ -4,7 +4,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang._
 
 /**
@@ -28,7 +28,7 @@ object DoubleLiteral {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
           val token = DoubleLiteral(numberFormat.parse(text).doubleValue(), source)
-          Success(token, Seq.empty, streamAfterToken)
+          Matched(token, Seq.empty, streamAfterToken)
         case None => NoMatch()
       }
     }
@@ -50,7 +50,7 @@ object DoubleLiteral {
 
           val value = significand * Math.pow(10, exponent)
           val token = DoubleLiteral(value, source)
-          Success(token, Seq.empty, streamAfterToken)
+          Matched(token, Seq.empty, streamAfterToken)
         case None => NoMatch()
       }
     }

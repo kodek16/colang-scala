@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl._
 import colang.ast.raw.statement.VariablesDefinition
 import colang.issues.Terms
@@ -44,10 +44,10 @@ object TypeDefinition {
 
         case (Present(specifiersList), Present(keyword), Present(name), Present(body), issues, streamAfterType) =>
           val typeDef = TypeDefinition(specifiersList, keyword, name, body)
-          Success(typeDef, issues, streamAfterType)
+          Matched(typeDef, issues, streamAfterType)
 
         case (Present(_), Present(_) | Invalid(), _, _, issues, streamAfterType) =>
-          Malformed(issues, streamAfterType)
+          Skipped(issues, streamAfterType)
 
         case _ => NoMatch()
       }
@@ -92,7 +92,7 @@ object TypeBody {
               RightBrace(previousSource.after)
           }
 
-          Success(TypeBody(leftBrace, members, rightBrace), issues, streamAfterBlock)
+          Matched(TypeBody(leftBrace, members, rightBrace), issues, streamAfterBlock)
         case None => NoMatch()
       }
     }

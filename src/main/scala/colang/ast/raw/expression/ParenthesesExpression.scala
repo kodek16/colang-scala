@@ -1,7 +1,7 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present, SingleTokenStrategy}
@@ -38,9 +38,9 @@ object ParenthesesExpression {
               RightParen(expression.source.after)
           }
 
-          Success(ParenthesesExpression(leftParen, expression, rightParen), issues, streamAfterExpression)
+          Matched(ParenthesesExpression(leftParen, expression, rightParen), issues, streamAfterExpression)
         case (Present(leftParen), Invalid() | Absent(), Present(rightParen), issues, streamAfterExpression) =>
-          Malformed(issues, streamAfterExpression)
+          Skipped(issues, streamAfterExpression)
         case _ => NoMatch()
       }
     }

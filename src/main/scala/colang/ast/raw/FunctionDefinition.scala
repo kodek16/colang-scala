@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang.TokenStream
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy, identifierStrategy}
 import colang.ast.raw.expression.Expression
@@ -61,7 +61,7 @@ object FunctionDefinition {
             parameterList,
             bodyOption.toOption)
 
-          Success(funcDef, issues, streamAfterFunction)
+          Matched(funcDef, issues, streamAfterFunction)
 
         case _ => NoMatch()
       }

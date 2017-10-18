@@ -1,7 +1,7 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl.SingleTokenStrategy
 import colang.ast.raw.expression.Expression
 import colang.ast.raw.{CodeBlock, Node, ParserImpl}
@@ -24,8 +24,8 @@ object Statement {
 
     def apply(stream: TokenStream): Result[TokenStream, Statement] = {
       tokenStrategy(stream) match {
-        case Success(_, _, streamAfterSemicolon) => Malformed(Seq.empty, streamAfterSemicolon)
-        case Malformed(_, streamAfterSemicolon)  => Malformed(Seq.empty, streamAfterSemicolon)
+        case Matched(_, _, streamAfterSemicolon) => Skipped(Seq.empty, streamAfterSemicolon)
+        case Skipped(_, streamAfterSemicolon)  => Skipped(Seq.empty, streamAfterSemicolon)
         case NoMatch() => NoMatch()
       }
     }

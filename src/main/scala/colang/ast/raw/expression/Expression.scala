@@ -1,7 +1,7 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl.{Absent, Invalid, Present}
 import colang.ast.raw.statement.Statement
 import colang.ast.raw.{Node, ParserImpl}
@@ -60,7 +60,7 @@ object Expression {
           .as[PostfixOperator] match {
 
           case (Present(postfixOperator), issues, streamAfterOperator) =>
-            Success(postfixOperator, issues, streamAfterOperator)
+            Matched(postfixOperator, issues, streamAfterOperator)
           case _ => NoMatch()
         }
       }
@@ -79,7 +79,7 @@ object Expression {
           elementDescription = Adjectives.Postfix applyTo Terms.Operator
         ) match {
           case (operators, issues, streamAfterOps) if operators.nonEmpty =>
-            Success(PostfixOperatorSequence(operators.toList.asInstanceOf[::[PostfixOperator]]), issues, streamAfterOps)
+            Matched(PostfixOperatorSequence(operators.toList.asInstanceOf[::[PostfixOperator]]), issues, streamAfterOps)
           case _ => NoMatch()
         }
       }
@@ -95,13 +95,13 @@ object Expression {
         case (Present(expression), Present(PostfixOperatorSequence(postfixOps)), issues, streamAfterExpr) =>
           val transform = (postfixOps.reverse map { _.apply } foldLeft identity[Expression] _) { _ compose _ }
           val result = transform(expression)
-          Success(result, issues, streamAfterExpr)
+          Matched(result, issues, streamAfterExpr)
 
         case (Present(expression), Invalid() | Absent(), issues, streamAfterExpr) =>
-          Success(expression, issues, streamAfterExpr)
+          Matched(expression, issues, streamAfterExpr)
 
         case (Invalid(), _, issues, streamAfterExpr) =>
-          Malformed(issues, streamAfterExpr)
+          Skipped(issues, streamAfterExpr)
 
         case _ => NoMatch()
       }

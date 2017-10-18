@@ -1,7 +1,7 @@
 package colang.tokens
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang.{SourceCode, SourceCodeStream}
 
 /**
@@ -20,7 +20,7 @@ object BoolLiteral {
         case Some(text) =>
           val (source, streamAfterToken) = stream.take(text)
           val token = BoolLiteral(text.toBoolean, source)
-          Success(token, Seq.empty, streamAfterToken)
+          Matched(token, Seq.empty, streamAfterToken)
         case None => NoMatch()
       }
     }

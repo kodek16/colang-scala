@@ -1,7 +1,7 @@
 package colang
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.issues.Issue
 
 import scala.annotation.tailrec
@@ -51,7 +51,7 @@ object Strategy {
       * @param issues encountered issues
       * @param newStream object stream without the extracted object
       */
-    case class Success[Stream, T](result: T,
+    case class Matched[Stream, T](result: T,
                                   issues: Seq[Issue],
                                   newStream: Stream) extends Result[Stream, T]
 
@@ -65,8 +65,8 @@ object Strategy {
       * @param issues encountered issues
       * @param newStream object stream without the extracted object
       */
-    case class Malformed[Stream, T](issues: Seq[Issue],
-                                    newStream: Stream) extends Result[Stream, T]
+    case class Skipped[Stream, T](issues: Seq[Issue],
+                                  newStream: Stream) extends Result[Stream, T]
 
     /**
       * The strategy failed to recognize raw stream contents as an object.
@@ -90,8 +90,8 @@ class MappedStrategy[Stream, From, To](from: Strategy[Stream, From],
 
   def apply(stream: Stream): Result[Stream, To] = {
     from(stream) match {
-      case Success(node, issues, newStream) => Success(mapper(node), issues, newStream)
-      case Malformed(issues, newStream) => Malformed(issues, newStream)
+      case Matched(node, issues, newStream) => Matched(mapper(node), issues, newStream)
+      case Skipped(issues, newStream) => Skipped(issues, newStream)
       case NoMatch() => NoMatch()
     }
   }
@@ -122,8 +122,8 @@ class StrategyUnion[Stream, T](strategies: Seq[Strategy[Stream, T]]) extends Str
       strategies match {
         case strategy +: tail =>
           strategy(stream) match {
-            case result @ Success(_, _, _) => result
-            case result @ Malformed(_, _)  => result
+            case result @ Matched(_, _, _) => result
+            case result @ Skipped(_, _)  => result
             case _ => applyStrategies(tail)
           }
         case _ => NoMatch()

@@ -1,7 +1,7 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl
 import colang.ast.raw.ParserImpl.{Present, SingleTokenStrategy}
 import colang.issues.Terms
@@ -32,10 +32,10 @@ object MemberAccess {
             def apply: (Expression) => Expression = { expr => MemberAccess(expr, memberName) }
             def source: SourceCode = dot.source + memberName.source
           }
-          Success(postfixOp, issues, streamAfterExpression)
+          Matched(postfixOp, issues, streamAfterExpression)
 
         case (Present(dot), _, issues, streamAfterExpression) =>
-          Malformed(issues, streamAfterExpression)
+          Skipped(issues, streamAfterExpression)
 
         case _ => NoMatch()
       }

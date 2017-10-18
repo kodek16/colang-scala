@@ -1,7 +1,7 @@
 package colang.ast.raw.statement
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.ast.raw.ParserImpl._
 import colang.ast.raw._
 import colang.ast.raw.expression.Expression
@@ -40,10 +40,10 @@ object VariableDefinition {
           .as[Assign, Expression] match {
 
           case (Present(assign), Present(expression), issues, streamAfterInitializer) =>
-            Success(VariableInitializer(assign, expression), issues, streamAfterInitializer)
+            Matched(VariableInitializer(assign, expression), issues, streamAfterInitializer)
 
           case (Present(assign), Invalid() | Absent(), issues, streamAfterInitializer) =>
-            Malformed(issues, streamAfterInitializer)
+            Skipped(issues, streamAfterInitializer)
 
           case _ => NoMatch()
         }
@@ -61,13 +61,13 @@ object VariableDefinition {
         .as[Identifier, VariableInitializer] match {
 
         case (Present(name), Present(initializer), issues, streamAfterVariable) =>
-          Success(VariableDefinition(name, Some(initializer.expression)), issues, streamAfterVariable)
+          Matched(VariableDefinition(name, Some(initializer.expression)), issues, streamAfterVariable)
 
         case (Present(name), Invalid(), issues, streamAfterVariable) =>
-          Success(VariableDefinition(name, None), issues, streamAfterVariable)
+          Matched(VariableDefinition(name, None), issues, streamAfterVariable)
 
         case (Present(name), Absent(), issues, streamAfterVariable) =>
-          Success(VariableDefinition(name, None), issues, streamAfterVariable)
+          Matched(VariableDefinition(name, None), issues, streamAfterVariable)
 
         case _ => NoMatch()
       }
@@ -109,7 +109,7 @@ object VariablesDefinition {
           separatorDescription = Some(Terms.Comma)
         ) match {
           case (variables, issues, streamAfterVariables) if variables.nonEmpty =>
-            Success(VariableDefinitionSequence(variables.toList.asInstanceOf[::[VariableDefinition]]), issues, streamAfterVariables)
+            Matched(VariableDefinitionSequence(variables.toList.asInstanceOf[::[VariableDefinition]]), issues, streamAfterVariables)
           case _ => NoMatch()
         }
       }
@@ -132,7 +132,7 @@ object VariablesDefinition {
               issues, streamAfterVariables) =>
 
             val node = VariablesDefinition(specifiers, type_, variables)
-            Success(node, issues, streamAfterVariables)
+            Matched(node, issues, streamAfterVariables)
 
         case _ => NoMatch()
       }

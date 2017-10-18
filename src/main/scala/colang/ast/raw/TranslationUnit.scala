@@ -1,6 +1,6 @@
 package colang.ast.raw
 
-import colang.Strategy.Result.Success
+import colang.Strategy.Result.Matched
 import colang.ast.raw.statement.VariablesDefinition
 import colang.issues.{Adjectives, Terms}
 import colang.{SourceCode, StrategyUnion, TokenStream}
@@ -26,14 +26,14 @@ object TranslationUnit {
       FunctionDefinition.strategy,
       VariablesDefinition.strategy)
 
-    def apply(stream: TokenStream): Success[TokenStream, TranslationUnit] = {
+    def apply(stream: TokenStream): Matched[TokenStream, TranslationUnit] = {
       ParserImpl.parseSequence(
         stream = stream,
         elementStrategy = globalSymbolStrategy,
         elementDescription = Terms.Definition of (Adjectives.Global applyTo Terms.Symbol),
         greedy = true
       ) match {
-        case (symbols, issues, newStream) => Success(TranslationUnit(symbols), issues, newStream)
+        case (symbols, issues, newStream) => Matched(TranslationUnit(symbols), issues, newStream)
       }
     }
   }

@@ -1,7 +1,7 @@
 package colang.ast.raw.expression
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang.ast.raw.{Node, ParserImpl}
 import colang.issues.Terms
 import colang.tokens.{Comma, LeftParen, RightParen}
@@ -40,7 +40,7 @@ object ArgumentList {
               RightParen(previousSource.after)
           }
 
-          Success(ArgumentList(leftParen, args, rightParen), issues, streamAfterNode)
+          Matched(ArgumentList(leftParen, args, rightParen), issues, streamAfterNode)
         case _ => NoMatch()
       }
     }

@@ -1,6 +1,6 @@
 package colang
 
-import colang.Strategy.Result.{Malformed, NoMatch, Success}
+import colang.Strategy.Result.{Skipped, NoMatch, Matched}
 import colang.issues.Warning
 
 class MappedStrategySpec extends LexerUnitSpec {
@@ -17,12 +17,12 @@ class MappedStrategySpec extends LexerUnitSpec {
   describe("A mapped strategy") {
     it("should wrap objects produced by underlying strategy") {
       val mappedStrategy = MappedStrategy(successfulStrategy, wrap[Int])
-      mappedStrategy("") should matchPattern { case Success(WrappedValue(4), Seq(`issue`), "new stream") => }
+      mappedStrategy("") should matchPattern { case Matched(WrappedValue(4), Seq(`issue`), "new stream") => }
     }
 
     it("should return Skipped when underlying strategy returns Skipped") {
       val mappedStrategy = MappedStrategy(malformedStrategy, wrap[Int])
-      mappedStrategy("") should matchPattern { case Malformed(Seq(`issue`), "new stream") => }
+      mappedStrategy("") should matchPattern { case Skipped(Seq(`issue`), "new stream") => }
     }
 
     it("should not match when underlying strategy doesn't") {

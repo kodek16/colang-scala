@@ -1,7 +1,7 @@
 package colang.tokens
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang.issues.Issues
 import colang.{SourceCode, SourceCodeStream, StrategyUnion}
 
@@ -27,7 +27,7 @@ object IntLiteral {
           val bigValue = BigInt(text)
 
           if (bigValue >= Int.MinValue && bigValue <= Int.MaxValue) {
-            Success(
+            Matched(
               IntLiteral(bigValue.toInt, source),
               issues = Seq.empty,
               streamAfterToken)
@@ -39,7 +39,7 @@ object IntLiteral {
               Issues.NumericLiteralTooSmall(source, "int")
             }
 
-            Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
+            Matched(IntLiteral(0, source), Seq(issue), streamAfterToken)
           }
 
         case None => NoMatch()
@@ -62,7 +62,7 @@ object IntLiteral {
           val issue = Issues.IntegerLiteralWithNonNaturalExponent(
             source, doubleLiteral)
 
-          Success(IntLiteral(0, source), Seq(issue), streamAfterToken)
+          Matched(IntLiteral(0, source), Seq(issue), streamAfterToken)
         case None => NoMatch()
       }
     }
@@ -88,24 +88,24 @@ object IntLiteral {
             val bigValue = significand * (BigInt(10) pow exponent.toInt)
 
             if (bigValue >= Int.MinValue && bigValue <= Int.MaxValue) {
-              Success(
+              Matched(
                 IntLiteral(bigValue.toInt, source),
                 issues = Seq.empty,
                 streamAfterToken)
             } else if (bigValue > 0) {
-              Success(
+              Matched(
                 IntLiteral(0, source),
                 issues = Seq(Issues.NumericLiteralTooBig(source, "int")),
                 streamAfterToken)
             } else {
-              Success(
+              Matched(
                 IntLiteral(0, source),
                 issues = Seq(Issues.NumericLiteralTooSmall(source, "int")),
                 streamAfterToken)
             }
 
           } else {
-            Success(
+            Matched(
               IntLiteral(0, source),
               issues = Seq(Issues.NumericLiteralTooBig(source, "int")),
               streamAfterToken)

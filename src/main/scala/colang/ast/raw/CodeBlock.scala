@@ -1,7 +1,7 @@
 package colang.ast.raw
 
 import colang.Strategy.Result
-import colang.Strategy.Result.{NoMatch, Success}
+import colang.Strategy.Result.{NoMatch, Matched}
 import colang._
 import colang.ast.raw.statement.Statement
 import colang.issues.Terms
@@ -39,7 +39,7 @@ object CodeBlock {
               RightBrace(previousSource.after)
           }
 
-          Success(CodeBlock(leftBrace, elements, rightBrace), issues, streamAfterBlock)
+          Matched(CodeBlock(leftBrace, elements, rightBrace), issues, streamAfterBlock)
         case None =>
           NoMatch()
       }
