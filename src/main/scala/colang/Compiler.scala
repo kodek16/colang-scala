@@ -107,19 +107,22 @@ class Compiler(lexer: Lexer,
     def colorWarning(s: String) = Console.YELLOW + s + Console.RESET
     def colorError(s: String) = Console.RED + s + Console.RESET
 
-    val (issueType, color, source, message, notes) = issue match {
-      case Warning(_, s, m, n) => (tr("warning"), colorWarning _, s, m, n)
-      case Error(_, s, m, n) => (tr("error"), colorError _, s, m, n)
+    val (issueType, color) = issue match {
+      case _: Warning => (tr("warning"), colorWarning _)
+      case _: Error => (tr("error"), colorError _)
     }
 
-    val fileName = source.file.name
-    val lineNo = source.startLine + 1
-    val charNo = source.startChar + 1
+    val fileName = issue.source.file.name
+    val lineNo = issue.source.startLine + 1
+    val charNo = issue.source.startChar + 1
+
+    val message = issue.message
+    val notes = issue.notes
 
     val heading = s"$fileName:$lineNo:$charNo: ${color(issueType)}: $message"
     System.err.println(heading)
 
-    printSourceFragment(source, color)
+    printSourceFragment(issue.source, color)
 
     notes foreach printNote
   }

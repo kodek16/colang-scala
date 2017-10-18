@@ -20,7 +20,7 @@ class MappedStrategySpec extends LexerUnitSpec {
       mappedStrategy("") should matchPattern { case Success(WrappedValue(4), Seq(`issue`), "new stream") => }
     }
 
-    it("should return Malformed when underlying strategy returns Malformed") {
+    it("should return Skipped when underlying strategy returns Skipped") {
       val mappedStrategy = MappedStrategy(malformedStrategy, wrap[Int])
       mappedStrategy("") should matchPattern { case Malformed(Seq(`issue`), "new stream") => }
     }

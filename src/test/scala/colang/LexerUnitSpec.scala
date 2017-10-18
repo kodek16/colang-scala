@@ -36,16 +36,16 @@ abstract class LexerUnitSpec extends UnitSpec {
 
           new SuccessWrapper(token, issues)
         case Malformed(_, _) =>
-          fail("Strategy matched with Malformed when it was expected to succeed.")
+          fail("Strategy matched with Skipped when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
       }
     }
 
     /**
-      * Asserts that the strategy matches a source code fragment completely and returns Malformed with a correct
+      * Asserts that the strategy matches a source code fragment completely and returns Skipped with a correct
       * new stream. Further checks are usually chained on the return value, see MalformedWrapper.
-      * @param source source code that the strategy should match with Malformed
+      * @param source source code that the strategy should match with Skipped
       * @return MalformedWrapper
       */
     def shouldMatchMalformedOn(source: String): MalformedWrapper = {
@@ -54,13 +54,13 @@ abstract class LexerUnitSpec extends UnitSpec {
 
       strategy(stream) match {
         case Success(_, _, _) =>
-          fail("Strategy succeeded when it was expected to match with Malformed.")
+          fail("Strategy succeeded when it was expected to match with Skipped.")
         case Malformed(issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           streamAfterToken.startChar should be (source.length)
           new MalformedWrapper(issues)
         case NoMatch() =>
-          fail("Strategy didn't match though it was supposed to match with Malformed.")
+          fail("Strategy didn't match though it was supposed to match with Skipped.")
       }
     }
 
@@ -89,7 +89,7 @@ abstract class LexerUnitSpec extends UnitSpec {
     def shouldOnlySucceedOn(tokenText: String) = new PartialSuccessClause(strategy, tokenText)
 
     /**
-      * Asserts that the strategy only matches a prefix of given source text and returns Malformed with a correct
+      * Asserts that the strategy only matches a prefix of given source text and returns Skipped with a correct
       * new stream. Use it like 'strategy shouldOnlyMatchMalformedOn "prefix" from "prefix some other code".
       * Other MalformedWrapper assertions may follow.
       * @param tokenText token text that the strategy should match
@@ -145,7 +145,7 @@ abstract class LexerUnitSpec extends UnitSpec {
   }
 
   /**
-    * Wraps a Malformed result allowing additional issue checks.
+    * Wraps a Skipped result allowing additional issue checks.
     * @param issues encountered issues
     */
   class MalformedWrapper(issues: Seq[Issue]) {
@@ -157,7 +157,7 @@ abstract class LexerUnitSpec extends UnitSpec {
       */
     def withoutIssues(): MalformedWrapper = {
       if (issues.nonEmpty) {
-        fail("Strategy matched with Malformed, but produced issues though it was not supposed to.")
+        fail("Strategy matched with Skipped, but produced issues though it was not supposed to.")
       }
       this
     }
@@ -199,7 +199,7 @@ abstract class LexerUnitSpec extends UnitSpec {
 
           new SuccessWrapper(token, issues)
         case Malformed(_, _) =>
-          fail("Strategy matched with Malformed when it was expected to succeed.")
+          fail("Strategy matched with Skipped when it was expected to succeed.")
         case NoMatch() =>
           fail("Strategy didn't match though it was supposed to.")
       }
@@ -213,13 +213,13 @@ abstract class LexerUnitSpec extends UnitSpec {
 
       strategy(stream) match {
         case Success(_, _, _) =>
-          fail("Strategy succeeded when it was expected to match with Malformed.")
+          fail("Strategy succeeded when it was expected to match with Skipped.")
         case Malformed(issues, streamAfterToken) =>
           streamAfterToken.file should be (sourceFile)
           streamAfterToken.startChar should be (tokenText.length)
           new MalformedWrapper(issues)
         case NoMatch() =>
-          fail("Strategy didn't match though it was supposed to match with Malformed.")
+          fail("Strategy didn't match though it was supposed to match with Skipped.")
       }
     }
   }

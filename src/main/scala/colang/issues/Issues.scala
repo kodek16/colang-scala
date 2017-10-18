@@ -3,6 +3,7 @@ package colang.issues
 import java.util.Locale
 
 import colang.SourceCode
+import colang.utils.Localization._
 
 /**
   * Issue factories implement this trait by defining locale-specific generation methods. The apply() method is
@@ -10,6 +11,7 @@ import colang.SourceCode
   * @tparam T generated issue type
   * @tparam Args arguments types passed to generators
   */
+@Deprecated
 trait LocaleAwareIssueFactory[T <: Issue, Args] {
   protected def en_US(source: SourceCode, args: Args): T
   protected def be_BY(source: SourceCode, args: Args): T
@@ -27,81 +29,48 @@ trait LocaleAwareIssueFactory[T <: Issue, Args] {
 object Issues {
 
   /**
-    * Generates an issue for numeric literals that are too big/small for their type.
-    * Args: (relevant adjective (big/small), type name)
+    * This class is a temporary measure to allow "old" (untyped) and "new"
+    * (typed) errors coexist.
+    *
+    * See several "new" errors inheriting from this class for example usage.
+    *
+    * After the migration is complete, Error should be changed to a trait, and
+    * this class won't be needed anymore.
     */
-  object NumericLiteralOverflow extends LocaleAwareIssueFactory[Error, (Adjective, String)] {
-    private val code = "E0001"
+  class NewError extends Error("", null, "", Seq.empty)
 
-    protected def en_US(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = (args._1.en_US.text, args._2)
-      Error(code, source, s"the literal value is too $relation for type '$typeName'", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = (args._1.be_BY.neuter.nominative, args._2)
-      Error(code, source, s"значэньне канстанты занадта $relation для тыпу '$typeName'", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, args: (Adjective, String)): Error = {
-      val (relation, typeName) = (args._1.ru_RU.neuter.nominative, args._2)
-      Error(code, source, s"значение константы слишком $relation для типа '$typeName'", notes = Seq.empty)
-    }
+  case class NumericLiteralTooSmall(override val source: SourceCode,
+                                    typeName: String) extends NewError {
+    override val code = "E0001"
+    override val message: String = tr("numeric_literal_too_small") format typeName
+    override val notes: Seq[Note] = Seq.empty
   }
 
-  /**
-    * Generates an issue for integer literals in scientific form with negative or fractional exponents.
-    * Args: suggested 'double'-type literal
-    */
-  object IntegerLiteralWithNonNaturalExponent extends LocaleAwareIssueFactory[Error, String] {
-    private val code = "E0002"
-
-    protected def en_US(source: SourceCode, suggestedDoubleLiteral: String): Error = {
-      Error(code, source, "integer literals can't have non-natural exponents. To make this a 'double' type " +
-        s"literal, rewrite it as '$suggestedDoubleLiteral'", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, suggestedDoubleLiteral: String): Error = {
-      Error(code, source, "цэлыя канстанты ня могуць мець ненатуральныя экспаненты. Каб надаць гэтай канстаньце тып " +
-        s"'double', перапішыце яе як '$suggestedDoubleLiteral'", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, suggestedDoubleLiteral: String): Error = {
-      Error(code, source, "целые константы не могут содержать ненатуральные экспоненты. Чтобы эта константа имела тип " +
-        s"'double', перепишите её как '$suggestedDoubleLiteral'", notes = Seq.empty)
-    }
+  case class NumericLiteralTooBig(override val source: SourceCode,
+                                  typeName: String) extends NewError {
+    override val code = "E0001"
+    override val message: String = tr("numeric_literal_too_big") format typeName
+    override val notes: Seq[Note] = Seq.empty
   }
 
-  object UnknownNumberFormat extends LocaleAwareIssueFactory[Error, Unit] {
-    private val code = "E0003"
-
-    protected def en_US(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "unknown number format", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "лік невядомага фармату", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "число неизвестного формата", notes = Seq.empty)
-    }
+  case class IntegerLiteralWithNonNaturalExponent(override val source: SourceCode,
+                                                  suggestedDoubleLiteral: String) extends NewError {
+    override val code = "E0002"
+    override val message: String =
+      tr("integer_literal_with_non_natural_exponent") format suggestedDoubleLiteral
+    override val notes: Seq[Note] = Seq.empty
   }
 
-  object UnknownCharacterSequence extends LocaleAwareIssueFactory[Error, Unit] {
-    private val code = "E0004"
+  case class UnknownNumberFormat(override val source: SourceCode) extends NewError {
+    override val code = "E0003"
+    override val message: String = tr("unknown_number_format")
+    override val notes: Seq[Note] = Seq.empty
+  }
 
-    protected def en_US(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "unknown character sequence", notes = Seq.empty)
-    }
-
-    protected def be_BY(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "невядомая пасьлядоўнасьць сімвалаў", notes = Seq.empty)
-    }
-
-    protected def ru_RU(source: SourceCode, args: Unit): Error = {
-      Error(code, source, "неизвестная последовательность символов", notes = Seq.empty)
-    }
+  case class UnknownCharacterSequence(override val source: SourceCode) extends NewError {
+    override val code = "E0004"
+    override val message: String = tr("unknown_character_sequence")
+    override val notes: Seq[Note] = Seq.empty
   }
 
   /**

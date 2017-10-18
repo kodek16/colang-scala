@@ -27,7 +27,7 @@ class StrategyUnionSpec extends LexerUnitSpec {
       union("") should matchPattern { case Success(1, Seq(`issueOne`), "new stream 1") => }
     }
 
-    it("should choose strategy that returned Malformed over successful strategy that came later") {
+    it("should choose strategy that returned Skipped over successful strategy that came later") {
       val malformed = makeMalformedStrategy(Seq(issueOne), "new stream 1")
       val successful = makeSuccessfulStrategy(2, Seq(issueTwo), "new stream 2")
 

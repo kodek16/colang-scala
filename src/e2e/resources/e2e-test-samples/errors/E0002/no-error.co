@@ -1,0 +1,4 @@
+void main() {
+    int x = 1e6
+    double y = 1.0e-1
+}

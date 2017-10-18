@@ -3,6 +3,7 @@ package colang.issues
 /**
   * A product of all locale-specific term types.
   */
+@Deprecated
 abstract class Term {
 
   def en_US: EnglishTerm
