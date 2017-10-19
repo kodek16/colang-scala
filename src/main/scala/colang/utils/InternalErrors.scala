@@ -23,7 +23,7 @@ object InternalErrors {
   }
 
   def noNativeSymbol(name: String): Nothing = {
-    System.err.println(tr("no_native_symbol"))
+    System.err.println(tr("no_native_symbol") format name)
     sys.exit(2)
   }
 }
